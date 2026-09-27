@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Textarea } from "@/components/ui/textarea";
+import { courseKindLabel } from "@/lib/course-kind";
 import { useT } from "@/stores/preferences-context";
 
 const COURSE_KINDS: CourseKind[] = ["course", "study", "club"];
@@ -41,8 +42,8 @@ export function CourseEditPanel(props: {
     setError("");
   });
 
-  const kindLabel = (value: CourseKind) =>
-    value === "study" ? t("courses.kind.study") : value === "club" ? t("courses.kind.club") : t("courses.kind.course");
+  // One row's kind: the singular label, as in the list's "Tür" column.
+  const kindLabel = (value: CourseKind) => courseKindLabel(value, t);
 
   const submit = async (event: SubmitEvent) => {
     event.preventDefault();

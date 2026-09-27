@@ -13,7 +13,7 @@ import {
 import { getSettings } from "@/api/settings";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IconDownload, IconTrash, IconUploadCloud } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -33,6 +33,7 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
   const [withdrawOpen, setWithdrawOpen] = createSignal(false);
+  const [removeTarget, setRemoveTarget] = createSignal<{ id: string; name: string } | null>(null);
   let input: HTMLInputElement | undefined;
 
   const [settings] = createResource(() => getSettings().catch(() => null));
@@ -59,9 +60,13 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
     },
   );
   const maxFileBytes = () => maxUploadBytes(settings());
-  const hasFiles = () => (submission()?.files.length ?? 0) > 0;
+  // An errored resource throws when read: these two stand in for them.
+  const current = () => (submission.error ? null : submission() ?? null);
+  const grade = () => (result.error ? null : result() ?? null);
+  const loadError = () => submission.error ?? result.error;
+  const hasFiles = () => (current()?.files.length ?? 0) > 0;
 
-  createEffect(() => setText(submission()?.text ?? ""));
+  createEffect(() => setText(current()?.text ?? ""));
 
   const save = async (event: SubmitEvent) => {
     event.preventDefault();
@@ -114,7 +119,7 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
 
   // The backend refuses a withdrawal once a grade exists (409), so the button
   // only shows while there is a submission and no result on it.
-  const canWithdraw = () => submission() != null && result() == null;
+  const canWithdraw = () => current() != null && grade() == null && !result.error;
   const withdraw = async () => {
     setError("");
     setPending(true);
@@ -150,8 +155,11 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
       <Show when={error()}>
         <Alert variant="destructive">{error()}</Alert>
       </Show>
+      <Show when={loadError()}>
+        {(err) => <Alert variant="destructive">{formatApiError(err(), locale())}</Alert>}
+      </Show>
       <Suspense fallback={<PageSpinner />}>
-        <Show when={result()}>
+        <Show when={grade()}>
           {(row) => (
             <div class="rounded-xl border border-border-line bg-surface-tint p-3 text-sm">
               <div class="flex flex-wrap items-center gap-2">
@@ -186,7 +194,7 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
             <div class="flex items-center gap-2">
               <p class="text-sm font-medium">{t("notes.files")}</p>
               <Show when={hasFiles()}>
-                <Badge variant="secondary" class="rounded-full">{submission()!.files.length}</Badge>
+                <Badge variant="secondary" class="rounded-full">{current()!.files.length}</Badge>
               </Show>
             </div>
             <input ref={(el) => { input = el; }} type="file" class="hidden" disabled={pending()} onChange={(event) => void upload(event.currentTarget.files?.[0])} />
@@ -198,7 +206,7 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
           {/* Collapsed to just the header row above until a file exists — the list opens the moment one is added. */}
           <Show when={hasFiles()}>
             <ul class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <For each={submission()?.files ?? []}>
+              <For each={current()?.files ?? []}>
                 {(file) => {
                   const meta = fileTypeMeta(file);
                   return (
@@ -208,12 +216,17 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
                         <p class="truncate font-medium">{file.name}</p>
                         <p class="text-xs text-text-subtle">{formatBytes(file.size)}</p>
                       </div>
-                      <a href={getHomeworkSubmissionFileUrl(props.homeworkId, file.id)} download={file.name}>
-                        <Button type="button" size="icon" variant="ghost" class="h-7 w-7 rounded-lg" title={t("notes.downloadFile")}>
-                          <IconDownload class="h-3.5 w-3.5" />
-                        </Button>
+                      {/* A link styled as the icon button, never a button inside a link. */}
+                      <a
+                        href={getHomeworkSubmissionFileUrl(props.homeworkId, file.id)}
+                        download={file.name}
+                        class={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-10 w-10 rounded-lg sm:h-8 sm:w-8 touch:h-10 touch:w-10")}
+                        title={t("notes.downloadFile")}
+                        aria-label={`${t("notes.downloadFile")}: ${file.name}`}
+                      >
+                        <IconDownload class="h-3.5 w-3.5" />
                       </a>
-                      <Button type="button" size="icon" variant="ghost" class="h-7 w-7 rounded-lg text-destructive-text hover:text-destructive-text" disabled={pending()} title={t("common.delete")} onClick={() => void removeFile(file.id)}>
+                      <Button type="button" size="icon" variant="ghost" class="h-10 w-10 rounded-lg text-destructive-text hover:text-destructive-text sm:h-8 sm:w-8 touch:h-10 touch:w-10" disabled={pending()} title={t("notes.removeFile")} aria-label={`${t("notes.removeFile")}: ${file.name}`} onClick={() => setRemoveTarget({ id: file.id, name: file.name })}>
                         <IconTrash class="h-3.5 w-3.5" />
                       </Button>
                     </li>
@@ -221,18 +234,31 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
                 }}
               </For>
             </ul>
-            <Show when={submission()}>
-              {(row) => (
-                <p class="text-xs text-text-subtle">
-                  {t("homework.submittedAt")}: {formatDateTime(row().updated_at, locale())}
-                  <Show when={row().late}> · {t("homework.late")}</Show>
-                </p>
-              )}
-            </Show>
           </Show>
         </div>
+        {/* A text-only submission has a time too, so this sits outside the files box. */}
+        <Show when={current()}>
+          {(row) => (
+            <p class="text-xs text-text-subtle">
+              {t("homework.submittedAt")}: {formatDateTime(row().updated_at, locale())}
+              <Show when={row().late}> · {t("homework.late")}</Show>
+            </p>
+          )}
+        </Show>
       </Suspense>
 
+      <ConfirmDialog
+        open={removeTarget() != null}
+        onOpenChange={(open) => !open && setRemoveTarget(null)}
+        title={t("notes.removeFile")}
+        summary={removeTarget()?.name ?? ""}
+        variant="destructive"
+        onConfirm={async () => {
+          const target = removeTarget();
+          setRemoveTarget(null);
+          if (target) await removeFile(target.id);
+        }}
+      />
       <ConfirmDialog
         open={withdrawOpen()}
         onOpenChange={setWithdrawOpen}

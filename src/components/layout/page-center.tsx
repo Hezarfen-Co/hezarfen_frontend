@@ -1,6 +1,6 @@
-import type { JSX } from "solid-js";
+import { createSignal, type JSX } from "solid-js";
 import { currentLocale } from "@/api/client";
-import { formatMessage, messageFor, type MessageKey } from "@/i18n/messages";
+import { formatMessage, loadLocale, messageFor, type MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
 
 /** Card sizing shared by the full-page states (load failure, record not found). */
@@ -11,8 +11,23 @@ export const PAGE_STATE_CARD = "min-h-[420px] gap-6 px-6 py-10 sm:px-10 sm:py-12
  * component, above the i18n provider, so they read the loaded dictionary
  * directly instead of `useT()` (the boot awaits the stored locale first).
  */
+// Bumped when a dictionary that was missing has loaded, so text read through
+// pageStateText redraws in place.
+const [dictionaryVersion, setDictionaryVersion] = createSignal(0);
+
 export function pageStateText(key: MessageKey, vars?: Record<string, string | number>): string {
-  return formatMessage(messageFor(currentLocale(), key) ?? key, vars);
+  dictionaryVersion();
+  const locale = currentLocale();
+  const message = messageFor(locale, key);
+  if (message == null) {
+    // The dictionary can be gone when this screen shows: a hot reload that
+    // dropped the i18n module, or a crash before the boot finished. Fetch it
+    // and redraw instead of leaving raw keys on screen; until it lands the
+    // screen shows nothing rather than "errors.pageLoad.title".
+    void loadLocale(locale).then(() => setDictionaryVersion((n) => n + 1), () => undefined);
+    return "";
+  }
+  return formatMessage(message, vars);
 }
 
 /**

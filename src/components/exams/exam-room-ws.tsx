@@ -457,9 +457,9 @@ export function ExamRoomWS(props: { exam: Exam }) {
                 </div>
               </Match>
               <Match when={att().status === "expired"}>
-                <div class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+                <div class="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
                   <div class="flex items-start gap-3">
-                    <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+                    <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-warning-text" />
                     <div class="min-w-0 space-y-1">
                       <p class="text-sm font-semibold text-foreground">{t("attempt.expired")}</p>
                       <p class="text-sm text-muted-foreground">{t("attempt.closed")}</p>
@@ -468,9 +468,9 @@ export function ExamRoomWS(props: { exam: Exam }) {
                 </div>
               </Match>
               <Match when={attemptStatus() === "left"}>
-                <div class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+                <div class="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
                   <div class="flex items-start gap-3">
-                    <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+                    <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-warning-text" />
                     <div class="min-w-0 space-y-1">
                       <p class="text-sm font-semibold text-foreground">{t("attempt.left")}</p>
                       <p class="text-sm text-muted-foreground">{t("attempt.closed")}</p>
@@ -553,7 +553,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
               <div>
                 <h3 class="text-sm font-semibold">{t("questions.title")}</h3>
                 <p class="mt-1 text-xs text-muted-foreground">
-                  {attempt()?.answered ?? 0} / {attempt()?.question_count ?? questions().length} {t("attempt.progress").toLowerCase()}
+                  {attempt()?.answered ?? 0} / {attempt()?.question_count ?? questions().length} {t("attempt.progress").toLocaleLowerCase(locale())}
                 </p>
               </div>
                <div class="grid grid-cols-4 gap-1.5">
@@ -562,10 +562,11 @@ export function ExamRoomWS(props: { exam: Exam }) {
                     <button
                       type="button"
                       class={cn(
-                        "inline-flex h-8 items-center justify-center rounded-md border text-xs font-medium transition-colors hover:bg-accent",
+                        "inline-flex h-8 items-center justify-center rounded-md border text-xs font-medium transition-colors hover:bg-accent touch:h-10",
                         question.answer ? "border-primary/35 bg-primary/10 text-primary-text hover:bg-primary/15" : "bg-background",
                         activeQuestionIndex() === index() && "ring-2 ring-primary/60",
                       )}
+                      aria-current={activeQuestionIndex() === index() ? "step" : undefined}
                       onClick={() => setActiveQuestionIndex(index())}
                     >
                       {index() + 1}
@@ -574,7 +575,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
                 </For>
               </div>
               <Show when={canWrite()}>
-                <Button type="button" variant="destructive" class="h-9 w-full rounded-md" disabled={pending()} onClick={() => setFinishOpen(true)}>
+                <Button type="button" variant="destructive" class="h-9 w-full rounded-md touch:h-10" disabled={pending()} onClick={() => setFinishOpen(true)}>
                   {t("attempt.finish")}
                 </Button>
               </Show>
@@ -635,7 +636,7 @@ function AttemptSummaryWS(props: { attempt: ExamAttempt; status?: string; remain
         <p class="text-xs text-muted-foreground">{t("attempt.attempt")}</p>
         <p class="mt-1 font-medium tabular-nums">{attemptLabel()}</p>
       </div>
-      <div class={remainingWarn() ? "h-full rounded-lg border border-amber-500/40 bg-amber-500/10 p-3" : "h-full rounded-lg border bg-background/60 p-3"}>
+      <div class={remainingWarn() ? "h-full rounded-lg border border-warning/40 bg-warning/10 p-3" : "h-full rounded-lg border bg-background/60 p-3"}>
         <p class="text-xs text-muted-foreground">{t("attempt.remaining")}</p>
         <p class="mt-1 font-mono text-lg font-semibold tabular-nums">{formatRemaining(props.remainingMs)}</p>
       </div>
@@ -668,7 +669,7 @@ function AttemptSummaryWS(props: { attempt: ExamAttempt; status?: string; remain
         </div>
       </Show>
       <Show when={props.attempt.left_at != null}>
-        <div class="h-full rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
+        <div class="h-full rounded-lg border border-warning/40 bg-warning/10 p-3">
           <p class="text-xs text-muted-foreground">{t("attempt.left")}</p>
           <p class="mt-1 font-medium">{formatDateTime(props.attempt.left_at, locale())}</p>
         </div>
@@ -679,6 +680,7 @@ function AttemptSummaryWS(props: { attempt: ExamAttempt; status?: string; remain
 
 function AttemptFocusBar(props: { attempt: ExamAttempt; status?: string; remainingMs: number | null; wsState: WsState }) {
   const t = useT();
+  const { locale } = usePreferences();
   const progressPct = () =>
     props.attempt.question_count <= 0
       ? 0
@@ -696,7 +698,7 @@ function AttemptFocusBar(props: { attempt: ExamAttempt; status?: string; remaini
         <span class="font-medium text-foreground">{statusLabel()}</span>
         <span class="mono font-semibold tabular-nums text-foreground">{formatRemaining(props.remainingMs)}</span>
         <span>
-          {props.attempt.answered} / {props.attempt.question_count} {t("attempt.progress").toLowerCase()}
+          {props.attempt.answered} / {props.attempt.question_count} {t("attempt.progress").toLocaleLowerCase(locale())}
         </span>
         <span class="ml-auto inline-flex items-center gap-1.5">
           <span class={props.wsState === "connected" ? "h-2 w-2 rounded-full bg-success" : "h-2 w-2 rounded-full bg-warning"} />

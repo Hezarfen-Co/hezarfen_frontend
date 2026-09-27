@@ -80,11 +80,11 @@ function StudentsRosterContent() {
   const columns = createMemo<ColumnDef<StudentRow>[]>(() => [
     {
       id: "student_number",
-      accessorFn: (row) => row.person.student_number ?? "",
+      accessorFn: (row) => row.person.student_number?.trim() ?? "",
       size: 110,
       header: t("roster.studentNumber"),
       meta: { cellClass: "whitespace-nowrap" },
-      cell: (cell) => <span class="mono text-sm">{cell.row.original.person.student_number?.trim() || "—"}</span>,
+      cell: (cell) => <span class="mono text-sm">{cell.row.original.person.student_number?.trim()}</span>,
     },
     {
       id: "student", size: 220,
@@ -94,10 +94,12 @@ function StudentsRosterContent() {
     {
       id: "class",
       size: 90,
+      // "" for a student in no class, so DataTable draws its empty-cell dash.
+      accessorFn: (row) => row.classes.map((cls) => cls.name).join(", "),
       header: t("roster.class"),
       meta: { cellClass: "max-w-0" },
       cell: (cell) => (
-        <span class="block truncate text-sm" title={cell.row.original.classes.map((cls) => cls.name).join(", ") || undefined}>{cell.row.original.classes.map((cls) => cls.name).join(", ") || "—"}</span>
+        <span class="block truncate text-sm" title={cell.row.original.classes.map((cls) => cls.name).join(", ")}>{cell.row.original.classes.map((cls) => cls.name).join(", ")}</span>
       ),
     },
     {

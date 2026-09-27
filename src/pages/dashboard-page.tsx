@@ -132,7 +132,11 @@ const kindKeys: Record<DeadlineKind, MessageKey> = {
 function scheduleStatus(startsAt: number | null, endsAt: number | null, now: number): Status | null {
   if (startsAt == null || (endsAt ?? startsAt) < now) return null;
   if (startsAt <= now) return "active";
-  if (startsAt - now <= DAY_MS) return "today";
+  // "Bugün" means the viewer's calendar day, not the next 24 hours — a
+  // deadline tomorrow morning read "Bugün" next to tomorrow's date.
+  const endOfToday = new Date(now);
+  endOfToday.setHours(24, 0, 0, 0);
+  if (startsAt < endOfToday.getTime()) return "today";
   if (startsAt - now <= WEEK_MS) return "soon";
   return null;
 }
@@ -813,6 +817,18 @@ function DashboardContent() {
             </div>
             <h1 class="text-[28px] font-semibold leading-9 tracking-[-0.02em] text-text-strong">{t("dashboard.hero.heading")}</h1>
             <CommandSearchField />
+            {/* The quick links fan out over rosters; their own boundary keeps
+                that wait from blanking the whole board behind the route
+                spinner. */}
+            <Suspense
+              fallback={
+                <div class={cn("grid w-full grid-cols-1 gap-3", on("classes") ? "sm:grid-cols-3" : "sm:grid-cols-2")} aria-hidden="true">
+                  <For each={on("classes") ? [0, 1, 2] : [0, 1]}>
+                    {() => <div class="h-[218px] animate-pulse rounded-xl border border-border-line bg-surface-base" />}
+                  </For>
+                </div>
+              }
+            >
             <div class={cn("grid w-full grid-cols-1 gap-3", on("classes") ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
               <QuickLinkColumn
                 title={t("dashboard.quicklinks.students")}
@@ -838,6 +854,7 @@ function DashboardContent() {
                 onOpen={() => navigate({ to: "/management/modules" })}
               />
             </div>
+            </Suspense>
           </header>
         </Show>
 
@@ -993,7 +1010,7 @@ function DashboardContent() {
                       <button
                         type="button"
                         onClick={() => navigate({ to: "/appointments" })}
-                        class="flex w-full flex-col gap-0.5 border-t border-border-hairline py-2.5 text-left first:border-t-0"
+                        class="-mx-2 flex w-[calc(100%+1rem)] flex-col gap-0.5 border-t border-border-hairline px-2 py-2.5 text-left outline-hidden transition-colors first:border-t-0 hover:bg-surface-tint focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                       >
                         <span class="truncate text-sm font-medium text-text-default">{personLabel(appointment.requester)}</span>
                         <span class="truncate text-xs text-text-subtle">{appointment.reason || "—"}</span>

@@ -116,7 +116,10 @@ export function BlueprintPanel(props: {
         </Show>
 
         <div class="space-y-1.5">
-          <Label for="bp-grade">{t("classBlueprints.grade")}</Label>
+          <Label for="bp-grade">
+            {t("classBlueprints.grade")}
+            <Show when={!editing()}><span class="ml-0.5 text-destructive-text">*</span></Show>
+          </Label>
           <GradeLevelSelect
             id="bp-grade"
             value={gradeLevel()}
@@ -168,12 +171,16 @@ export function BlueprintPanel(props: {
         </div>
 
         <Show when={error()}>
-          <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>
+          <Alert variant="destructive">{error()}</Alert>
         </Show>
 
-        <div class="flex justify-end">
-          <Button type="submit" class="w-full sm:w-auto" disabled={pending() || gradeLevel() === null}>
+        {/* Save + Cancel on a hairline, like the class create and edit panels. */}
+        <div class="flex gap-2 border-t border-border-hairline pt-4">
+          <Button type="submit" disabled={pending() || gradeLevel() === null}>
             {t("common.save")}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => props.onOpenChange(false)}>
+            {t("common.cancel")}
           </Button>
         </div>
       </form>

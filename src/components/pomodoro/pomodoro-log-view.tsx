@@ -14,7 +14,7 @@ export function PomodoroLogView(props: { log: PomodoroLog }) {
     {
       accessorKey: "label",
       header: t("pomodoro.sessionLabel"),
-      cell: (cell) => <span class="font-medium">{cell.row.original.label || "—"}</span>,
+      cell: (cell) => <span class="font-medium">{cell.row.original.label}</span>,
     },
     {
       accessorKey: "started_at",
@@ -35,12 +35,9 @@ export function PomodoroLogView(props: { log: PomodoroLog }) {
       accessorKey: "counted",
       header: t("pomodoro.counted"),
       cell: (cell) => (
+        // A null `counted` never reaches here: DataTable draws its empty dash.
         <Badge variant={cell.row.original.counted ? "default" : "secondary"}>
-          {cell.row.original.counted == null
-            ? "—"
-            : cell.row.original.counted
-              ? t("pomodoro.countedYes")
-              : t("pomodoro.countedNo")}
+          {cell.row.original.counted ? t("pomodoro.countedYes") : t("pomodoro.countedNo")}
         </Badge>
       ),
     },
@@ -52,7 +49,8 @@ export function PomodoroLogView(props: { log: PomodoroLog }) {
         <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("pomodoro.total")}</p>
         <p class="mt-2 text-3xl font-semibold tabular-nums">{formatDurationClock(props.log.total_focus_ms)}</p>
       </div>
-      <DataTable columns={columns()} data={props.log.items} empty={t("pomodoro.empty")} enablePagination pageSize={10} />
+      {/* No search and no filters here, so no toolbar card holding only "Sütunlar". */}
+      <DataTable columns={columns()} data={props.log.items} empty={t("pomodoro.empty")} enableColumnVisibility={false} enablePagination pageSize={10} />
     </div>
   );
 }

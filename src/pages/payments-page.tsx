@@ -29,6 +29,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { TOOLBAR_CONTROL } from "@/components/ui/data-toolbar";
+import { cn } from "@/lib/cn";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DetailField } from "@/components/ui/detail-field";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -659,7 +661,7 @@ function PaymentsContent() {
                 <h2 class="text-lg font-semibold">{personLabel(current())}</h2>
                 <p class="text-sm text-muted-foreground">@{current().username}</p>
               </div>
-              <Button variant="outline" size="sm" class="h-10 rounded-full px-3.5 text-[13px] sm:h-8 touch:h-10" onClick={() => navigate({ to: "/management/payments" })}>
+              <Button variant="outline" size="sm" class={cn(TOOLBAR_CONTROL, "px-3.5")} onClick={() => navigate({ to: "/management/payments" })}>
                 <IconChevronLeft class="h-4 w-4" />{t("payments.allStudents")}
               </Button>
             </div>
@@ -681,7 +683,7 @@ function PaymentsContent() {
                     <div class="space-y-3">
                       <EmptyState kind="payments" title={t("payments.noDebt")} description={t("payments.noDebtHint")} />
                       <div class="flex justify-center">
-                        <Button variant="outline" size="sm" class="rounded-lg" onClick={() => setTab("plans")}>{t("payments.tabPlans")}</Button>
+                        <Button variant="outline" size="sm" class={cn(TOOLBAR_CONTROL, "px-3.5")} onClick={() => setTab("plans")}>{t("payments.tabPlans")}</Button>
                       </div>
                     </div>
                   }
@@ -719,7 +721,7 @@ function PaymentsContent() {
 
             {/* advanced corrections, folded away */}
             <div>
-              <Button variant="ghost" size="sm" onClick={() => setShowLedger(!showLedger())}>{showLedger() ? t("payments.hideLedger") : t("payments.showLedger")}</Button>
+              <Button variant="ghost" size="sm" class={cn(TOOLBAR_CONTROL, "px-3.5")} aria-expanded={showLedger()} onClick={() => setShowLedger(!showLedger())}>{showLedger() ? t("payments.hideLedger") : t("payments.showLedger")}</Button>
               <Show when={showLedger()}>
                 <section class="data-shell mt-3 space-y-1 p-4">
                   <div class="mb-2">

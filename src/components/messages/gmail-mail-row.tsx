@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { IconArchive, IconTrash, IconMessage } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { personLabel } from "@/lib/person";
-import { useT } from "@/stores/preferences-context";
+import { richTextExcerpt, toRichTextHtml } from "@/lib/rich-text";
+import { usePreferences, useT } from "@/stores/preferences-context";
 
 interface GmailMailRowProps {
   message: Message;
@@ -20,6 +21,7 @@ interface GmailMailRowProps {
 
 export function GmailMailRow(props: GmailMailRowProps) {
   const t = useT();
+  const { locale } = usePreferences();
 
   const isSent = () => props.folder === "sent" || props.message.sender.id === props.currentUserId;
   const peer = () => (isSent() ? props.message.recipient : props.message.sender);
@@ -36,9 +38,9 @@ export function GmailMailRow(props: GmailMailRowProps) {
       date.getFullYear() === now.getFullYear();
 
     if (isToday) {
-      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      return date.toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" });
     }
-    return date.toLocaleDateString([], { month: "short", day: "numeric" });
+    return date.toLocaleDateString(locale(), { month: "short", day: "numeric" });
   };
 
   return (
@@ -47,12 +49,23 @@ export function GmailMailRow(props: GmailMailRowProps) {
         // A phone cannot fit sender, subject, snippet, date and actions on one
         // 40px line, so below sm: the row stacks and grows to a thumb-sized
         // target; from sm: up it stays the dense single line it always was.
-        "group relative flex shrink-0 cursor-pointer select-none flex-col gap-0.5 border-b border-l-4 border-border-hairline px-3 py-2.5 text-xs transition-colors duration-150",
+        "group relative flex shrink-0 cursor-pointer select-none flex-col gap-0.5 border-b border-l-4 border-border-hairline px-3 py-2.5 text-xs transition-colors duration-150 outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
         "sm:h-10 sm:flex-row sm:items-center sm:gap-3 sm:px-4 sm:py-0",
         unread() ? "border-l-primary bg-surface-base font-semibold text-foreground hover:bg-accent/40" : "border-l-transparent bg-surface-overlay text-muted-foreground hover:bg-muted/50",
         props.isSelected && "bg-accent/80 text-foreground"
       )}
+      role="button"
+      tabindex="0"
+      aria-current={props.isSelected ? "true" : undefined}
       onClick={props.onSelect}
+      onKeyDown={(event) => {
+        // Only the row itself: Enter on a quick action must not open the message.
+        if (event.target !== event.currentTarget) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          props.onSelect();
+        }
+      }}
     >
       {/* Sender / Peer Name — carries the date too while stacked, so the first
           line reads like a message list entry on a phone. */}
@@ -66,7 +79,7 @@ export function GmailMailRow(props: GmailMailRowProps) {
           {isSent() ? `${t("messages.to")}${peerName()}` : peerName()}
         </span>
         <Show when={role()}>
-          <span class="shrink-0 text-[11px] uppercase font-mono px-1 py-0.2 rounded bg-muted text-muted-foreground border border-border-hairline">
+          <span class="shrink-0 text-[11px] uppercase font-mono px-1 rounded bg-muted text-muted-foreground border border-border-hairline">
             {t(`role.${role()}` as any)}
           </span>
         </Show>
@@ -88,7 +101,7 @@ export function GmailMailRow(props: GmailMailRowProps) {
         </span>
         <span class="truncate text-[11px] text-muted-foreground/70">
           <span class="hidden sm:inline">— </span>
-          {props.message.body.replace(/<[^>]*>?/gm, "").trim()}
+          {richTextExcerpt(toRichTextHtml(props.message.body), 160)}
         </span>
       </div>
 
@@ -109,12 +122,13 @@ export function GmailMailRow(props: GmailMailRowProps) {
         </span>
 
         {/* Quick Actions (Always visible with opacity on mobile, group-hover visible on desktop) */}
-        <div class="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+        <div class="flex items-center justify-end gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
           <Show when={props.onArchive}>
             <button
               type="button"
-              class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+              class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring hover:bg-accent hover:text-foreground transition-colors"
               title={props.folder === "archive" ? t("messages.moveOutOfArchive") : t("messages.moveToArchive")}
+              aria-label={props.folder === "archive" ? t("messages.moveOutOfArchive") : t("messages.moveToArchive")}
               onClick={(e) => {
                 e.stopPropagation();
                 props.onArchive?.();
@@ -127,8 +141,9 @@ export function GmailMailRow(props: GmailMailRowProps) {
           <Show when={props.onTrash}>
             <button
               type="button"
-              class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text transition-colors"
+              class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring hover:bg-destructive/10 hover:text-destructive-text transition-colors"
               title={props.folder === "trash" ? t("messages.restoreFromTrash") : t("messages.moveToTrash")}
+              aria-label={props.folder === "trash" ? t("messages.restoreFromTrash") : t("messages.moveToTrash")}
               onClick={(e) => {
                 e.stopPropagation();
                 props.onTrash?.();
@@ -141,8 +156,9 @@ export function GmailMailRow(props: GmailMailRowProps) {
           <Show when={props.onDeleteForever}>
             <button
               type="button"
-              class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text transition-colors"
+              class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring hover:bg-destructive/10 hover:text-destructive-text transition-colors"
               title={t("messages.deleteForever")}
+              aria-label={t("messages.deleteForever")}
               onClick={(e) => {
                 e.stopPropagation();
                 props.onDeleteForever?.();
@@ -155,8 +171,9 @@ export function GmailMailRow(props: GmailMailRowProps) {
           <Show when={props.onToggleRead}>
             <button
               type="button"
-              class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+              class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring hover:bg-accent hover:text-foreground transition-colors"
               title={unread() ? t("messages.markAsRead") : t("messages.markAsUnread")}
+              aria-label={unread() ? t("messages.markAsRead") : t("messages.markAsUnread")}
               onClick={(e) => {
                 e.stopPropagation();
                 props.onToggleRead?.();

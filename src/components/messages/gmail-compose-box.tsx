@@ -106,11 +106,13 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
   return (
     <Show when={props.open}>
       <div
+        role="dialog"
+        aria-label={t("messages.newMessage")}
         class="fixed inset-x-0 bottom-0 z-50 w-full rounded-t-2xl border border-border-line bg-surface-base pb-[max(env(safe-area-inset-bottom),var(--android-nav-inset,0px))] shadow-2xl shadow-black/20 transition-all duration-200 sm:inset-x-auto sm:right-6 sm:w-[560px] sm:rounded-t-xl sm:pb-0"
         style={{ "max-height": isMinimized() ? "44px" : "640px" }}
       >
         {/* Gmail Header */}
-        <div class="flex h-9 items-center justify-between rounded-t-xl border-b border-border-hairline bg-surface-overlay px-4">
+        <div class="flex h-11 items-center justify-between rounded-t-2xl border-b sm:h-9 sm:rounded-t-xl border-border-hairline bg-surface-overlay px-4">
           <div class="flex min-w-0 flex-1 items-center gap-2">
             <span class="h-2.5 w-2.5 rounded-full bg-primary" />
             <h3 class="min-w-0 truncate text-xs font-bold text-foreground">
@@ -120,7 +122,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
           <div class="flex items-center gap-1">
             <button
               type="button"
-              class="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+              class="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground outline-hidden hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring sm:h-7 sm:w-7"
               onClick={() => setIsMinimized(!isMinimized())}
               title={isMinimized() ? t("messages.expand") : t("messages.minimize")}
               aria-label={isMinimized() ? t("messages.expand") : t("messages.minimize")}
@@ -130,7 +132,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
             </button>
             <button
               type="button"
-              class="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text"
+              class="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground outline-hidden hover:bg-destructive/10 hover:text-destructive-text focus-visible:ring-2 focus-visible:ring-ring sm:h-7 sm:w-7"
               onClick={requestClose}
               title={t("common.cancel")}
               aria-label={t("common.cancel")}
@@ -214,7 +216,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
                   disabled={pending() || !!sendBlocker()}
                   aria-describedby={sendBlocker() ? "gmail-compose-send-hint" : undefined}
                 >
-                  <IconSend class="mr-2 h-4 w-4" />
+                  <IconSend class="h-4 w-4" />
                   {t("messages.send")}
                 </Button>
                 <Show when={sendBlocker() && !error()}>
@@ -226,7 +228,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
 
               <button
                 type="button"
-                class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text transition-colors"
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground outline-hidden transition-colors hover:bg-destructive/10 hover:text-destructive-text focus-visible:ring-2 focus-visible:ring-ring sm:h-8 sm:w-8"
                 onClick={requestClose}
                 title={t("messages.deleteDraft")}
                 aria-label={t("messages.deleteDraft")}

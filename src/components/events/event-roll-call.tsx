@@ -11,7 +11,7 @@ import { TOOLBAR_CONTROL } from "@/components/ui/data-toolbar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InfoTip } from "@/components/ui/info-tip";
 import { IconCheck } from "@/components/ui/icons";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { InfiniteSentinel } from "@/components/ui/infinite-sentinel";
 import { ATTENDANCE_STATUSES, getAttendanceStatusMeta } from "@/lib/attendance-status";
 import { cn } from "@/lib/cn";
 import {
@@ -24,7 +24,8 @@ import { personLabel } from "@/lib/person";
 import { matchesSearch } from "@/lib/search-text";
 import { useT } from "@/stores/preferences-context";
 
-const PAGE_SIZE = 20;
+/** Rows drawn at first and added each time the reader nears the end. */
+const REVEAL_STEP = 50;
 
 /**
  * Event roll call as one roster: every expected attendee (resolved by the
@@ -64,7 +65,7 @@ export function EventRollCall(props: {
   const [summary, setSummary] = createSignal<{ kind: "success" | "destructive"; text: string } | null>(null);
   const [query, setQuery] = createSignal("");
   const [onlyUnmarked, setOnlyUnmarked] = createSignal(false);
-  const [page, setPage] = createSignal(0);
+  const [revealed, setRevealed] = createSignal(REVEAL_STEP);
 
   const effective = (userId: string) => draft()[userId] ?? saved()[userId] ?? undefined;
   const changes = createMemo(() => rollCallChanges(saved(), draft()));
@@ -86,12 +87,10 @@ export function EventRollCall(props: {
       return !q || matchesSearch(q, personLabel(row.user), row.user.username, row.user.student_number);
     });
   });
-  const pageCount = () => Math.max(1, Math.ceil(visible().length / PAGE_SIZE));
-  createEffect(on([query, onlyUnmarked], () => setPage(0), { defer: true }));
-  createEffect(() => {
-    if (page() >= pageCount()) setPage(pageCount() - 1);
-  });
-  const pageRows = createMemo(() => visible().slice(page() * PAGE_SIZE, (page() + 1) * PAGE_SIZE));
+  // The roster is already in memory: no page numbers, the list just draws
+  // more rows as the reader scrolls (the app's client-list standard).
+  createEffect(on([query, onlyUnmarked], () => setRevealed(REVEAL_STEP), { defer: true }));
+  const pageRows = createMemo(() => visible().slice(0, revealed()));
 
   const busy = () => progress() != null;
   const locked = () => !props.open || busy();
@@ -224,7 +223,7 @@ export function EventRollCall(props: {
               type="button"
               size="sm"
               variant="outline"
-              class={cn(TOOLBAR_CONTROL, "px-3.5")}
+              class={cn(TOOLBAR_CONTROL, "px-3.5", onlyUnmarked() && "border-primary text-primary-text")}
               aria-pressed={onlyUnmarked()}
               onClick={() => setOnlyUnmarked((value) => !value)}
             >
@@ -283,7 +282,7 @@ export function EventRollCall(props: {
                               aria-checked={selected()}
                               disabled={locked()}
                               class={cn(
-                                "h-9 min-w-0 rounded-lg border px-2.5 text-xs font-semibold transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60",
+                                "h-10 min-w-0 rounded-lg border px-2.5 text-xs sm:h-9 touch:h-10 font-semibold transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60",
                                 selected()
                                   ? getAttendanceStatusMeta(status)?.class ?? "border-primary bg-primary/10 text-primary-text"
                                   : "border-border-line bg-surface-base text-muted-foreground hover:bg-muted/60 hover:text-foreground",
@@ -302,12 +301,12 @@ export function EventRollCall(props: {
             </For>
           </ul>
         </Show>
-        <TablePagination
-          pageIndex={page()}
-          pageCount={pageCount()}
-          pageSize={PAGE_SIZE}
+        <InfiniteSentinel
+          hasMore={pageRows().length < visible().length}
+          loading={false}
+          shown={pageRows().length}
           total={visible().length}
-          onPageChange={setPage}
+          onLoadMore={() => setRevealed((count) => count + REVEAL_STEP)}
         />
 
         <Show when={summary()}>
@@ -323,14 +322,14 @@ export function EventRollCall(props: {
                 : t("events.rollCall.noChanges")}
           </p>
           <Show when={changes().length > 0 && !busy()}>
-            <Button type="button" variant="ghost" size="sm" class="h-9 rounded-lg" onClick={() => { setDraft({}); setRowErrors({}); setSummary(null); }}>
+            <Button type="button" variant="ghost" size="sm" class="h-10 rounded-lg sm:h-9 touch:h-10" onClick={() => { setDraft({}); setRowErrors({}); setSummary(null); }}>
               {t("events.rollCall.discard")}
             </Button>
           </Show>
           <Button
             type="button"
             size="sm"
-            class="h-9 min-w-[7.5rem] rounded-lg"
+            class="h-10 min-w-[7.5rem] rounded-lg sm:h-9 touch:h-10"
             disabled={locked() || changes().length === 0}
             onClick={() => void save()}
           >

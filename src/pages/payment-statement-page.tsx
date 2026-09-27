@@ -124,6 +124,9 @@ function StatementContent() {
         </div>
       </Show>
 
+      {/* Only once the statement is in: zeros while it loads (or after it
+          failed) would read as a real balance. */}
+      <Show when={statement() && !statement.error}>
       <section class="data-shell p-4">
         <div class="flex flex-wrap items-baseline justify-between gap-2">
           <p class="text-sm font-medium text-text-subtle">{t("payments.collected")}</p>
@@ -132,7 +135,7 @@ function StatementContent() {
             <span class="font-normal text-text-subtle"> / {formatTry(summary().billed, moneyLocale())}</span>
           </p>
         </div>
-        <div class="mt-3 h-2 overflow-hidden rounded-full bg-surface-tint">
+        <div class="mt-3 h-2 overflow-hidden rounded-full bg-surface-tint" role="progressbar" aria-label={t("payments.collected")} aria-valuemin={0} aria-valuemax={summary().billed} aria-valuenow={summary().collected}>
           <div
             class="h-full rounded-full bg-primary"
             style={{ width: `${summary().billed > 0 ? Math.max(0, Math.min(100, Math.round((summary().collected / summary().billed) * 100))) : 0}%` }}
@@ -149,6 +152,7 @@ function StatementContent() {
           </div>
         </div>
       </section>
+      </Show>
 
       <section class="space-y-4 p-0">
         <Suspense fallback={<DataTableSkeleton columns={5} rows={6} />}>

@@ -11,6 +11,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,13 +32,18 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
   const [removeSubject, setRemoveSubject] = createSignal<Subject | null>(null);
   const [name, setName] = createSignal("");
   const [description, setDescription] = createSignal("");
+  // The form keeps its own error so a failed save shows inside the panel,
+  // not a second time on the page behind it.
+  const [formError, setFormError] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [flash, setFlash] = createFlash();
   const [search, setSearch] = createSignal("");
   const visibleSubjects = createMemo(() => {
     const query = search().trim();
-    return query ? (subjects() ?? []).filter((subject) => matchesSearch(query, subject.name, subject.description)) : subjects() ?? [];
+    // An errored resource throws on read; the ErrorAlert stands in for it.
+    const rows = subjects.error ? [] : subjects() ?? [];
+    return query ? rows.filter((subject) => matchesSearch(query, subject.name, subject.description)) : rows;
   });
   const columns = createMemo<ColumnDef<Subject>[]>(() => [
     {
@@ -78,6 +84,7 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
     const subject = editing();
     setName(subject?.name ?? "");
     setDescription(subject?.description ?? "");
+    setFormError("");
   });
 
   const openEdit = (subject: Subject) => {
@@ -92,7 +99,7 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
 
   const save = async (event: SubmitEvent) => {
     event.preventDefault();
-    setError("");
+    setFormError("");
     setPending(true);
     try {
       const body = { name: name().trim(), description: description().trim() };
@@ -104,7 +111,7 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
       await refetch();
       setFlash(subject ? t("common.saved") : t("common.created"));
     } catch (err) {
-      setError(formatApiError(err));
+      setFormError(formatApiError(err));
     } finally {
       setPending(false);
     }
@@ -118,14 +125,14 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
       <SidePanel guardUnsaved open={props.createOpen} onOpenChange={setPanelOpen} title={editing() ? t("subjects.edit") : t("subjects.add")} description={t("subjects.help")}>
         <form class="space-y-3" onSubmit={(event) => void save(event)}>
           <div class="space-y-1.5">
-            <Label for="subject-name">{t("subjects.name")}</Label>
+            <Label for="subject-name">{t("subjects.name")}<span class="ml-0.5 text-destructive-text">*</span></Label>
             <Input id="subject-name" required maxlength={200} value={name()} onInput={(event) => setName(event.currentTarget.value)} />
           </div>
           <div class="space-y-1.5">
             <Label for="subject-description">{t("form.description")}</Label>
             <Textarea id="subject-description" maxlength={2000} rows={3} value={description()} onInput={(event) => setDescription(event.currentTarget.value)} />
           </div>
-          {error() && <p class="text-sm text-destructive-text">{error()}</p>}
+          <Show when={formError()}><Alert variant="destructive">{formError()}</Alert></Show>
           <div class="flex flex-wrap gap-2">
             <Button type="submit" class="rounded-lg" disabled={pending()}>
               {editing() ? t("common.update") : t("common.create")}
@@ -161,19 +168,22 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
         }}
       />
 
-      {error() && <p class="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>}
+      <Show when={error()}><Alert variant="destructive">{error()}</Alert></Show>
+      <Show when={subjects.error}>
+        <ErrorAlert message={formatApiError(subjects.error)} onRetry={() => void refetch()} />
+      </Show>
 
       {/* The table draws its toolbar (search, add, columns) and grid as two
           sibling cards, like the list pages; no frame around them. */}
       <Suspense fallback={<DataTableSkeleton />}>
+        <Show when={!subjects.error}>
         <DataTable
           columns={columns()}
           data={visibleSubjects()}
           searchValue={search()}
           onSearchInput={setSearch}
           filterPlaceholder={t("common.searchPlaceholder")}
-          enablePagination
-          pageSize={10}
+          filterHint={t("search.hint.subjects")}
           empty={t("subjects.empty")}
           emptyIllustration="courses"
           actions={props.canManage ? (
@@ -182,6 +192,7 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
             </Button>
           ) : undefined}
         />
+        </Show>
       </Suspense>
     </div>
   );

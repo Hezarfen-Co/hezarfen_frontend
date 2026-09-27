@@ -5,6 +5,8 @@ import { getUserSearch } from "@/api/users";
 import { ApiError, formatApiError, type InsightRun, type PersonRef, type StudentInsight } from "@/api/client";
 import { InsightDetail } from "@/components/insights/insight-detail";
 import { Button } from "@/components/ui/button";
+import { TOOLBAR_CONTROL, TOOLBAR_SLOT } from "@/components/ui/data-toolbar";
+import { cn } from "@/lib/cn";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconCopy, IconDownload, IconFileText, IconReportAnalytics } from "@/components/ui/icons";
@@ -239,7 +241,7 @@ function ReportDocument(props: {
                         <Button
                           variant="outline"
                           size="sm"
-                          class="rounded-lg"
+                          class={cn(TOOLBAR_CONTROL, "px-3.5")}
                           onClick={() => props.onOpenStudent?.(student.id)}
                         >
                           {tx("openStudent")}
@@ -445,7 +447,7 @@ export function InsightRunReport(props: { run: InsightRun }) {
     <div class="space-y-5">
       {/* Report actions are toolbar pills: touch-sized (h-10) below `sm` and on
           touch screens, h-8 above. */}
-      <div class="flex flex-wrap items-center justify-end gap-2 [&_button]:h-10 [&_button]:rounded-full [&_button]:px-3.5 [&_button]:text-[13px] sm:[&_button]:h-8 touch:[&_button]:h-10">
+      <div class={cn("flex flex-wrap items-center justify-end gap-2", TOOLBAR_SLOT)}>
         <Button variant="outline" size="sm" disabled={loading()} onClick={() => void copyReport()}>
           <IconCopy class="h-4 w-4" />
           {tx("copy")}
@@ -476,37 +478,29 @@ export function InsightRunReport(props: { run: InsightRun }) {
         {(message) => <ErrorAlert message={message()} />}
       </Show>
 
-      <Show when={unloaded().length > 0}>
+      {/* One loading bar with one control: signals for the students already
+          listed come first, then the next page of the roster. Two buttons
+          side by side read as two different jobs. */}
+      <Show when={unloaded().length > 0 || rosterTotal() > roster().length}>
         <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border-line px-3 py-2">
-          <p class="text-xs text-muted-foreground">
+          <p class="text-xs text-muted-foreground" aria-live="polite">
             {loading() ? tx("loadingSignals") : tx("coverage", { loaded: model().coverage.loaded, total: model().coverage.total })}
           </p>
           <Button
             variant="outline"
             size="sm"
-            class="rounded-lg"
+            class={cn(TOOLBAR_CONTROL, "px-3.5")}
             disabled={loading()}
-            onClick={() => void loadSignals(unloaded().map((person) => person.id))}
+            onClick={() =>
+              void (unloaded().length > 0 ? loadSignals(unloaded().map((person) => person.id)) : loadRoster(roster().length))}
           >
-            {tx("loadAll", { count: unloaded().length })}
+            {unloaded().length > 0 ? tx("loadAll", { count: unloaded().length }) : tx("loadMoreRoster")}
           </Button>
         </div>
       </Show>
 
-      <Show when={loading() && unloaded().length === 0 && model().coverage.loaded === 0}>
+      <Show when={loading() && unloaded().length === 0 && model().coverage.loaded === 0 && rosterTotal() <= roster().length}>
         <p class="text-sm text-muted-foreground">{tx("loadingSignals")}</p>
-      </Show>
-
-      <Show when={rosterTotal() > roster().length}>
-        <Button
-          variant="outline"
-          size="sm"
-          class="rounded-lg"
-          disabled={loading()}
-          onClick={() => void loadRoster(roster().length)}
-        >
-          {tx("loadMoreRoster")}
-        </Button>
       </Show>
 
       <ReportDocument model={model()} loading={loading()} onOpenStudent={setOpenStudentId} />

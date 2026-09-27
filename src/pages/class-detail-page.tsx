@@ -26,6 +26,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { TOOLBAR_CONTROL } from "@/components/ui/data-toolbar";
 import { IconBook, IconEdit, IconExternalLink, IconListChecks, IconPlus, IconTrash, IconUsers } from "@/components/ui/icons";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -58,13 +59,14 @@ const personName = (person: PersonRef | null | undefined) => person?.display_nam
 // One info tile of the header card, the same surface homework and event
 // detail pages use for their facts.
 const TILE = "min-w-0 rounded-xl border border-border-hairline bg-surface-tint px-4 py-4";
-const TILE_LABEL = "text-xs font-medium uppercase tracking-[0.08em] text-text-subtle";
+const TILE_LABEL = "text-xs font-medium text-text-subtle";
 const TILE_VALUE = "mt-1 break-words font-medium text-text-default";
 
-// Header buttons share the row-actions trigger's box (h-8, rounded-lg) so a
-// button and the ⋮ menu beside it line up. Tab toolbar actions go through
-// DataTable's `actions` slot, which sizes them as pills like "Sütunlar".
-const ACTION_BUTTON = "h-8 min-w-[7.5rem] rounded-lg! px-3 text-[13px]";
+// Header buttons are sized as toolbar pills by PageHeader's `actions` slot,
+// the same box as the row-actions trigger beside them; this only sets a
+// common minimum width. Tab toolbar actions go through DataTable's `actions`
+// slot, which sizes them as pills like "Sütunlar".
+const ACTION_BUTTON = "min-w-[7.5rem]";
 
 function ClassDetailContent() {
   const auth = useAuth();
@@ -360,7 +362,7 @@ function ClassDetailContent() {
               <Show when={skipped().length > 0}>
                 <Alert class="flex flex-wrap items-center justify-between gap-3 border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
                   <span class="min-w-0 flex-1">{t("classBlueprints.skippedSummary", { count: skipped().length })}</span>
-                  <Button type="button" size="sm" variant="outline" class="shrink-0 rounded-lg" onClick={() => setReportOpen(true)}>
+                  <Button type="button" size="sm" variant="outline" class={cn(TOOLBAR_CONTROL, "shrink-0 px-3.5")} onClick={() => setReportOpen(true)}>
                     {t("classBlueprints.skippedDetails")}
                   </Button>
                 </Alert>

@@ -8,6 +8,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconCheck, IconX } from "@/components/ui/icons";
 import { ATTENDANCE_STATUSES, getAttendanceStatusMeta } from "@/lib/attendance-status";
 import { cn } from "@/lib/cn";
@@ -39,10 +40,10 @@ export function SessionRollCall(props: {
   // The school's statuses in its own order, except "present" leads: it is
   // the one a teacher taps most, so it sits first on every row.
   const statuses = createMemo<AttendanceStatus[]>(() => {
-    const list = settings.latest?.attendance_statuses ?? ATTENDANCE_STATUSES.map((item) => item.value);
+    const list = (settings.error ? undefined : settings.latest)?.attendance_statuses ?? ATTENDANCE_STATUSES.map((item) => item.value);
     return list.includes("present") ? ["present", ...list.filter((status) => status !== "present")] : list;
   });
-  const [attendance] = createResource(
+  const [attendance, { refetch: refetchAttendance }] = createResource(
     () => props.sessionId,
     async (sessionId) => (await getSessionAttendance(sessionId)).items,
   );
@@ -50,6 +51,8 @@ export function SessionRollCall(props: {
   // updates it optimistically instead of refetching the whole roster.
   const [marks, setMarks] = createSignal<Record<string, AttendanceStatus>>({});
   createEffect(() => {
+    // An errored read throws on access; the ErrorAlert below offers a retry.
+    if (attendance.error) return;
     const rows = attendance.latest;
     if (rows) setMarks(Object.fromEntries(rows.map((row) => [row.user.id, row.status])));
   });
@@ -57,7 +60,7 @@ export function SessionRollCall(props: {
   // The roster renders from props at once, but the saved marks arrive with
   // the attendance read; a tap before then would be overwritten by it, so
   // the status buttons wait for it.
-  const ready = () => attendance.latest !== undefined;
+  const ready = () => !attendance.error && attendance.latest !== undefined;
   const targets = createMemo<RollCallTarget[]>(() => [
     ...props.roster.map((row) => ({ user: row.user, isTeacher: false })),
     ...(props.canMarkTeacher && !props.roster.some((row) => row.user.id === props.teacher.id)
@@ -166,6 +169,9 @@ export function SessionRollCall(props: {
       <Show when={error()}>
         <Alert variant="destructive">{error()}</Alert>
       </Show>
+      <Show when={attendance.error}>
+        <ErrorAlert message={formatApiError(attendance.error)} onRetry={() => void refetchAttendance()} />
+      </Show>
       <Show
         when={targets().length > 0}
         fallback={<EmptyState kind="people" title={t("sessions.emptyRoster")} />}
@@ -173,7 +179,7 @@ export function SessionRollCall(props: {
         <div class="sticky top-0 z-10 -mx-5 space-y-2.5 border-b border-border-hairline bg-surface-base px-5 pb-3">
           <div class="flex items-center justify-between gap-3">
             <p class="text-sm font-semibold text-text-strong" role="status">
-              {ready() ? t("rollCall.progress", { marked: markedCount(), total: targets().length }) : t("common.loading")}
+              {ready() ? t("rollCall.progress", { marked: markedCount(), total: targets().length }) : attendance.error ? "—" : t("common.loading")}
             </p>
             <div class="flex flex-wrap justify-end gap-1.5">
               <For each={statuses()}>
@@ -198,7 +204,7 @@ export function SessionRollCall(props: {
               type="button"
               size="sm"
               variant={studentsLeft() > 0 || bulk() ? "default" : "outline"}
-              class="h-9 rounded-lg"
+              class="h-10 rounded-lg sm:h-9 touch:h-10"
               disabled={!ready() || bulk() != null || studentsLeft() === 0}
               onClick={() => void markRestPresent()}
             >
@@ -213,7 +219,7 @@ export function SessionRollCall(props: {
               type="button"
               size="sm"
               variant="outline"
-              class="h-9 rounded-lg"
+              class="h-10 rounded-lg sm:h-9 touch:h-10"
               aria-pressed={onlyUnmarked()}
               onClick={() => setOnlyUnmarked((value) => !value)}
             >
@@ -250,7 +256,7 @@ export function SessionRollCall(props: {
                       </Show>
                     </div>
                     <div class="flex items-center gap-1.5">
-                      <div role="radiogroup" aria-label={groupLabel()} class="grid flex-1 grid-cols-4 gap-1 sm:flex sm:flex-none">
+                      <div role="radiogroup" aria-label={groupLabel()} class="flex min-w-0 flex-1 gap-1 sm:flex-none">
                         <For each={statuses()}>
                           {(status) => {
                             const selected = () => current() === status;
@@ -261,7 +267,7 @@ export function SessionRollCall(props: {
                                 aria-checked={selected()}
                                 disabled={!ready() || busy() || bulk() != null}
                                 class={cn(
-                                  "h-9 min-w-0 rounded-lg border px-2.5 text-xs font-semibold transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60",
+                                  "h-10 min-w-0 flex-1 truncate rounded-lg border px-1 text-xs sm:h-9 sm:px-2.5 sm:flex-none touch:h-10 font-semibold transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60",
                                   selected()
                                     ? getAttendanceStatusMeta(status)?.class ?? "border-primary bg-primary/10 text-primary-text"
                                     : "border-border-line bg-surface-base text-muted-foreground hover:bg-muted/60 hover:text-foreground",
@@ -278,8 +284,8 @@ export function SessionRollCall(props: {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        class={cn("h-9 w-9 shrink-0 text-muted-foreground", !current() && "invisible")}
-                        aria-label={t("rollCall.clear")}
+                        class={cn("h-10 w-10 shrink-0 text-muted-foreground sm:h-9 sm:w-9 touch:h-10 touch:w-10", !current() && "invisible")}
+                        aria-label={`${t("rollCall.clear")}: ${groupLabel()}`}
                         disabled={busy() || !current()}
                         onClick={() => void clear(target.user.id)}
                       >

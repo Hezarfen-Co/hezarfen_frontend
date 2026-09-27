@@ -1,6 +1,6 @@
-import { Show, Suspense, createEffect, createMemo, createSignal, on } from "solid-js";
-import { createResponsivePageSize } from "@/lib/create-page-size";
-import { createResource } from "@/lib/create-resource";
+import { Show, createEffect, createSignal } from "solid-js";
+import { createInfiniteList } from "@/lib/infinite-list";
+import { createScrollRestore } from "@/lib/scroll-restore";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { deleteNoteById } from "@/api/notes";
 import { getNotes } from "@/api/notes";
@@ -8,6 +8,8 @@ import { patchNoteById } from "@/api/notes";
 import { postNote } from "@/api/notes";
 import { formatApiError } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
+import { ErrorAlert } from "@/components/ui/error-alert";
+import { InfiniteSentinel } from "@/components/ui/infinite-sentinel";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { NoteImportPanel } from "@/components/notes/note-import-panel";
 import { NoteList } from "@/components/notes/note-list";
@@ -15,15 +17,11 @@ import { Button } from "@/components/ui/button";
 import { TOOLBAR_CARD, TOOLBAR_SLOT } from "@/components/ui/data-toolbar";
 import { IconPlus, IconUploadCloud } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { TablePagination } from "@/components/ui/table-pagination";
 import { SidePanel } from "@/components/ui/side-panel";
 import { cn } from "@/lib/cn";
 import { createFlash } from "@/lib/flash";
-import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { personalNoteFiles } from "@/lib/note-source";
 import { useT } from "@/stores/preferences-context";
-
-const NOTE_PAGE_SIZE = 10;
 
 export default function NotesPage() {
   return (
@@ -45,25 +43,13 @@ function NotesContent() {
     if (location().searchStr.includes("action=new")) void navigate({ to: "/notes/new", replace: true });
     if (location().searchStr.includes("action=import")) setImportOpen(true);
   });
-  const [page, setPage] = createSignal(0);
-  const pageSize = createResponsivePageSize(NOTE_PAGE_SIZE);
-  createEffect(on(pageSize, () => setPage(0), { defer: true }));
-
-  const [list, { refetch }] = createResource(
-    () => ({ page: page(), size: pageSize() }),
-    async (source) =>
-      loadListPage({
-        page: source.page,
-        pageSize: source.size,
-        clientMode: false,
-        fetch: getNotes,
-      }),
-  );
-
-  const total = () => list()?.total ?? 0;
-  const pageItems = () => list()?.items ?? [];
-  const totalPages = createMemo(() => pagesOf(total(), pageSize()));
-  const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
+  // Notes load a page at a time as the reader scrolls, like every other
+  // server list; edits and deletes re-read the loaded rows in place.
+  const list = createInfiniteList(() => "notes", (_key, paging) => getNotes(paging), { restoreKey: "notes" });
+  const refetch = () => list.refresh();
+  const pageItems = () => list.items();
+  // Back from a note lands on the same card once the grid is drawn.
+  createScrollRestore("notes", () => pageItems().length > 0);
 
   const wrap = async (fn: () => Promise<void>, okMessage: string) => {
     setError("");
@@ -87,7 +73,7 @@ function NotesContent() {
               title: importedTitle,
               content: importedMarkdown || undefined,
             });
-            await refetch();
+            list.reload();
             setImportOpen(false);
             setFlash(t("common.created"));
           }}
@@ -112,11 +98,11 @@ function NotesContent() {
           <Show when={error() && !importOpen()}>
             <Alert variant="destructive">{error()}</Alert>
           </Show>
-          <Suspense fallback={<PageSpinner />}>
-            <Show when={list.error}>
-              <Alert variant="destructive">{formatApiError(list.error)}</Alert>
-            </Show>
-            <Show when={list()}>
+          <Show when={list.error()}>
+            {(err) => <ErrorAlert message={formatApiError(err())} onRetry={() => list.reload()} />}
+          </Show>
+          <Show when={!list.initialLoading()} fallback={<PageSpinner />}>
+            <Show when={!list.error() || pageItems().length > 0}>
               <NoteList
                 notes={pageItems()}
                 source={personalNoteFiles}
@@ -134,11 +120,15 @@ function NotesContent() {
                   }, t("common.deleted"))
                 }
               />
-              <Show when={total() > pageSize()}>
-                <TablePagination pageIndex={safePage()} pageCount={totalPages()} onPageChange={setPage} />
-              </Show>
+              <InfiniteSentinel
+                hasMore={list.hasMore()}
+                loading={list.loading()}
+                onLoadMore={list.loadMore}
+                shown={pageItems().length}
+                total={list.total()}
+              />
             </Show>
-          </Suspense>
+          </Show>
         </div>
       </div>
     </div>

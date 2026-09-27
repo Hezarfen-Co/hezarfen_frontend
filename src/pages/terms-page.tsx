@@ -218,7 +218,7 @@ function TermsContent() {
       return;
     }
     if (!editing() && !yearId()) {
-      setError(t("academicYears.year"));
+      setError(t("form.selectAcademicYear"));
       return;
     }
     setPending(true);

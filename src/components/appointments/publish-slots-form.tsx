@@ -130,7 +130,7 @@ export function PublishSlotsForm(props: {
       </div>
 
       <div class="space-y-3 rounded-lg border border-violet-500/15 bg-violet-500/3 p-4">
-        <label class="flex items-center gap-2 text-sm font-medium">
+        <label class="flex min-h-10 cursor-pointer items-center gap-2 text-sm font-medium sm:min-h-0">
           <input
             type="checkbox"
             class="h-4 w-4 rounded border-border"
@@ -139,7 +139,7 @@ export function PublishSlotsForm(props: {
           />
           <span>{t("appointments.repeatWeekly")}</span>
         </label>
-        <p class="text-xs text-muted-foreground">{t("appointments.repeatWeeklyHelp")}</p>
+        <p class="-mt-2 pl-6 text-xs text-muted-foreground sm:-mt-1.5">{t("appointments.repeatWeeklyHelp")}</p>
         <Show when={repeatWeekly()}>
           <div class="space-y-1.5 pt-1">
             <Label for="slot-until">{t("appointments.until")}</Label>

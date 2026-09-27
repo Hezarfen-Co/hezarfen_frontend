@@ -45,6 +45,8 @@ const instance = {
   id: "instance-1",
   class: "class-1",
   course: "course-1",
+  // The API resolves the section's display title (override → offering → catalog).
+  title: "Algebra",
   ders_saati: 4,
   counts_toward_karne: true,
   enrollment_count: 0,

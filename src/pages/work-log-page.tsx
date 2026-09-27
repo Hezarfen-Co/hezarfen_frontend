@@ -1,4 +1,5 @@
-import { Show, Suspense, createMemo, createSignal } from "solid-js";
+import { Show, createMemo, createSignal } from "solid-js";
+import { createInfiniteList } from "@/lib/infinite-list";
 import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getMyWorkLog } from "@/api/work";
@@ -17,8 +18,6 @@ import { createFlash } from "@/lib/flash";
 import { formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import type { WorkEntry } from "@/api/client";
-
-const WORK_PAGE_SIZE = 15;
 
 export default function WorkLogPage() {
   return (
@@ -42,12 +41,9 @@ function WorkLogContent() {
   );
   const openEntry = createMemo(() => (openProbe() ?? []).find((entry) => entry.check_out == null) ?? null);
 
-  const [list, { refetch }] = createResource(
-    () => version(),
-    async () => getMyWorkLog(),
-  );
-
-  const pageItems = () => list()?.items ?? [];
+  // The log is server-paged: rows load a page at a time as the reader scrolls.
+  const list = createInfiniteList(() => "work", (_key, paging) => getMyWorkLog(paging));
+  const pageItems = () => list.items();
   const columns = createMemo<ColumnDef<WorkEntry>[]>(() => [
     {
       accessorKey: "check_in",
@@ -87,7 +83,8 @@ function WorkLogContent() {
         setFlash(t("common.saved"));
       }
       setVersion((value) => value + 1);
-      await Promise.all([refetch(), refetchOpen()]);
+      list.reload();
+      await refetchOpen();
     } catch (err) {
       setError(formatApiError(err));
     } finally {
@@ -113,21 +110,19 @@ function WorkLogContent() {
       />
 
       <section class="space-y-4 p-0">
-        <Suspense fallback={<PageSpinner />}>
-          <Show when={list.error}>
-            <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
-          </Show>
+        <Show when={list.error()}>
+          {(err) => <ErrorAlert message={formatApiError(err())} onRetry={() => list.reload()} />}
+        </Show>
+        <Show when={!list.initialLoading()} fallback={<PageSpinner />}>
           <DataTable
-            urlState
             title={t("work.entries")}
             description={t("work.ready")}
             columns={columns()}
             data={pageItems()}
-            enablePagination
-            pageSize={WORK_PAGE_SIZE}
+            infinite={{ hasMore: list.hasMore(), loading: list.loading(), total: list.total(), onLoadMore: list.loadMore }}
             empty={t("work.empty")}
           />
-        </Suspense>
+        </Show>
       </section>
     </div>
   );

@@ -29,22 +29,23 @@ export function NoteCard(props: {
 
   return (
     <>
-      <article
-        role="button"
-        tabindex="0"
-        class="group flex h-full min-h-44 cursor-pointer flex-col rounded-xl border border-border bg-card p-4 shadow-xs transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-        onClick={() => props.onOpen(props.note)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            props.onOpen(props.note);
-          }
-        }}
-      >
+      {/* The title is the card's one open control, stretched over the whole
+          card; the actions menu sits above it. A role="button" card wrapping
+          the menu nested one button in another, and Enter on the menu
+          trigger bubbled up and opened the note. */}
+      <article class="group relative flex h-full min-h-44 cursor-pointer flex-col rounded-xl border border-border-line bg-card p-4 shadow-xs transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md has-[.note-card-open:focus-visible]:ring-2 has-[.note-card-open:focus-visible]:ring-ring">
         <div class="flex items-start justify-between gap-3">
-          <h3 class="line-clamp-2 min-w-0 text-[15px] font-semibold leading-snug text-text-strong">{props.note.title}</h3>
+          <h3 class="line-clamp-2 min-w-0 text-[15px] font-semibold leading-snug text-text-strong">
+            <button
+              type="button"
+              class="note-card-open text-left outline-hidden after:absolute after:inset-0 after:rounded-xl after:content-['']"
+              onClick={() => props.onOpen(props.note)}
+            >
+              {props.note.title}
+            </button>
+          </h3>
           <Show when={canManage()}>
-            <div class="-mr-1.5 -mt-1 shrink-0" onClick={(event) => event.stopPropagation()}>
+            <div class="relative z-10 -mr-1.5 -mt-1 shrink-0">
               <TableRowActions
                 label={t("common.actions")}
                 actions={[
@@ -68,11 +69,11 @@ export function NoteCard(props: {
         <p class={cn("mt-2 line-clamp-5 flex-1 text-[13px] leading-6", excerpt() ? "text-muted-foreground" : "italic text-muted-foreground/70")}>
           {excerpt() || t("notes.noContent")}
         </p>
-        <span class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-text opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+        <span aria-hidden="true" class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-text opacity-0 transition-opacity group-hover:opacity-100 group-has-[.note-card-open:focus-visible]:opacity-100">
           {t("notes.open")}
           <IconChevronRight class="h-3.5 w-3.5" />
         </span>
-        {error() && <p class="mt-2 text-sm text-destructive-text">{error()}</p>}
+        {error() && <p class="relative z-10 mt-2 text-sm text-destructive-text">{error()}</p>}
       </article>
 
       <SidePanel guardUnsaved open={editing()} onOpenChange={setEditing} title={t("common.edit")} description={props.note.title}>

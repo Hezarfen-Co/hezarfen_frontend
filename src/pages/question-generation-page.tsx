@@ -63,8 +63,11 @@ function QuestionGenerationContent() {
   const [result, setResult] = createSignal<RagQuestionSet | null>(null);
   const [draft, setDraft] = createSignal<Draft | null>(null);
 
-  const scope = () => scopes()?.find((option) => option.key === scopeKey()) ?? null;
-  const courses = createMemo(() => [...new Map((scopes() ?? []).map((option) => [option.course.id, option.course])).values()]);
+  // A failed scope read is a load error, not "you teach nothing".
+  const scopeList = () => (scopes.error ? [] : scopes() ?? []);
+  const noScopes = () => !scopes.loading && !scopes.error && scopeList().length === 0;
+  const scope = () => scopeList().find((option) => option.key === scopeKey()) ?? null;
+  const courses = createMemo(() => [...new Map(scopeList().map((option) => [option.course.id, option.course])).values()]);
   const canBank = () => modules.isEnabled("bank_questions");
   const difficultyLabel = (value: Difficulty) =>
     value === "kolay" ? rag().difficultyEasy : value === "zor" ? rag().difficultyHard : rag().difficultyMedium;
@@ -112,12 +115,21 @@ function QuestionGenerationContent() {
         <Alert variant="success">{flash()}</Alert>
       </Show>
 
+      <Show when={scopes.error}>
+        {(err) => <Alert variant="destructive">{formatApiError(err())}</Alert>}
+      </Show>
+
+      {/* Someone who teaches no course gets one plain notice, not a form
+          column beside a results pane asking them to pick a course. */}
+      <Show when={noScopes()}>
+        <section class="data-shell p-4 sm:p-5">
+          <EmptyInline class="py-10" size="md" illustration="exams" title={t("qgen.noScopes")} />
+        </section>
+      </Show>
+
+      <Show when={!noScopes() && !scopes.error}>
       <div class="grid grid-cols-1 items-start gap-5 lg:grid-cols-[22rem_minmax(0,1fr)]">
         <form class="data-shell space-y-4 p-4 sm:p-5" onSubmit={(event) => void generate(event)}>
-          <Show
-            when={scopes.loading || (scopes()?.length ?? 0) > 0}
-            fallback={<p class="text-sm leading-6 text-muted-foreground">{t("qgen.noScopes")}</p>}
-          >
             <div class="space-y-1.5">
               <Label for="qgen-scope">{t("qgen.scope")}</Label>
               <SearchableSelect
@@ -126,7 +138,7 @@ function QuestionGenerationContent() {
                 onChange={setScopeKey}
                 placeholder={t("qgen.scopePlaceholder")}
                 disabled={scopes.loading}
-                options={(scopes() ?? []).map((option) => ({ value: option.key, label: option.label }))}
+                options={scopeList().map((option) => ({ value: option.key, label: option.label }))}
               />
             </div>
 
@@ -159,7 +171,7 @@ function QuestionGenerationContent() {
                         role="radio"
                         aria-checked={difficulty() === value}
                         class={cn(
-                          "h-8 flex-1 rounded-md px-2 text-xs font-medium transition-colors",
+                          "h-8 flex-1 rounded-md px-2 text-xs font-medium transition-colors touch:h-10",
                           difficulty() === value ? "bg-primary text-primary-foreground shadow-2xs" : "text-muted-foreground hover:text-foreground",
                         )}
                         onClick={() => setDifficulty(value)}
@@ -182,11 +194,10 @@ function QuestionGenerationContent() {
               <p class="text-xs text-muted-foreground">{t("qgen.seedHint")}</p>
             </div>
 
-            <Button type="submit" size="sm" class="w-full rounded-lg" disabled={!scope() || !pagesInput().trim() || pending()}>
+            <Button type="submit" size="sm" class="w-full rounded-lg touch:h-10" disabled={!scope() || !pagesInput().trim() || pending()}>
               <IconSparkles class="h-4 w-4" />
               {pending() ? t("qgen.generating") : t("qgen.generate")}
             </Button>
-          </Show>
         </form>
 
         <section class="data-shell min-h-[20rem] space-y-4 p-4 sm:p-5" aria-label={t("qgen.results")} aria-live="polite">
@@ -234,6 +245,7 @@ function QuestionGenerationContent() {
           </Switch>
         </section>
       </div>
+      </Show>
 
       <SidePanel
         guardUnsaved

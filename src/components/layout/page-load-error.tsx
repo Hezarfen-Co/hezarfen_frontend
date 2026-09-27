@@ -81,7 +81,7 @@ export function PageLoadError(props: { error: unknown; reset: () => void }) {
         description={formatApiError(props.error)}
         action={
           <div class="flex w-full flex-col items-center gap-5">
-            <Button type="button" size="sm" class="h-9 rounded-lg px-4" disabled={wait() > 0} onClick={() => props.reset()}>
+            <Button type="button" size="sm" class="h-9 rounded-lg px-4 text-sm" disabled={wait() > 0} onClick={() => props.reset()}>
               {wait() > 0 ? tt("errors.pageLoad.retryIn", { seconds: wait() }) : tt("errors.pageLoad.retry")}
             </Button>
             <details class="group w-full rounded-lg border border-border-hairline bg-surface-tint/60 text-left">

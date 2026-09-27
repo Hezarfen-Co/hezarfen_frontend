@@ -22,6 +22,7 @@ import { WeeklyPlanTable } from "@/components/instances/weekly-plan-table";
 import { InfoTip } from "@/components/ui/info-tip";
 import { WeeklySlotForm } from "@/components/instances/weekly-slot-form";
 import { Alert } from "@/components/ui/alert";
+import { ErrorAlert } from "@/components/ui/error-alert";
 import { Button } from "@/components/ui/button";
 import { IconPlus } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
@@ -47,6 +48,8 @@ export function OfferingPanel(props: {
   offering: Offering | null;
   canEdit: boolean;
   courseSubjects: Subject[];
+  /** The catalog subjects are still loading: the picker waits instead of saying all are taken. */
+  courseSubjectsLoading?: boolean;
   examKinds: string[];
   limits?: Limits;
   onSaved: (offering: Offering) => void | Promise<void>;
@@ -67,6 +70,10 @@ export function OfferingPanel(props: {
   const [subjects, { refetch: refetchSubjects }] = createResource(editingId, (id) => getOfferingSubjects(id));
   const [slots, { refetch: refetchSlots }] = createResource(editingId, (id) => getOfferingWeeklyPlan(id));
   const [weights, { refetch: refetchWeights }] = createResource(editingId, async (id) => (await getOfferingExamWeights(id)).weights);
+  // An errored resource throws on read; each section shows its own retry.
+  const subjectRows = () => (subjects.error ? [] : subjects.latest ?? []);
+  const slotRows = () => (slots.error ? [] : slots.latest ?? []);
+  const weightRows = () => (weights.error ? [] : weights.latest ?? []);
 
   createEffect(() => {
     if (!props.open) return;
@@ -188,8 +195,12 @@ export function OfferingPanel(props: {
                   <h3 class="text-sm font-semibold">{t("instances.subjectsTitle")}</h3>
                   <InfoTip text={t("offerings.subjectsHelp")} label={t("common.infoAbout", { item: t("instances.subjectsTitle") })} />
                 </div>
+                <Show when={subjects.error}>
+                  <ErrorAlert message={formatApiError(subjects.error)} onRetry={() => void refetchSubjects()} />
+                </Show>
                 <SubjectSetEditor
-                  selected={subjects.latest ?? []}
+                  loading={(subjects.loading && !subjects.latest) || props.courseSubjectsLoading}
+                  selected={subjectRows()}
                   available={props.courseSubjects}
                   canEdit={props.canEdit}
                   onAdd={async (subjectId) => { await postOfferingSubject(offering().id, subjectId); await refetchSubjects(); }}
@@ -202,8 +213,11 @@ export function OfferingPanel(props: {
                   <h3 class="text-sm font-semibold">{t("weeklyPlan.title")}</h3>
                   <InfoTip text={t("offerings.weeklyPlanHelp")} label={t("common.infoAbout", { item: t("weeklyPlan.title") })} />
                 </div>
+                <Show when={slots.error}>
+                  <ErrorAlert message={formatApiError(slots.error)} onRetry={() => void refetchSlots()} />
+                </Show>
                 <WeeklyPlanTable
-                  slots={slots.latest ?? []}
+                  slots={slotRows()}
                   onRemove={props.canEdit ? (slot: WeeklySlot) => void guard(async () => { await deleteOfferingWeeklySlotById(offering().id, slot.id); await refetchSlots(); }) : undefined}
                   actions={
                     <Show when={props.canEdit}>
@@ -221,8 +235,11 @@ export function OfferingPanel(props: {
                   <h3 class="text-sm font-semibold">{t("instances.examWeightsTitle")}</h3>
                   <InfoTip text={t("offerings.weightsHelp")} label={t("common.infoAbout", { item: t("instances.examWeightsTitle") })} />
                 </div>
+                <Show when={weights.error}>
+                  <ErrorAlert message={formatApiError(weights.error)} onRetry={() => void refetchWeights()} />
+                </Show>
                 <ExamWeightsEditor
-                  weights={weights.latest ?? []}
+                  weights={weightRows()}
                   kinds={props.examKinds}
                   canEdit={props.canEdit}
                   editing={weightEditing()}

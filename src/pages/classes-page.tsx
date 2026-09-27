@@ -13,8 +13,11 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { DropdownSelect, Select } from "@/components/ui/select";
 import { Alert } from "@/components/ui/alert";
+import { ErrorAlert } from "@/components/ui/error-alert";
 import { FAN_OUT_LIMIT, mapConcurrent } from "@/lib/map-concurrent";
 import { Button } from "@/components/ui/button";
+import { TOOLBAR_CONTROL } from "@/components/ui/data-toolbar";
+import { cn } from "@/lib/cn";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconEdit, IconEye, IconListChecks, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
@@ -89,9 +92,13 @@ function ClassesContent() {
     async () => (await getClasses({ limit: 200 })).items,
   );
   const courseTitle = (id: string) => skippedCourseTitles()[id] ?? "—";
-  const listData = () => list.latest ?? list() ?? [];
-  const gradeData = () => gradeList.latest ?? gradeList() ?? [];
-  const yearName = (id: string | null) => (id ? years.latest?.find((year) => year.id === id)?.name ?? "—" : t("academicYears.unassigned"));
+  // A failed read must not throw out of the page: `.latest` rethrows the
+  // error, so each accessor checks it first and the table shows ErrorAlert.
+  const listData = () => (list.error ? [] : list.latest ?? list() ?? []);
+  const gradeData = () => (gradeList.error ? [] : gradeList.latest ?? gradeList() ?? []);
+  const limitData = () => (limits.error ? undefined : limits.latest);
+  const yearList = () => (years.error ? [] : years.latest ?? []);
+  const yearName = (id: string | null) => (id ? yearList().find((year) => year.id === id)?.name ?? "—" : t("academicYears.unassigned"));
 
   // The grade filter offers only the rungs this school's classes sit on.
   const grades = createMemo(() => [...new Set(gradeData().map((cls) => cls.grade_level))].sort((a, b) => a - b));
@@ -319,13 +326,13 @@ function ClassesContent() {
       <SidePanel open={canManage() && showForm()} onOpenChange={setShowForm} guardUnsaved title={t("classGroups.newClass")} description={t("classGroups.subtitle")}>
         <form class="space-y-4" noValidate onSubmit={createClass}>
           <div class="space-y-3">
-            <div class="space-y-1.5"><Label for="class-name">{t("classGroups.className")}<span class="ml-0.5 text-destructive-text">*</span></Label><Input id="class-name" required aria-required="true" maxlength={limits.latest?.course.max_class_name_len} value={name()} error={nameError()} onInput={(e) => { setName(e.currentTarget.value); setNameError(""); }} /></div>
+            <div class="space-y-1.5"><Label for="class-name">{t("classGroups.className")}<span class="ml-0.5 text-destructive-text">*</span></Label><Input id="class-name" required aria-required="true" maxlength={limitData()?.course.max_class_name_len} value={name()} error={nameError()} onInput={(e) => { setName(e.currentTarget.value); setNameError(""); }} /></div>
             <div class="space-y-1.5">
               <Label for="class-grade">{t("classGroups.grade")}<span class="ml-0.5 text-destructive-text">*</span></Label>
-              <GradeLevelSelect id="class-grade" value={gradeLevel()} error={!!gradeError()} min={limits.latest?.course.min_grade_level} max={limits.latest?.course.max_grade_level} onChange={(level) => { setGradeLevel(level); setGradeError(""); }} />
+              <GradeLevelSelect id="class-grade" value={gradeLevel()} error={!!gradeError()} min={limitData()?.course.min_grade_level} max={limitData()?.course.max_grade_level} onChange={(level) => { setGradeLevel(level); setGradeError(""); }} />
               <Show when={gradeError()}><p class="text-xs font-medium text-destructive-text">{gradeError()}</p></Show>
             </div>
-            <div class="space-y-1.5"><Label for="class-year">{t("academicYears.year")}</Label><Select id="class-year" value={yearId()} onChange={(e) => setYearId(e.currentTarget.value)}><option value="">{t("academicYears.unassigned")}</option><For each={years.latest ?? []}>{(year) => <option value={year.id}>{year.name}</option>}</For></Select></div>
+            <div class="space-y-1.5"><Label for="class-year">{t("academicYears.year")}</Label><Select id="class-year" value={yearId()} onChange={(e) => setYearId(e.currentTarget.value)}><option value="">{t("academicYears.unassigned")}</option><For each={yearList()}>{(year) => <option value={year.id}>{year.name}</option>}</For></Select></div>
             <UserSearchSelect id="class-teacher" label={t("classGroups.homeroomTeacher")} value={teacherId()} onChange={setTeacherId} placeholder={t("classGroups.selectTeacher")} role="teacher" />
           </div>
           <Show when={error()}><Alert variant="destructive">{error()}</Alert></Show>
@@ -337,10 +344,10 @@ function ClassesContent() {
         cls={editTarget()}
         open={editTarget() !== null}
         onOpenChange={(open) => { if (!open) setEditTarget(null); }}
-        years={years.latest ?? []}
-        maxNameLen={limits.latest?.course.max_class_name_len}
-        minGradeLevel={limits.latest?.course.min_grade_level}
-        maxGradeLevel={limits.latest?.course.max_grade_level}
+        years={yearList()}
+        maxNameLen={limitData()?.course.max_class_name_len}
+        minGradeLevel={limitData()?.course.min_grade_level}
+        maxGradeLevel={limitData()?.course.max_grade_level}
         onSaved={async () => { setFlash(t("common.saved")); await refreshList(); }}
       />
 
@@ -373,7 +380,7 @@ function ClassesContent() {
       <Show when={skipped().length > 0}>
         <Alert class="flex flex-wrap items-center justify-between gap-3 border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
           <span class="min-w-0 flex-1">{t("classBlueprints.skippedSummary", { count: skipped().length })}</span>
-          <Button type="button" size="sm" variant="outline" class="shrink-0 rounded-lg" onClick={() => setReportOpen(true)}>
+          <Button type="button" size="sm" variant="outline" class={cn(TOOLBAR_CONTROL, "shrink-0 px-3.5")} onClick={() => setReportOpen(true)}>
             {t("classBlueprints.skippedDetails")}
           </Button>
         </Alert>
@@ -399,6 +406,10 @@ function ClassesContent() {
         <TabsContent value="classes">
           <div class="space-y-4">
             <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
+              <Show when={list.error}>
+                <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refreshList()} />
+              </Show>
+              <Show when={!list.error}>
               <DataTable
                 urlState
                 columns={columns()}
@@ -434,6 +445,7 @@ function ClassesContent() {
                   </Show>
                 }
               />
+              </Show>
             </Suspense>
           </div>
         </TabsContent>

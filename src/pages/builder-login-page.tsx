@@ -79,7 +79,7 @@ function BuilderLoginForm() {
             <Label for="builder-username">{t("auth.username")}</Label>
             <Input
               id="builder-username"
-              class="h-9"
+              class="h-10 sm:h-9 touch:h-10"
               autocomplete="username"
               required
               minlength={MIN_USERNAME_LEN}
@@ -93,7 +93,7 @@ function BuilderLoginForm() {
             <div class="relative">
               <Input
                 id="builder-password"
-                class="h-9 pr-10"
+                class="h-10 pr-10 sm:h-9 touch:h-10"
                 type={showPassword() ? "text" : "password"}
                 autocomplete="current-password"
                 required
@@ -105,7 +105,7 @@ function BuilderLoginForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword())}
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                class="absolute right-0.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors outline-hidden hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label={showPassword() ? t("auth.hidePassword") : t("auth.showPassword")}
               >
                 <Show when={showPassword()} fallback={<IconEye class="h-4 w-4" />}>
@@ -115,10 +115,10 @@ function BuilderLoginForm() {
             </div>
           </div>
           <Show when={error()}>
-            <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>
+            <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>
           </Show>
-          <Button type="submit" class="h-9 w-full text-sm" disabled={pending()}>
-            {t("auth.login")}
+          <Button type="submit" class="h-10 w-full text-sm sm:h-9 touch:h-10" disabled={pending()}>
+            {pending() ? t("common.loading") : t("auth.login")}
           </Button>
         </form>
         <p class="mt-8 border-t border-border-hairline pt-6 text-center text-sm text-text-subtle">

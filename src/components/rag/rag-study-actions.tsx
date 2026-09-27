@@ -5,6 +5,7 @@ import { postRagQuestions, postRagSummarize } from "@/api/rag";
 import { CelebiMarkdown } from "@/components/layout/celebi-markdown";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { TOOLBAR_CONTROL } from "@/components/ui/data-toolbar";
 import type { ragCopy } from "@/components/rag/rag-copy";
 
 type Copy = ReturnType<typeof ragCopy>;
@@ -67,16 +68,16 @@ export function RagStudyActions(props: {
         fallback={<p class="text-xs text-muted-foreground">{props.copy.studyUnavailable}</p>}
       >
         <div class="flex flex-wrap items-center gap-2">
-          <Button type="button" size="sm" variant="outline" class="h-8 rounded-lg" disabled={busy()} onClick={() => void summarize()}>
+          <Button type="button" size="sm" variant="outline" class={`${TOOLBAR_CONTROL} px-3.5`} disabled={busy()} onClick={() => void summarize()}>
             {props.copy.summarize}
           </Button>
-          <Button type="button" size="sm" variant="outline" class="h-8 rounded-lg" disabled={busy()} onClick={() => void practice()}>
+          <Button type="button" size="sm" variant="outline" class={`${TOOLBAR_CONTROL} px-3.5`} disabled={busy()} onClick={() => void practice()}>
             {props.copy.practice}
           </Button>
           <Select
             aria-label={props.copy.difficulty}
             wrapperClass="w-auto"
-            class="h-8 rounded-lg text-[13px]"
+            class={TOOLBAR_CONTROL}
             value={difficulty()}
             onChange={(event) => setDifficulty(event.currentTarget.value as (typeof DIFFICULTIES)[number])}
           >

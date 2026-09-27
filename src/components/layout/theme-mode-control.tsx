@@ -18,7 +18,7 @@ export function ThemeModeControl(props: ThemeModeControlProps) {
     return (
       <button
         type="button"
-        class="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        class="flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground outline-hidden transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring sm:h-8 sm:w-8 touch:h-10 touch:w-10"
         aria-label={prefs.t("theme.toggle")}
         title={isDark() ? lightLabel() : darkLabel()}
         onClick={() => selectTheme(isDark() ? "light" : "dark")}
@@ -33,10 +33,10 @@ export function ThemeModeControl(props: ThemeModeControlProps) {
     // touch screens.
     return (
       <div class="flex rounded-lg bg-muted p-0.5 dark:bg-white/8" role="group" aria-label={prefs.t("theme.toggle")}>
-        <button type="button" class={cn("rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground touch:p-3.5 dark:text-white/60 dark:hover:text-white", !isDark() && "bg-background text-foreground shadow-xs dark:bg-white/12 dark:text-white")} onClick={() => selectTheme("light")} aria-pressed={!isDark()} aria-label={lightLabel()} title={lightLabel()}>
+        <button type="button" class={cn("rounded-md p-3 text-muted-foreground outline-hidden transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring sm:p-1.5 touch:p-3.5 dark:text-white/60 dark:hover:text-white", !isDark() && "bg-background text-foreground shadow-xs dark:bg-white/12 dark:text-white")} onClick={() => selectTheme("light")} aria-pressed={!isDark()} aria-label={lightLabel()} title={lightLabel()}>
           <IconSun class="h-4 w-4" />
         </button>
-        <button type="button" class={cn("rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground touch:p-3.5 dark:text-white/60 dark:hover:text-white", isDark() && "bg-background text-foreground shadow-xs dark:bg-white/12 dark:text-white")} onClick={() => selectTheme("dark")} aria-pressed={isDark()} aria-label={darkLabel()} title={darkLabel()}>
+        <button type="button" class={cn("rounded-md p-3 text-muted-foreground outline-hidden transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring sm:p-1.5 touch:p-3.5 dark:text-white/60 dark:hover:text-white", isDark() && "bg-background text-foreground shadow-xs dark:bg-white/12 dark:text-white")} onClick={() => selectTheme("dark")} aria-pressed={isDark()} aria-label={darkLabel()} title={darkLabel()}>
           <IconMoon class="h-4 w-4" />
         </button>
       </div>
@@ -46,8 +46,8 @@ export function ThemeModeControl(props: ThemeModeControlProps) {
   if (props.variant === "segmented") {
     return (
       <div class="flex w-full gap-0.5 rounded-lg bg-muted p-0.5" role="group" aria-label={prefs.t("theme.toggle")}>
-        <button type="button" aria-pressed={!isDark()} onClick={() => selectTheme("light")} class={cn("flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring", !isDark() ? "bg-background text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground")}>{lightLabel()}</button>
-        <button type="button" aria-pressed={isDark()} onClick={() => selectTheme("dark")} class={cn("flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring", isDark() ? "bg-background text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground")}>{darkLabel()}</button>
+        <button type="button" aria-pressed={!isDark()} onClick={() => selectTheme("light")} class={cn("h-10 flex-1 rounded-md px-3 text-sm font-medium sm:h-8 touch:h-10 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring", !isDark() ? "bg-background text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground")}>{lightLabel()}</button>
+        <button type="button" aria-pressed={isDark()} onClick={() => selectTheme("dark")} class={cn("h-10 flex-1 rounded-md px-3 text-sm font-medium sm:h-8 touch:h-10 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring", isDark() ? "bg-background text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground")}>{darkLabel()}</button>
       </div>
     );
   }

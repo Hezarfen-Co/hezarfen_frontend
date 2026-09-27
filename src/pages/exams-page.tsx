@@ -40,7 +40,6 @@ import { createUrlEnum, createUrlString } from "@/lib/url-state";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const EXAM_PAGE_SIZE = 10;
 // The course combobox is a bordered div, not a <button>, so the DataTable
 // filters slot cannot size it: it takes the toolbar pill by hand.
 const COURSE_FILTER_CLASS = cn(TOOLBAR_CONTROL, "min-w-[12rem] max-w-[18rem] [&_input]:text-[13px]");
@@ -413,7 +412,6 @@ function ExamsContent() {
                 filterHint={t("search.hint.exams")}
                 searchPredicate={searchExam}
                 enablePagination
-                pageSize={EXAM_PAGE_SIZE}
                 empty={emptyMessage()}
                 urlState
                 pageResetKey={`${tab()}|${courseFilter()}|${kindFilter()}`}
@@ -423,9 +421,9 @@ function ExamsContent() {
                 onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })}
                 filters={
                   <div class="flex flex-wrap items-center gap-2.5">
-                    <label for="exams-course-filter" class="text-xs font-semibold text-muted-foreground">{t("nav.courses")}:</label>
                     <SearchableSelect
                       id="exams-course-filter"
+                      labelPrefix={t("nav.courses")}
                       class={cn(COURSE_FILTER_CLASS, courseFilter() !== "all" && "border-primary text-primary-text")}
                       value={courseFilter()}
                       onChange={(val) => setCourseFilter(val)}
@@ -485,12 +483,13 @@ function ExamsContent() {
           <button
             type="button"
             class={cn(
-              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+              "inline-flex h-8 items-center rounded-md px-3 text-xs font-medium transition-colors touch:h-10",
               createStep() === "details"
                 ? "bg-surface-base text-foreground shadow-xs"
                 : "text-muted-foreground hover:bg-muted/50",
             )}
             onClick={() => setCreateStep("details")}
+            aria-pressed={createStep() === "details"}
           >
             {t("exams.step1Details")}
           </button>
@@ -498,7 +497,7 @@ function ExamsContent() {
             type="button"
             disabled={!createdExam()}
             class={cn(
-              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+              "inline-flex h-8 items-center rounded-md px-3 text-xs font-medium transition-colors touch:h-10",
               createStep() === "questions"
                 ? "bg-surface-base text-foreground shadow-xs"
                 : createdExam()
@@ -506,6 +505,7 @@ function ExamsContent() {
                 : "opacity-40 cursor-not-allowed text-muted-foreground",
             )}
             onClick={() => createdExam() && setCreateStep("questions")}
+            aria-pressed={createStep() === "questions"}
           >
             {t("exams.step2Questions")}
           </button>
@@ -581,24 +581,26 @@ function ExamsContent() {
                 <button
                   type="button"
                   class={cn(
-                    "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                    "inline-flex h-8 items-center rounded-md px-3 text-xs font-medium transition-colors touch:h-10",
                     editTab() === "details"
                       ? "bg-surface-base text-foreground shadow-xs"
                       : "text-muted-foreground hover:bg-muted/50",
                   )}
                   onClick={() => setEditTab("details")}
+                  aria-pressed={editTab() === "details"}
                 >
                   {t("exams.step1Details")}
                 </button>
                 <button
                   type="button"
                   class={cn(
-                    "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                    "inline-flex h-8 items-center rounded-md px-3 text-xs font-medium transition-colors touch:h-10",
                     editTab() === "questions"
                       ? "bg-surface-base text-foreground shadow-xs"
                       : "text-muted-foreground hover:bg-muted/50",
                   )}
                   onClick={() => setEditTab("questions")}
+                  aria-pressed={editTab() === "questions"}
                 >
                   {t("exams.step2Questions")}
                 </button>

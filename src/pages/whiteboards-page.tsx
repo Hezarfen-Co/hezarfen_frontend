@@ -1,4 +1,5 @@
 import { useNavigate } from "@tanstack/solid-router";
+import { createScrollRestore } from "@/lib/scroll-restore";
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import { createDebouncedSignal } from "@/lib/create-debounced-signal";
 import { createInfiniteList } from "@/lib/infinite-list";
@@ -48,6 +49,8 @@ function WhiteboardsContent() {
   );
   const [createOpen, setCreateOpen] = createSignal(false);
   const visibleBoards = () => boards.items();
+  // Back from a board lands on the same card once the grid is drawn.
+  createScrollRestore(`whiteboards${window.location.search}`, () => visibleBoards().length > 0);
 
   const meId = () => auth.user()?.id ?? "";
 
@@ -165,6 +168,7 @@ function CreateBoardPanel(props: {
   // live search below (the admin-only `/users` list would 403 a manager/teacher).
   const canSearch = () => hasMinRole(auth.user()?.role, "teacher");
   const [searchResults, setSearchResults] = createSignal<PersonRef[]>([]);
+  const [searching, setSearching] = createSignal(false);
   let searchController: AbortController | null = null;
   let searchTimer: ReturnType<typeof setTimeout> | undefined;
   createEffect(() => {
@@ -173,8 +177,10 @@ function CreateBoardPanel(props: {
     clearTimeout(searchTimer);
     if (!canSearch() || q.length === 0) {
       setSearchResults([]);
+      setSearching(false);
       return;
     }
+    setSearching(true);
     searchTimer = setTimeout(() => {
       const ctrl = new AbortController();
       searchController = ctrl;
@@ -182,6 +188,9 @@ function CreateBoardPanel(props: {
         .then((page) => setSearchResults(page.items))
         .catch(() => {
           if (!ctrl.signal.aborted) setSearchResults([]);
+        })
+        .finally(() => {
+          if (!ctrl.signal.aborted) setSearching(false);
         });
     }, 300);
   });
@@ -259,7 +268,7 @@ function CreateBoardPanel(props: {
         </div>
 
         <div class="space-y-1.5">
-          <Label>{t("whiteboard.participants")}</Label>
+          <Label for="new-whiteboard-participant">{t("whiteboard.participants")}</Label>
           <p class="text-xs text-muted-foreground">{t("whiteboard.participantsHint")}</p>
           <Show when={selected().length > 0}>
             <div class="flex flex-wrap gap-1.5">
@@ -267,7 +276,8 @@ function CreateBoardPanel(props: {
                 {(u) => (
                   <button
                     type="button"
-                    class="inline-flex items-center gap-1 rounded-full border bg-muted px-2 py-0.5 text-xs"
+                    class="inline-flex h-8 items-center gap-1 rounded-full border bg-muted px-2.5 text-xs outline-hidden hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring touch:h-10"
+                    aria-label={`${t("common.remove")}: ${personLabel(u)}`}
                     onClick={() => setSelected((prev) => prev.filter((x) => x.id !== u.id))}
                   >
                     {personLabel(u)}
@@ -278,6 +288,7 @@ function CreateBoardPanel(props: {
             </div>
           </Show>
           <Input
+            id="new-whiteboard-participant"
             placeholder={t("whiteboard.addParticipant")}
             value={query()}
             disabled={!canSearch()}
@@ -286,6 +297,9 @@ function CreateBoardPanel(props: {
           />
           <Show when={!canSearch()}>
             <p class="text-xs text-muted-foreground">{t("form.searchNoPermission")}</p>
+          </Show>
+          <Show when={canSearch() && query().trim() && filtered().length === 0 && searchResults().length === 0 && !searching()}>
+            <p class="text-xs text-muted-foreground">{t("common.noResults")}</p>
           </Show>
           <Show when={query().trim() && filtered().length > 0}>
             <div class="rounded-lg border">

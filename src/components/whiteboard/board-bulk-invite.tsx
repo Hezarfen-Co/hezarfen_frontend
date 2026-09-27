@@ -89,7 +89,7 @@ export function BoardBulkInvite(props: {
   };
 
   return (
-    <section class="space-y-3 rounded-xl border border-border/70 bg-card p-4 shadow-xs">
+    <section class="space-y-3 rounded-xl border border-border-line bg-card p-4 shadow-xs">
       <div>
         <h3 class="text-sm font-semibold">{t("whiteboard.bulkInvite")}</h3>
         <p class="mt-1 text-xs text-muted-foreground">{t("whiteboard.bulkInviteHint")}</p>
@@ -101,7 +101,7 @@ export function BoardBulkInvite(props: {
             <button
               type="button"
               class={cn(
-                "rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
+                "inline-flex h-8 items-center rounded-full border px-3.5 text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring touch:h-10",
                 kind() === k
                   ? "border-primary bg-primary/10 text-primary-text"
                   : "border-border/70 text-muted-foreground hover:bg-muted/60",
@@ -129,16 +129,17 @@ export function BoardBulkInvite(props: {
       <div class="space-y-1.5">
         <Label for="board-invite-source">{t("whiteboard.inviteSelect")}</Label>
         <div class="flex flex-wrap gap-2">
+          <div class="min-w-0 flex-1">
           <SearchableSelect
             id="board-invite-source"
-            class="min-w-0 flex-1"
             value={picked()}
             onChange={setPicked}
             options={options.latest ?? []}
             placeholder={t("whiteboard.inviteSelect")}
             disabled={options.loading || (options.latest?.length ?? 0) === 0}
           />
-          <Button type="button" size="sm" class="rounded-lg" disabled={pending() || !picked()} onClick={() => void invite()}>
+          </div>
+          <Button type="button" size="sm" class="h-9 rounded-lg px-4 text-sm touch:h-10" disabled={pending() || !picked()} onClick={() => void invite()}>
             {t("whiteboard.inviteAction")}
           </Button>
         </div>

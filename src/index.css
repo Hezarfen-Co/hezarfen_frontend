@@ -322,7 +322,9 @@
 }
 
 @utility detail-action-group {
-  @apply flex w-full flex-wrap items-center gap-1.5 rounded-lg border border-border/80 bg-card p-1.5 shadow-sm sm:w-auto;
+  /* A plain row: the pill buttons inside carry their own borders, and a
+   * boxed frame around them read as one more, squarer control. */
+  @apply flex w-full flex-wrap items-center gap-2 sm:w-auto;
 }
 
 @utility detail-action-divider {
@@ -422,12 +424,14 @@
     @apply sticky bottom-0 -mx-5 mb-0 justify-end border-t border-border bg-background px-5 py-3;
   }
 
+  /* Save / Cancel: touch-sized (h-10) on phones and touch screens, h-9 on
+     a desktop pointer. */
   & form > .flex:last-child button {
-    @apply h-9 rounded-md px-4 font-medium;
+    @apply h-9 rounded-md px-4 font-medium touch:h-10;
   }
 
   & form > .flex.flex-wrap:last-child button {
-    @apply h-9 rounded-md px-4 font-medium;
+    @apply h-9 rounded-md px-4 font-medium touch:h-10;
   }
 }
 

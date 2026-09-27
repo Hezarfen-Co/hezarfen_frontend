@@ -52,7 +52,7 @@ export function RagComposer(props: {
           value={props.value}
           disabled={props.disabled}
           placeholder={props.placeholder}
-          class="max-h-44 min-h-0 flex-1 resize-none overflow-y-auto border-0 bg-transparent px-0 py-1.5 text-base shadow-none hover:border-0 hover:bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+          class="max-h-44 min-h-0 flex-1 resize-none overflow-y-auto border-0 bg-transparent px-0 py-1.5 text-base shadow-none placeholder:truncate hover:border-0 hover:bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
           onInput={(event) => props.onInput(event.currentTarget.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter" && !event.shiftKey) {

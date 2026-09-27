@@ -53,7 +53,7 @@ export function AppShell(props: ParentProps) {
   // mounted, and their dismissed state never has two in-memory copies.
   const phone = createMediaQuery("(max-width: 63.98rem)");
   const routeLabel = createMemo(() => {
-    const key = routeLabelKey(location().pathname, auth.user()?.role);
+    const key = routeLabelKey(location().pathname, auth.user()?.role, location().search as Record<string, unknown>);
     return key ? t(key) : "";
   });
   // The page's own h1, when it renders one (detail pages, the 404). Watched
@@ -83,7 +83,11 @@ export function AppShell(props: ParentProps) {
   const shellChrome = () => Boolean(auth.user()) && !fullScreen();
   // Room below the last row for the quick-action button resting over the tab
   // bar, so a pager or a last card's actions can scroll clear of it.
-  const fabClearance = () => shellChrome() && phone() && !quickActionsSuppressed();
+  // A board fills the content column edge to edge; the floating button sat
+  // on its bottom-right corner, over the canvas's own controls.
+  const boardPage = () => /^\/whiteboards\/[^/]+/.test(location().pathname);
+  const fabHidden = () => quickActionsSuppressed() || boardPage();
+  const fabClearance = () => shellChrome() && phone() && !fabHidden();
   const logout = async () => {
     await auth.logout();
     void navigate({ to: "/login" });
@@ -251,7 +255,7 @@ export function AppShell(props: ParentProps) {
       </Show>
       <Show when={auth.user() && !fullScreen() && phone()}>
         <MobileQuickActions
-          hidden={mobileOpen() || celebiPanelOpen() || commandPaletteOpen() || profileOpen() || quickActionsSuppressed()}
+          hidden={mobileOpen() || celebiPanelOpen() || commandPaletteOpen() || profileOpen() || fabHidden()}
         />
       </Show>
       </ShellFeedProvider>

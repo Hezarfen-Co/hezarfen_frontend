@@ -8,7 +8,10 @@ import { formatApiError, type BlueprintResult, type BlueprintSectionStatus, type
 import { BlueprintPanel } from "@/components/classes/blueprint-panel";
 import { BlueprintSkippedReport } from "@/components/classes/blueprint-skipped-report";
 import { Alert } from "@/components/ui/alert";
+import { ErrorAlert } from "@/components/ui/error-alert";
 import { Button } from "@/components/ui/button";
+import { TOOLBAR_CONTROL } from "@/components/ui/data-toolbar";
+import { cn } from "@/lib/cn";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconClipboardCheck, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
@@ -43,7 +46,11 @@ export function BlueprintsTab(props: {
   const [courses] = createResource(enabled, async () => (await getCourses({ limit: 200 })).items);
   const [limits] = createResource(enabled, () => getLimits());
 
-  const courseTitle = (id: string) => courses.latest?.find((c) => c.id === id)?.title ?? id;
+  // `.latest` rethrows a failed read; these keep one failure from throwing
+  // the whole page out (the list shows ErrorAlert, the rest fall back).
+  const courseList = () => (courses.error ? [] : courses.latest ?? []);
+  const limitData = () => (limits.error ? undefined : limits.latest);
+  const courseTitle = (id: string) => courseList().find((c) => c.id === id)?.title ?? id;
 
   const columns = createMemo<ColumnDef<ClassBlueprint>[]>(() => [
     {
@@ -56,6 +63,8 @@ export function BlueprintsTab(props: {
     {
       id: "count",
       accessorFn: (row) => t("classBlueprints.courseCount", { count: row.courses.length }),
+      // The label is text ("10 ders" sorts before "3 ders"); order by the count.
+      sortingFn: (a, b) => a.original.courses.length - b.original.courses.length,
       header: t("classBlueprints.courseCountColumn"),
     },
     {
@@ -63,7 +72,7 @@ export function BlueprintsTab(props: {
       accessorFn: (row) => {
         const names = row.courses.slice(0, 3).map(courseTitle);
         const rest = row.courses.length - names.length;
-        return rest > 0 ? `${names.join(", ")} +${rest}` : names.join(", ") || "—";
+        return rest > 0 ? `${names.join(", ")} +${rest}` : names.join(", ");
       },
       header: t("classBlueprints.courses"),
       meta: { cellClass: "text-muted-foreground" },
@@ -91,15 +100,15 @@ export function BlueprintsTab(props: {
               },
             },
             {
+              label: t("classBlueprints.status"),
+              icon: <IconClipboardCheck class="h-4 w-4" />,
+              onSelect: () => void checkStatus(cell.row.original.grade_level),
+            },
+            {
               label: t("classBlueprints.delete"),
               icon: <IconTrash class="h-4 w-4" />,
               destructive: true,
               onSelect: () => setDeleting(cell.row.original),
-            },
-            {
-              label: t("classBlueprints.status"),
-              icon: <IconClipboardCheck class="h-4 w-4" />,
-              onSelect: () => void checkStatus(cell.row.original.grade_level),
             },
           ]}
         />
@@ -156,7 +165,7 @@ export function BlueprintsTab(props: {
     },
     {
       id: "missing",
-      accessorFn: (row) => row.missing.map(courseTitle).join(", ") || "—",
+      accessorFn: (row) => row.missing.map(courseTitle).join(", "),
       header: t("classBlueprints.statusMissing"),
       meta: { cellClass: "text-muted-foreground" },
     },
@@ -180,7 +189,7 @@ export function BlueprintsTab(props: {
       <Show when={skipped().length > 0}>
         <Alert class="flex flex-wrap items-center justify-between gap-3 border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
           <span class="min-w-0 flex-1">{t("classBlueprints.skippedSummary", { count: skipped().length })}</span>
-          <Button type="button" size="sm" variant="outline" class="shrink-0 rounded-lg" onClick={() => setReportOpen(true)}>
+          <Button type="button" size="sm" variant="outline" class={cn(TOOLBAR_CONTROL, "shrink-0 px-3.5")} onClick={() => setReportOpen(true)}>
             {t("classBlueprints.skippedDetails")}
           </Button>
         </Alert>
@@ -188,11 +197,16 @@ export function BlueprintsTab(props: {
 
       {/* The list is read through `.latest`, so a refetch after a save never
           re-suspends the tab; the skeleton only covers the first load. */}
-      <Show when={!list.loading || list.latest} fallback={<DataTableSkeleton />}>
+      <Show when={list.error}>
+        <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
+      </Show>
+      <Show when={!list.error && (!list.loading || list.latest)} fallback={<Show when={!list.error}><DataTableSkeleton /></Show>}>
         <DataTable
           columns={columns()}
           data={list.latest ?? []}
           filterColumn="grade"
+          filterPlaceholder={t("classBlueprints.searchPlaceholder")}
+          filterHint={t("search.hint.blueprints")}
           enablePagination
           pageSize={10}
           title={t("classBlueprints.title")}
@@ -221,10 +235,10 @@ export function BlueprintsTab(props: {
           if (!open) setEditing(null);
         }}
         blueprint={editing()}
-        courses={courses.latest ?? []}
-        maxCourses={limits.latest?.course.max_class_courses ?? 50}
-        minGradeLevel={limits.latest?.course.min_grade_level}
-        maxGradeLevel={limits.latest?.course.max_grade_level}
+        courses={courseList()}
+        maxCourses={limitData()?.course.max_class_courses ?? 50}
+        minGradeLevel={limitData()?.course.min_grade_level}
+        maxGradeLevel={limitData()?.course.max_grade_level}
         onSaved={(result) => void handleSaved(result)}
       />
 

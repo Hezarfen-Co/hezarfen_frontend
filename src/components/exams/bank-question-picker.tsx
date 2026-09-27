@@ -65,7 +65,7 @@ export function BankQuestionPicker(props: {
 
   return (
     <div class="space-y-3">
-      <p class="rounded-lg border border-amber-500/20 bg-amber-500/8 px-3 py-2 text-xs text-muted-foreground">
+      <p class="rounded-lg border border-warning/20 bg-warning/10 px-3 py-2 text-xs text-muted-foreground">
         {t("bank.copyNotice")}
       </p>
 

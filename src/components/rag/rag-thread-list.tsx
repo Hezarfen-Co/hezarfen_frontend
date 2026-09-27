@@ -26,6 +26,8 @@ export function RagThreadList(props: {
     actions: string;
     delete: string;
     loadMore: string;
+    threadsFailed: string;
+    tryAgain: string;
     groupToday: string;
     groupYesterday: string;
     groupThisWeek: string;
@@ -38,7 +40,7 @@ export function RagThreadList(props: {
   onRemove: (thread: RagThread) => void;
 }) {
   const [limit, setLimit] = createSignal(THREAD_PAGE_SIZE);
-  const [threads] = createResource(
+  const [threads, { refetch }] = createResource(
     () => ({ limit: limit(), version: props.version }),
     ({ limit }) => getRagThreads({ limit, offset: 0 }),
   );
@@ -52,7 +54,20 @@ export function RagThreadList(props: {
   };
   return (
     <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-      <Show when={threads.latest} fallback={<PageSpinner />}>
+      {/* A failed first read used to spin forever: `latest` never arrives. */}
+      <Show when={threads.error && !threads.latest}>
+        <div class="space-y-2 px-2.5 py-6 text-center text-sm text-muted-foreground" role="alert">
+          <p>{props.labels.threadsFailed}</p>
+          <button
+            type="button"
+            class="inline-flex h-10 items-center rounded-full border border-border-line px-3.5 text-[13px] font-medium text-foreground outline-hidden transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring lg:h-8 touch:h-10"
+            onClick={() => void refetch()}
+          >
+            {props.labels.tryAgain}
+          </button>
+        </div>
+      </Show>
+      <Show when={threads.latest} fallback={<Show when={!threads.error}><PageSpinner /></Show>}>
         {(result) => (
           <Show
             when={result().items.length > 0}
@@ -73,7 +88,7 @@ export function RagThreadList(props: {
                       <button
                         type="button"
                         class={cn(
-                          "min-w-0 flex-1 truncate rounded-lg py-1.5 pl-2.5 pr-8 text-left text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                          "min-w-0 flex-1 truncate rounded-lg py-2.5 pl-2.5 pr-10 text-left text-sm lg:py-1.5 lg:pr-8 touch:py-2.5 outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
                           active() ? "font-medium text-foreground" : "text-foreground/85",
                         )}
                         title={thread.title || props.labels.untitled}
@@ -84,7 +99,7 @@ export function RagThreadList(props: {
                       {/* The row menu shows on hover, on keyboard focus and on the open chat. */}
                       <div
                         class={cn(
-                          "absolute right-1 top-1/2 -translate-y-1/2 transition-opacity focus-within:opacity-100 group-hover:opacity-100 [@media(pointer:coarse)]:opacity-100",
+                          "absolute right-0 top-1/2 -translate-y-1/2 transition-opacity lg:right-1 [&_[data-row-actions-trigger]]:size-10 lg:[&_[data-row-actions-trigger]]:size-7 touch:[&_[data-row-actions-trigger]]:size-10 focus-within:opacity-100 group-hover:opacity-100 [@media(pointer:coarse)]:opacity-100",
                           active() ? "opacity-100" : "opacity-0",
                         )}
                       >
@@ -105,7 +120,7 @@ export function RagThreadList(props: {
             <Show when={hasMore()}>
               <button
                 type="button"
-                class="mt-1 w-full rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground disabled:opacity-50"
+                class="mt-1 h-10 w-full rounded-lg px-2.5 text-left text-xs font-medium text-muted-foreground outline-hidden transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 lg:h-8 touch:h-10"
                 disabled={threads.loading}
                 onClick={() => setLimit((value) => Math.min(THREAD_PAGE_MAX, value + THREAD_PAGE_SIZE))}
               >

@@ -244,6 +244,8 @@ function QuestionBankContent() {
                 onSearchInput={setQuery}
                 infinite={{ hasMore: list.hasMore(), loading: list.loading(), total: total(), onLoadMore: list.loadMore }}
                 empty={t("bank.empty")}
+                filtersActive={subjectFilter() !== "all"}
+                onClearFilters={() => setSubjectFilter("all")}
                 storageKey="question-bank"
                 onRowClick={(question) => navigate({ to: "/question-bank/$id", params: { id: question.id } })}
                 filters={

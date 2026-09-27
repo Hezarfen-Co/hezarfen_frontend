@@ -143,7 +143,7 @@ export function NoteFilesPanel(props: {
   };
 
   return (
-    <section class="space-y-3 rounded-lg border border-border/80 bg-card p-4 shadow-xs dark:border-white/8">
+    <section class="space-y-3 rounded-xl border border-border-line bg-card p-4 shadow-xs">
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
@@ -167,11 +167,11 @@ export function NoteFilesPanel(props: {
           {/* Two equal halves spanning the panel, the same width as the drop
               area and file list under them. */}
           <div class="grid w-full grid-cols-2 gap-2">
-            <Button type="button" variant="outline" size="sm" class="w-full rounded-lg" disabled={pending() || atLimit()} onClick={openNewDrawing}>
+            <Button type="button" variant="outline" size="sm" class="h-10 w-full rounded-full text-[13px] sm:h-8 touch:h-10" disabled={pending() || atLimit()} onClick={openNewDrawing}>
               <IconEdit class="h-4 w-4 shrink-0" />
               <span class="truncate">{t("notes.draw")}</span>
             </Button>
-            <Button type="button" size="sm" class="w-full rounded-lg" disabled={pending() || atLimit()} onClick={() => input?.click()}>
+            <Button type="button" size="sm" class="h-10 w-full rounded-full text-[13px] sm:h-8 touch:h-10" disabled={pending() || atLimit()} onClick={() => input?.click()}>
               <IconPlus class="h-4 w-4 shrink-0" />
               <span class="truncate">{t("notes.addFile")}</span>
             </Button>
@@ -191,14 +191,14 @@ export function NoteFilesPanel(props: {
       <Suspense fallback={<PageSpinner />}>
         <Show
           when={(files() ?? []).length > 0}
-          fallback={<p class="rounded-md border border-dashed border-border/80 bg-muted/20 px-3 py-6 text-center text-sm text-muted-foreground">{t("notes.noFiles")}</p>}
+          fallback={!files.error && <p class="rounded-md border border-dashed border-border/80 bg-muted/20 px-3 py-6 text-center text-sm text-muted-foreground">{t("notes.noFiles")}</p>}
         >
           <ul class="grid grid-cols-1 gap-3 rounded-md border border-border/70 bg-background/70 p-2 sm:grid-cols-2">
             <For each={pageFiles()}>
               {(file) => {
                 const meta = fileTypeMeta(file, "h-8 w-8");
                 return (
-                  <li class="group overflow-hidden rounded-xl border border-border/70 bg-card text-sm shadow-xs transition-colors hover:border-amber-500/40">
+                  <li class="group overflow-hidden rounded-xl border border-border/70 bg-card text-sm shadow-xs transition-colors hover:border-primary/40">
                     <div class="relative h-28 bg-muted/25">
                       <button type="button" class="flex h-full w-full items-center justify-center rounded-t-xl transition-colors hover:bg-muted/40" aria-label={`${t("common.view")}: ${file.name}`} onClick={() => setPreviewFile(file)}>
                         <span class={cn("flex h-16 w-16 items-center justify-center rounded-lg border", meta.class)}>

@@ -28,7 +28,7 @@ export function MealWalkInPanel(props: {
     <SidePanel open={props.open} onOpenChange={props.onOpenChange} title={t("meals.addWalkIn")} description={props.description}>
       <form class="space-y-4" onSubmit={submit}>
         <p class="text-sm text-muted-foreground">{t("meals.walkInHelp")}</p>
-        <UserSearchSelect id="meal-walkin" value={student()} onChange={setStudent} label={t("meals.student")} placeholder={t("form.selectStudent")} />
+        <UserSearchSelect id="meal-walkin" role="student" value={student()} onChange={setStudent} label={t("meals.student")} placeholder={t("form.selectStudent")} />
         <Show when={props.error}><Alert variant="destructive">{props.error}</Alert></Show>
         <div class="flex gap-2 border-t border-border-hairline pt-4">
           <Button type="submit" disabled={!student() || props.pending}>{t("meals.served")}</Button>

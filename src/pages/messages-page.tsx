@@ -3,13 +3,13 @@ import {
   Show,
   createMemo,
   createSignal,
-  Suspense,
   useTransition,
 } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { InfiniteSentinel } from "@/components/ui/infinite-sentinel";
 import { createInfiniteList } from "@/lib/infinite-list";
+import { createScrollRestore } from "@/lib/scroll-restore";
 import { Button } from "@/components/ui/button";
 import {
   IconArchive,
@@ -38,6 +38,9 @@ import { useT } from "@/stores/preferences-context";
 import { createDebouncedSignal } from "@/lib/create-debounced-signal";
 import { createFlash } from "@/lib/flash";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorAlert } from "@/components/ui/error-alert";
+import { PageSpinner } from "@/components/ui/page-spinner";
 
 const folders: { id: MessageFolder; labelKey: MessageKey; icon: typeof IconMessage }[] = [
   { id: "inbox", labelKey: "messages.inbox", icon: IconMessage },
@@ -80,6 +83,8 @@ export default function MessagesPage() {
   );
 
   const selected = createMemo(() => messages().find((m) => m.id === selectedId()) ?? null);
+  // Back to this page lands on the same message row once the list is drawn.
+  createScrollRestore("messages", () => messages().length > 0);
   const isOwnSentMessage = (msg: Message) => msg.sender.id === auth.user()?.id;
 
   const restoreFolder = (msg: Message): MessageFolder => {
@@ -109,10 +114,17 @@ export default function MessagesPage() {
     }
   };
 
+  // Deleting forever cannot be undone, so it waits for a confirmation.
+  const [pendingDelete, setPendingDelete] = createSignal<Message | null>(null);
+
   const handleAction = async (
     msg: Message,
-    action: { folder?: MessageFolder; delete?: boolean; read?: boolean }
+    action: { folder?: MessageFolder; delete?: boolean; read?: boolean; confirmed?: boolean }
   ) => {
+    if (action.delete && !action.confirmed && msg.folder === "trash") {
+      setPendingDelete(msg);
+      return;
+    }
     try {
       if (action.delete) {
         if (msg.folder !== "trash") {
@@ -257,7 +269,7 @@ export default function MessagesPage() {
                     >
                       <IconRefresh
                         class={cn(
-                          "h-3.5 w-3.5 mr-1.5 transition-transform duration-500",
+                          "h-3.5 w-3.5 transition-transform duration-500",
                           isRefreshing() && "animate-spin text-primary-text"
                         )}
                       />
@@ -280,7 +292,7 @@ export default function MessagesPage() {
                         class={cn(TOOLBAR_CONTROL, "px-3.5 text-destructive-text hover:bg-destructive/10")}
                         onClick={() => setConfirmEmptyTrash(true)}
                       >
-                        <IconTrash class="mr-1.5 h-3.5 w-3.5" />
+                        <IconTrash class="h-3.5 w-3.5" />
                         {t("messages.emptyTrash")}
                       </Button>
                     </Show>
@@ -302,19 +314,26 @@ export default function MessagesPage() {
                         isPending() && "opacity-50 pointer-events-none"
                       )}
                     >
-                      <Suspense
-                        fallback={
-                          <div class="p-6 text-center text-xs text-muted-foreground">
-                            {t("common.loading")}
+                      <Show when={messageList.error()}>
+                        {(err) => (
+                          <div class="p-4">
+                            <ErrorAlert message={formatApiError(err())} onRetry={() => messageList.reload()} />
                           </div>
-                        }
-                      >
+                        )}
+                      </Show>
+                      {/* The list does not suspend: it says it is loading until the
+                          first page lands instead of flashing "no messages". */}
+                      <Show when={!messageList.initialLoading()} fallback={<PageSpinner />}>
                         <Show
                           when={messages().length > 0}
                           fallback={
-                            <div class="p-12 text-center text-xs text-muted-foreground">
-                              {query().trim() ? t("common.noResults") : t("messages.noMessages")}
-                            </div>
+                            <Show when={!messageList.error()}>
+                              <EmptyState
+                                kind={query().trim() ? "search" : "messages"}
+                                title={query().trim() ? t("common.noResults") : t("messages.noMessages")}
+                                class="rounded-none border-0 bg-transparent"
+                              />
+                            </Show>
                           }
                         >
                           <For each={messages()}>
@@ -349,9 +368,9 @@ export default function MessagesPage() {
                             )}
                           </For>
                         </Show>
-                      </Suspense>
+                      </Show>
 
-                      <div class="border-t border-border-hairline px-4 py-3">
+                      <div class={cn("border-t border-border-hairline px-4 py-3", messageList.total() === 0 && "hidden")}>
                         <InfiniteSentinel
                           hasMore={messageList.hasMore()}
                           loading={messageList.loading()}
@@ -397,6 +416,21 @@ export default function MessagesPage() {
           }}
         />
       </div>
+      <ConfirmDialog
+        open={pendingDelete() !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+        title={t("messages.deleteForever")}
+        variant="destructive"
+        summary={pendingDelete()?.subject ?? ""}
+        description={t("confirm.irreversible")}
+        confirmLabel={t("messages.deleteForever")}
+        onConfirm={async () => {
+          const msg = pendingDelete();
+          if (msg) await handleAction(msg, { delete: true, confirmed: true });
+        }}
+      />
       <ConfirmDialog
         open={confirmEmptyTrash()}
         onOpenChange={setConfirmEmptyTrash}

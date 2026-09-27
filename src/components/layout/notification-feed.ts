@@ -41,9 +41,12 @@ export function createNotificationFeed() {
 
   // Exams and homework of one ders taught in two şubeler share titles; the
   // row's description names "<ders> — <şube>" so they can be told apart.
+  // Only the open list shows these labels, and resolving them costs a read
+  // per section; the unread badge needs none. So they wait for the first open.
   const auth = useAuth();
+  const [labelsWanted, setLabelsWanted] = createSignal(false);
   const sectionLabels = createInstanceLabels(
-    () => [
+    () => !labelsWanted() ? [] : [
       ...feed.exams().items.filter((ex) => ex.starts_at && !ex.draft && notEnded(ex.starts_at, ex.ends_at)).map((ex) => ex.class_course),
       ...feed.homework().items.filter((hw) => hw.due_at >= nowMs()).map((hw) => hw.class_course),
     ],
@@ -224,6 +227,8 @@ export function createNotificationFeed() {
     dismissAll,
     markRead,
     refreshAll: feed.refreshAll,
+    /** Call when the list opens: resolves the section labels its rows show. */
+    opened: () => setLabelsWanted(true),
   };
 }
 

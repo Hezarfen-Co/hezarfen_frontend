@@ -10,6 +10,8 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { RoleBadge } from "@/components/layout/role-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TOOLBAR_SLOT } from "@/components/ui/data-toolbar";
+import { cn } from "@/lib/cn";
 import { DetailField } from "@/components/ui/detail-field";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEdit, IconSchool, IconUserCircle } from "@/components/ui/icons";
@@ -203,7 +205,7 @@ function ProfileContent() {
                   </div>
                   </div>
                   {/* Header actions are toolbar pills: h-10 below `sm` and on touch, h-8 above. */}
-                  <div class="mt-3 flex flex-wrap gap-2 [&_button]:h-10 [&_button]:rounded-full [&_button]:px-3.5 [&_button]:text-[13px] sm:[&_button]:h-8 touch:[&_button]:h-10">
+                  <div class={cn("mt-3 flex flex-wrap gap-2", TOOLBAR_SLOT)}>
                     <Show when={infoSource(p())}>
                       <Button type="button" size="sm" variant="outline" onClick={() => setInfoOpen(true)}>
                         <IconUserCircle class="mr-1.5 h-4 w-4" />

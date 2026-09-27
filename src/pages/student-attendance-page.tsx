@@ -6,7 +6,6 @@ import { ApiError, formatApiError } from "@/api/client";
 import type { ClassGroup, PersonRef } from "@/api/client";
 import { AttendanceReportView } from "@/components/attendance/attendance-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { Alert } from "@/components/ui/alert";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { DropdownSelect } from "@/components/ui/select";
@@ -33,6 +32,9 @@ function StudentAttendanceContent() {
   const t = useT();
   const [viewUser, setViewUser] = createSignal<PersonRef | null>(null);
   const [error, setError] = createSignal("");
+  // The roster read's own failure: shown in place of the table with a retry,
+  // so a failed load does not read as "no students".
+  const [listError, setListError] = createSignal("");
 
   // No endpoint reports attendance or focus time for a list of students —
   // only one student at a time — so the list stays a roster (a column per
@@ -43,11 +45,11 @@ function StudentAttendanceContent() {
   // picked class's roster, so the dropdown keeps listing every class and the
   // scoped fetch resolves the picked class without another request.
   const [allClasses, setAllClasses] = createSignal<ClassGroup[]>([]);
-  const [list] = createResource(
+  const [list, { refetch: refetchList }] = createResource(
     () => classFilter(),
     async (classId) => {
       try {
-        setError("");
+        setListError("");
         if (!classId) {
           const rows = await getStudentDirectory();
           const seen = new Map<string, ClassGroup>();
@@ -58,7 +60,7 @@ function StudentAttendanceContent() {
         const picked = allClasses().find((cls) => cls.id === classId);
         return await getStudentDirectory(picked);
       } catch (err) {
-        setError(formatApiError(err));
+        setListError(formatApiError(err));
         return [];
       }
     },
@@ -121,11 +123,11 @@ function StudentAttendanceContent() {
   return (
     <div class="space-y-6">
       <section class="space-y-4 p-0">
-        <Show when={error() && !viewUser()}>
-          <Alert variant="destructive">{error()}</Alert>
+        <Show when={listError()}>
+          <ErrorAlert message={listError()} onRetry={() => void refetchList()} />
         </Show>
 
-        <Show when={!listLoading()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
+        <Show when={!listLoading() && !listError()} fallback={<Show when={!listError()}><DataTableSkeleton columns={4} rows={6} /></Show>}>
           <DataTable
             urlState
             title={t("nav.studentAttendance")}
@@ -135,6 +137,7 @@ function StudentAttendanceContent() {
             tableClass="min-w-xl"
             empty={t("form.noStudents")}
             searchPredicate={searchPerson}
+            filterPlaceholder={t("roster.searchDirectory")}
             filters={
               <DropdownSelect
                 labelPrefix={t("roster.class")}
@@ -146,7 +149,7 @@ function StudentAttendanceContent() {
             filtersActive={classFilter() !== ""}
             pageResetKey={classFilter()}
             onClearFilters={() => setClassFilter("")}
-            filterHint={t("search.hint.people")}
+            filterHint={t("search.hint.studentDirectory")}
             enablePagination
             pageSize={PAGE_SIZE}
             storageKey="student-attendance"
@@ -168,7 +171,6 @@ function StudentAttendanceContent() {
           }
         }}
         title={t("attendance.forUser", { user: personLabel(viewUser()) })}
-        description={t("attendance.lookup")}
         bodyClass="bg-muted/20"
       >
         <div class="min-w-0 space-y-3">

@@ -213,7 +213,14 @@ export function CourseSessionsPanel(props: {
   };
 
   const panelOpen = () => props.createOpen || editingSession() != null;
-  createEffect(() => props.onCountChange(sessions()?.length ?? 0));
+  // Report a count only once the list has loaded (and not after a failed
+  // read): the tab badge must not claim "0" while the lessons are loading.
+  createEffect(() => {
+    if (sessions.error) return;
+    const list = sessions.latest;
+    if (list) props.onCountChange(list.length);
+  });
+  const rows = () => (sessions.error ? [] : sessions() ?? []);
   const columns = createMemo<ColumnDef<CourseSession>[]>(() => [
     {
       accessorKey: "topic",
@@ -276,13 +283,13 @@ export function CourseSessionsPanel(props: {
         <Show when={sessions.error}>
           <ErrorAlert message={formatApiError(sessions.error)} onRetry={() => void refetch()} />
         </Show>
+        <Show when={!sessions.error}>
         <DataTable
           columns={columns()}
-          data={sessions() ?? []}
+          data={rows()}
           filterColumn="topic"
+          filterHint={t("search.hint.sessions")}
           storageKey={`instance-sessions-${props.instanceId}`}
-          enablePagination
-          pageSize={10}
           empty={t("sessions.empty")}
           onRowClick={setDetailSession}
           actions={props.canManage ? (
@@ -291,6 +298,7 @@ export function CourseSessionsPanel(props: {
             </Button>
           ) : undefined}
         />
+        </Show>
       </Suspense>
 
       <SidePanel guardUnsaved
@@ -333,32 +341,33 @@ export function CourseSessionsPanel(props: {
             <div class="space-y-1.5">
               <Label for="session-starts">{t("events.starts")}</Label>
               <div class="grid grid-cols-2 gap-2">
-                <DatePicker id="session-starts" class="h-10" placeholder={t("form.datePlaceholder")} value={startsDate()} required onChange={setStartsDate} />
-                <Input class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/35" placeholder="09:00" value={startsTime()} required onInput={(e) => setStartsTime(e.currentTarget.value)} />
+                <DatePicker id="session-starts" class="h-9" placeholder={t("form.datePlaceholder")} value={startsDate()} required onChange={setStartsDate} />
+                <Input class="h-9 font-mono placeholder:text-muted-foreground/45" inputMode="numeric" placeholder="09:00" aria-label={t("appointments.startTime")} value={startsTime()} required onInput={(e) => setStartsTime(e.currentTarget.value)} />
               </div>
             </div>
             <div class="space-y-1.5">
               <Label for="session-ends">{t("events.ends")}</Label>
               <div class="grid grid-cols-2 gap-2">
-                <DatePicker id="session-ends" class="h-10" placeholder={t("form.datePlaceholder")} value={endsDate()} onChange={setEndsDate} />
-                <Input class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/35" placeholder="10:00" value={endsTime()} onInput={(e) => setEndsTime(e.currentTarget.value)} />
+                <DatePicker id="session-ends" class="h-9" placeholder={t("form.datePlaceholder")} value={endsDate()} onChange={setEndsDate} />
+                <Input class="h-9 font-mono placeholder:text-muted-foreground/45" inputMode="numeric" placeholder="10:00" aria-label={t("appointments.endTime")} value={endsTime()} onInput={(e) => setEndsTime(e.currentTarget.value)} />
               </div>
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-2">
+            {/* Submit first, as in every other panel form of the course pages. */}
+            <Button type="submit" class="rounded-lg" disabled={pending()}>
+              {editingSession() ? t("common.update") : t("sessions.add")}
+            </Button>
             <Button
               type="button"
               variant="outline"
-              class="h-10 rounded-lg"
+              class="rounded-lg"
               onClick={() => {
                 props.onCreateOpenChange(false);
                 resetForm();
               }}
             >
               {t("common.cancel")}
-            </Button>
-            <Button type="submit" class="h-10 rounded-lg" disabled={pending()}>
-              {editingSession() ? t("common.update") : t("sessions.add")}
             </Button>
           </div>
         </form>
@@ -378,7 +387,7 @@ export function CourseSessionsPanel(props: {
                 <DetailField label={t("events.starts")} value={formatDateTime(session.starts_at, locale())} />
                 <DetailField label={t("events.ends")} value={formatDateTime(session.ends_at, locale())} />
                 <Show when={props.canManage}>
-                  <DetailField label={t("attendance.title")} value={`${detailAttendance()?.length ?? 0} / ${attendanceTargetCount(session)}`} />
+                  <DetailField label={t("attendance.title")} value={detailAttendance.loading || detailAttendance.error ? "—" : `${detailAttendance()?.length ?? 0} / ${attendanceTargetCount(session)}`} />
                 </Show>
               </div>
               <Show when={props.canManage}>

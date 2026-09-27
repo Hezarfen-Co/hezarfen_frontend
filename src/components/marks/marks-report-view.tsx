@@ -75,9 +75,9 @@ export function MarksReportView(props: {
       id: "course",
       accessorFn: (row) => row.course.title,
       header: t("nav.courses"),
-      meta: { headerClass: "w-[36%]" },
+      size: 260,
       cell: (cell) => (
-        <Link to="/courses/$id" params={{ id: cell.row.original.course.id }} class="block truncate font-medium hover:text-primary-text hover:underline">
+        <Link to="/courses/$id" params={{ id: cell.row.original.course.id }} title={cell.row.original.course.title} class="block truncate font-medium hover:text-primary-text hover:underline">
           {cell.row.original.course.title}
         </Link>
       ),
@@ -85,7 +85,8 @@ export function MarksReportView(props: {
     {
       id: "instance",
       header: t("instances.title"),
-      meta: { headerClass: "w-[24%]", cellClass: "text-muted-foreground" },
+      size: 170,
+      meta: { cellClass: "text-muted-foreground" },
       cell: (cell) => (
         <Link
           to="/instances/$id"
@@ -104,7 +105,7 @@ export function MarksReportView(props: {
       id: "average",
       accessorFn: (row) => row.average ?? undefined,
       header: t("marks.courseAvg"),
-      meta: { headerClass: "w-[22%]" },
+      size: 160,
       cell: (cell) => (
         <div class="flex min-w-0 items-center gap-2">
           <div class="h-1.5 w-12 min-w-8 shrink overflow-hidden rounded-full bg-muted">
@@ -118,7 +119,7 @@ export function MarksReportView(props: {
       id: "band",
       accessorFn: (row) => row.average_grade || undefined,
       header: t("marks.band"),
-      meta: { headerClass: "w-[18%]" },
+      size: 110,
     },
   ]);
   const [settings] = createResource(() => getSettings());
@@ -139,9 +140,11 @@ export function MarksReportView(props: {
     {
       accessorKey: "title",
       header: t("marks.exam"),
+      // The title is the one long value; four equal columns cut it to "2. Dönem B…".
+      size: 240,
       meta: { stickyLeft: true },
       cell: (cell) => (
-        <ExamLink examId={cell.row.original.exam} class="block truncate font-medium hover:underline">
+        <ExamLink examId={cell.row.original.exam} title={cell.row.original.title} class="block truncate font-medium hover:underline">
           {cell.row.original.title}
         </ExamLink>
       ),
@@ -150,18 +153,21 @@ export function MarksReportView(props: {
     // it and stack it under the title as a second line instead.
     {
       id: "kind",
+      size: 110,
       accessorFn: (row) => examKindLabel(row.kind, t),
       header: t("exams.kind"),
       cell: (cell) => <Badge variant="outline" class="rounded-sm capitalize">{examKindLabel(cell.row.original.kind, t)}</Badge>,
     },
     {
       id: "weight",
+      size: 90,
       header: t("marks.weight"),
       meta: { align: "right", divider: "left", cellClass: "" },
       cell: (cell) => examWeight(cell.row.original, settings()?.exam_kinds) ?? "—",
     },
     {
       id: "mark",
+      size: 100,
       accessorFn: (row) => row.mark ?? undefined,
       header: t("marks.mark"),
       meta: { align: "right", cellClass: "font-semibold" },
@@ -169,6 +175,7 @@ export function MarksReportView(props: {
     },
     {
       id: "grade",
+      size: 120,
       accessorFn: (row) => row.grade || undefined,
       header: t("marks.band"),
       meta: { align: "right" },
@@ -177,7 +184,7 @@ export function MarksReportView(props: {
 
   return (
     <div class="@container min-w-0 space-y-4">
-      <section class="overflow-hidden rounded-lg border border-border bg-card">
+      <section class="overflow-hidden rounded-xl border border-border bg-card">
         <Show when={props.identity}>
           {(identity) => (
             <div class="border-b border-border bg-muted/25 px-4 py-4">
@@ -225,7 +232,7 @@ export function MarksReportView(props: {
         </div>
       </section>
 
-      <Show when={props.report.courses.length > 0} fallback={<div class="rounded-lg border border-border bg-card p-4"><EmptyInline illustration="exams" title={t("marks.empty")} /></div>}>
+      <Show when={props.report.courses.length > 0} fallback={<div class="rounded-xl border border-border bg-card p-4"><EmptyInline illustration="exams" title={t("marks.empty")} /></div>}>
         <Tabs value={tab()} onChange={(value) => setTab(value === "byCourse" ? "byCourse" : "general")}>
           <TabsList class="w-full @lg:w-fit">
             <TabsTrigger value="general" class="min-w-0">{t("marks.tabGeneral")}</TabsTrigger>
@@ -259,7 +266,7 @@ export function MarksReportView(props: {
 
             <Show when={activeCourse()} keyed>
               {(block) => (
-                <div class="rounded-lg border border-border bg-card p-4 shadow-xs">
+                <div class="rounded-xl border border-border bg-card p-4 shadow-xs">
                   <div class="grid gap-3 @lg:grid-cols-[minmax(0,1fr)_auto] @lg:items-start">
                     <div class="min-w-0">
                       <Link to="/courses/$id" params={{ id: block.course.id }} class="block truncate text-sm font-semibold text-primary-text hover:underline">
@@ -276,7 +283,7 @@ export function MarksReportView(props: {
                       </Link>
                     </div>
                     <div class="@lg:text-right">
-                      <p class="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{t("marks.courseAvg")}</p>
+                      <p class="text-xs font-medium text-muted-foreground">{t("marks.courseAvg")}</p>
                       <p class="mt-0.5 text-xl font-semibold tabular-nums">{markWithGrade(block.average, block.average_grade)}</p>
                     </div>
                   </div>

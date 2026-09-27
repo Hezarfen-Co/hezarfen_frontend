@@ -345,17 +345,19 @@ export function QuestionForm(props: {
         </div>
         <div>
           <Label class="mb-1 block text-xs font-semibold text-muted-foreground">{t("questions.kind")}</Label>
-          <div class="flex gap-0.5 rounded-md border bg-muted/40 p-0.5">
+          {/* h-9 like the subject select and points field beside it. */}
+          <div role="group" aria-label={t("questions.kind")} class="flex h-9 gap-0.5 rounded-md border bg-muted/40 p-0.5">
             <For each={QUESTION_KINDS}>
               {(k) => (
                 <button
                   type="button"
                   class={cn(
-                    "h-7 rounded-sm px-2.5 text-xs font-semibold transition-colors",
+                    "rounded-sm px-2.5 text-xs font-semibold transition-colors",
                     kind() === k
                       ? "bg-primary text-primary-foreground shadow-2xs"
                       : "text-muted-foreground hover:text-foreground",
                   )}
+                  aria-pressed={kind() === k}
                   onClick={() => setKind(k)}
                 >
                   {k === "choice" ? t("questions.kind.choice") : t("questions.kind.text")}
@@ -386,7 +388,7 @@ export function QuestionForm(props: {
               <Label class="text-sm font-semibold">{t("questions.choices")}</Label>
               <p class="mt-0.5 text-xs text-muted-foreground">{t("questions.correctHint")}</p>
             </div>
-            <Button type="button" variant="outline" size="sm" class="h-7 gap-1 text-xs" disabled={rows().length >= BANK_QUESTION_LIMITS.maxChoices} onClick={addChoice}>
+            <Button type="button" variant="outline" size="sm" class="h-7 gap-1 text-xs touch:h-10" disabled={rows().length >= BANK_QUESTION_LIMITS.maxChoices} onClick={addChoice}>
               <IconPlus class="h-3.5 w-3.5" />
               {t("questions.addChoice")}
             </Button>
@@ -403,16 +405,16 @@ export function QuestionForm(props: {
                     data-choice-id={row().id}
                     class={cn(
                       "flex items-start gap-2 rounded-md border p-2 transition-colors",
-                      isCorrect() ? "border-emerald-400/60 bg-emerald-50/60" : "border-border bg-background",
+                      isCorrect() ? "border-success/60 bg-success/10" : "border-border bg-background",
                     )}
                   >
                     <button
                       type="button"
                       class={cn(
-                        "mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold transition-colors",
+                        "mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold transition-colors touch:h-10 touch:w-10",
                         isCorrect()
-                          ? "bg-emerald-600 text-white shadow-2xs"
-                          : "border bg-background text-muted-foreground hover:border-emerald-400 hover:text-emerald-600",
+                          ? "bg-success text-white shadow-2xs"
+                          : "border bg-background text-muted-foreground hover:border-success hover:text-success-text",
                       )}
                       onClick={() => setCorrect(row().id)}
                       title={t("questions.correct")}
@@ -453,7 +455,7 @@ export function QuestionForm(props: {
                       variant="ghost"
                       size="sm"
                       disabled={rows().length <= BANK_QUESTION_LIMITS.minChoices}
-                      class="mt-0.5 h-6 w-6 p-0 text-muted-foreground hover:text-destructive-text"
+                      class="mt-0.5 h-6 w-6 p-0 text-muted-foreground hover:text-destructive-text touch:h-10 touch:w-10"
                       onClick={() => removeChoice(row().id)}
                       aria-label={t("common.delete")}
                     >

@@ -174,6 +174,9 @@ export function ExamAudiencePanel(props: {
       <Show when={error()}>
         <Alert variant="destructive">{error()}</Alert>
       </Show>
+      {/* DataTable no longer draws its title block, and this line is the only
+          place the tab says what sharing does. */}
+      <p class="text-sm text-muted-foreground">{t("exams.audience.description")}</p>
       <Suspense fallback={<DataTableSkeleton columns={2} rows={3} />}>
         <Show when={!audience.error} fallback={<Alert variant="destructive">{formatApiError(audience.error)}</Alert>}>
           <DataTable

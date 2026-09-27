@@ -30,6 +30,9 @@ export function SearchableSelect(props: {
   disabled?: boolean;
   required?: boolean;
   class?: string;
+  /** Filter-chip prefix drawn inside the pill ("Ders: Tümü"), like
+   * DropdownSelect's `labelPrefix`; it also labels the field. */
+  labelPrefix?: string;
 }) {
   const t = useT();
   const [query, setQuery] = createSignal("");
@@ -85,8 +88,14 @@ export function SearchableSelect(props: {
       )}
     >
       <ComboboxControl class={props.class}>
+        <Show when={props.labelPrefix}>
+          <label for={props.id} class="shrink-0 cursor-pointer pl-3 text-xs font-semibold text-muted-foreground">
+            {props.labelPrefix}:
+          </label>
+        </Show>
         <ComboboxInput
           id={props.id}
+          class={props.labelPrefix ? "pl-1.5 font-medium" : undefined}
           ref={inputRef}
           // The field is the affordance: a plain click toggles the list. The
           // chevron is a sibling button, so its own pointerdown toggle never

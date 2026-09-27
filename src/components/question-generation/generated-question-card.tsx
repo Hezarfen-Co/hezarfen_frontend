@@ -38,17 +38,17 @@ export function GeneratedQuestionCard(props: {
             </div>
           </Show>
           <div class="flex flex-wrap items-center gap-2">
-            <Button type="button" size="sm" variant="outline" class="h-8 rounded-lg" aria-expanded={open()} onClick={() => setOpen((value) => !value)}>
+            <Button type="button" size="sm" variant="outline" class="h-8 rounded-lg touch:h-10" aria-expanded={open()} onClick={() => setOpen((value) => !value)}>
               {open() ? t("qgen.hideAnswer") : t("qgen.showAnswer")}
             </Button>
-            <Button type="button" size="sm" variant="ghost" class="h-8 rounded-lg" onClick={() => void copy()}>
+            <Button type="button" size="sm" variant="ghost" class="h-8 rounded-lg touch:h-10" onClick={() => void copy()}>
               <Show when={copied()} fallback={<IconCopy class="h-3.5 w-3.5" />}>
                 <IconCheck class="h-3.5 w-3.5" />
               </Show>
               {copied() ? t("qgen.copied") : t("qgen.copy")}
             </Button>
             <Show when={props.onAddToBank}>
-              <Button type="button" size="sm" variant="ghost" class="ml-auto h-8 rounded-lg" onClick={() => props.onAddToBank?.()}>
+              <Button type="button" size="sm" variant="ghost" class="ml-auto h-8 rounded-lg touch:h-10" onClick={() => props.onAddToBank?.()}>
                 <IconPlus class="h-3.5 w-3.5" />
                 {t("qgen.addToBank")}
               </Button>

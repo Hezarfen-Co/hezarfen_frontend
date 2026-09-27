@@ -77,7 +77,10 @@ function MyStudentsContent() {
     <div class="space-y-6">
       <DataSection title={t("nav.children")} description={t("parents.subtitle")}>
       <Suspense fallback={<PageSpinner />}>
-        <Show when={list()}>
+        <Show when={list.error}>
+          <ErrorAlert message={formatApiError(list.error)} />
+        </Show>
+        <Show when={!list.error && list()}>
           <Show when={list()!.length > 0} fallback={<EmptyState kind="people" title={t("common.noResults")} />}>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <For each={list()}>
@@ -124,7 +127,8 @@ function StudentDetailPanel(props: { student: PersonRef | null; initialTab: Stud
 
   const [classesRes] = createResource(
     () => props.student?.id,
-    async (id) => (await getClassesByUserId(id, { limit: 1 })).items,
+    // A refusal only drops the class line; it is not an error to show.
+    async (id) => (await getClassesByUserId(id, { limit: 1 }).catch(() => ({ items: [] }))).items,
   );
   const studentClass = () => classesRes()?.[0] ?? null;
 
@@ -148,7 +152,8 @@ function StudentDetailPanel(props: { student: PersonRef | null; initialTab: Stud
     if (props.student?.id) setActiveTab(props.initialTab);
   });
 
-  const report = () => marksRes() ?? null;
+  // An errored resource throws when read, so every read checks `.error` first.
+  const report = () => (marksRes.error ? null : marksRes() ?? null);
   const courseRows = createMemo<CourseRow[]>(() => report()?.courses ?? []);
   const examRows = createMemo<ExamRow[]>(() =>
     courseRows().flatMap((course) =>
@@ -201,9 +206,11 @@ function StudentDetailPanel(props: { student: PersonRef | null; initialTab: Stud
   ]);
 
   return (
-    <SidePanel open={!!props.student} onOpenChange={(open) => !open && props.onClose()} title={props.student ? personLabel(props.student) : ""} description={`@${props.student?.username}`}>
+    <SidePanel open={!!props.student} onOpenChange={(open) => !open && props.onClose()} title={props.student ? personLabel(props.student) : ""} description={props.student ? `@${props.student.username}` : undefined} bodyClass="overflow-hidden p-0">
+      {/* The panel body drops its own padding and scroll: the action and tab
+          rows stay pinned and only the tab content below them scrolls. */}
       <div class="flex h-full flex-col">
-        <div class="border-b border-border-hairline p-4">
+        <div class="shrink-0 border-b border-border-hairline px-5 py-4">
           <div class={cn("mb-3 flex flex-wrap items-center justify-between gap-2", PANEL_CONTROLS)}>
             {/* A parent may read their linked students' profiles, so this is safe
                 — it 403s only for someone else's child. Close the panel before
@@ -246,7 +253,7 @@ function StudentDetailPanel(props: { student: PersonRef | null; initialTab: Stud
               {(tab) => {
                 const Icon = tab.icon;
                 return (
-                  <Button variant={activeTab() === tab.key ? "default" : "outline"} size="sm" onClick={() => setActiveTab(tab.key)}>
+                  <Button variant={activeTab() === tab.key ? "default" : "outline"} size="sm" aria-pressed={activeTab() === tab.key} onClick={() => setActiveTab(tab.key)}>
                     <Icon class="mr-2 h-4 w-4" />
                     {tab.label}
                   </Button>
@@ -256,12 +263,14 @@ function StudentDetailPanel(props: { student: PersonRef | null; initialTab: Stud
           </div>
         </div>
 
-        <div class="flex-1 overflow-auto p-4">
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
           <Suspense fallback={<PageSpinner />}>
             <Switch>
               <Match when={activeTab() === "exams"}>
-                <Show when={examRows().length > 0} fallback={<DataTableEmpty>{t("exams.noResults")}</DataTableEmpty>}>
-                  <DataTable class="min-w-0" columns={examColumns()} data={examRows()} tableClass="w-full min-w-176 text-sm" enableSorting={false} />
+                <Show when={!marksRes.error} fallback={<ErrorAlert message={formatApiError(marksRes.error)} />}>
+                  <Show when={examRows().length > 0} fallback={<DataTableEmpty>{t("exams.noResults")}</DataTableEmpty>}>
+                    <DataTable class="min-w-0" columns={examColumns()} data={examRows()} tableClass="w-full min-w-176 text-sm" enableSorting={false} />
+                  </Show>
                 </Show>
               </Match>
 
@@ -272,8 +281,10 @@ function StudentDetailPanel(props: { student: PersonRef | null; initialTab: Stud
               </Match>
 
               <Match when={activeTab() === "marks"}>
-                <Show when={marksRes()} fallback={<PageSpinner />}>
-                  <MarksReportView report={marksRes()!} />
+                <Show when={!marksRes.error} fallback={<ErrorAlert message={formatApiError(marksRes.error)} />}>
+                  <Show when={marksRes()} fallback={<PageSpinner />}>
+                    {(marks) => <MarksReportView report={marks()} />}
+                  </Show>
                 </Show>
               </Match>
 
@@ -287,8 +298,10 @@ function StudentDetailPanel(props: { student: PersonRef | null; initialTab: Stud
               </Match>
 
               <Match when={activeTab() === "attendance"}>
-                <Show when={attendanceRes()} fallback={<PageSpinner />}>
-                  <AttendanceReportView report={attendanceRes()!} />
+                <Show when={!attendanceRes.error} fallback={<ErrorAlert message={formatApiError(attendanceRes.error)} />}>
+                  <Show when={attendanceRes()} fallback={<PageSpinner />}>
+                    {(attendance) => <AttendanceReportView report={attendance()} />}
+                  </Show>
                 </Show>
               </Match>
             </Switch>

@@ -17,7 +17,9 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DetailField } from "@/components/ui/detail-field";
 import { IconEdit, IconExternalLink, IconUsers } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { TOOLBAR_SLOT } from "@/components/ui/data-toolbar";
 import { Select } from "@/components/ui/select";
+import { cn } from "@/lib/cn";
 import { ROLES, hasMinRole } from "@/lib/roles";
 import { genderLabel } from "@/lib/gender";
 import { useAuth } from "@/stores/auth-context";
@@ -90,19 +92,19 @@ function AdminUserDetailContent() {
                     class="[&>div]:min-h-0"
                     actions={
                       <>
-                        <Link to="/profile/$userId" params={{ userId: current().id }}>
-                          <Button type="button" variant="outline" class="h-9 rounded-lg">
+                        <Link to="/profile/$userId" params={{ userId: current().id }} class="contents">
+                          <Button type="button" variant="outline" size="sm">
                             <IconExternalLink class="h-4 w-4" />
                             {t("profile.viewProfile")}
                           </Button>
                         </Link>
                         <Show when={current().role === "parent"}>
-                          <Button type="button" variant="outline" class="h-9 rounded-lg" onClick={() => setStudentsOpen(true)}>
+                          <Button type="button" variant="outline" size="sm" onClick={() => setStudentsOpen(true)}>
                             <IconUsers class="h-4 w-4" />
                             {t("parentLink.manage")}
                           </Button>
                         </Show>
-                        <Button type="button" class="h-9 rounded-lg" onClick={() => setEditing(true)}>
+                        <Button type="button" size="sm" onClick={() => setEditing(true)}>
                           <IconEdit class="h-4 w-4" />
                           {t("common.edit")}
                         </Button>
@@ -154,10 +156,10 @@ function AdminUserDetailContent() {
                 <DetailField label={t("admin.id")} value={current().id} mono wrap />
                 <div class="min-w-0 space-y-1.5">
                   <p class="text-xs font-medium text-muted-foreground">{t("admin.role")}</p>
-                  <div class="flex gap-2">
+                  {/* The role picker and its Update button are toolbar pills. */}
+                  <div class={cn("flex gap-2", TOOLBAR_SLOT)}>
                     <Select
                       aria-label={t("admin.role")}
-                      class="h-9"
                       value={pendingRole()}
                       disabled={current().id === auth.user()?.id}
                       onChange={(event) => setPendingRole(event.currentTarget.value as Role)}
@@ -165,7 +167,7 @@ function AdminUserDetailContent() {
                       {ROLES.map((role) => <option value={role}>{t(`role.${role}` as MessageKey)}</option>)}
                     </Select>
                     <Button
-                      class="h-9 shrink-0 rounded-lg"
+                      size="sm"
                       disabled={current().id === auth.user()?.id || pendingRole() === current().role}
                       onClick={() => setRoleConfirmOpen(true)}
                     >

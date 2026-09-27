@@ -1,6 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
 import { For, Show, Suspense, createEffect, createMemo, createSignal, on } from "solid-js";
-import { createResponsivePageSize } from "@/lib/create-page-size";
 import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteExamById } from "@/api/exams";
@@ -10,6 +9,7 @@ import { getExamAttempt } from "@/api/exams";
 import { getExamLive } from "@/api/exams";
 import { getExamResult } from "@/api/exams";
 import { getExamResults } from "@/api/exams";
+import { loadAllPages } from "@/lib/capped-list";
 import { getStudentMarksHistory } from "@/api/exams";
 import { getExamStatistics } from "@/api/exams";
 import { getInstanceById, getInstanceEnrollments, getMyInstances } from "@/api/instances";
@@ -51,7 +51,6 @@ import { scheduleStatusClass } from "@/lib/schedule-status";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const RESULT_PAGE_SIZE = 10;
 
 export default function ExamDetailPage() {
   return (
@@ -116,9 +115,6 @@ function ExamDetailContent() {
   const [deleteOpen, setDeleteOpen] = createSignal(false);
   const [removeUserId, setRemoveUserId] = createSignal<string | null>(null);
   const [gradeOpen, setGradeOpen] = createSignal(false);
-  const [resultPage, setResultPage] = createSignal(0);
-  const resultPageSize = createResponsivePageSize(RESULT_PAGE_SIZE);
-  createEffect(on(resultPageSize, () => setResultPage(0), { defer: true }));
   const [answerSheetUserId, setAnswerSheetUserId] = createSignal<string | null>(null);
   const [answerSheetUserLabel, setAnswerSheetUserLabel] = createSignal("");
   const openAnswerSheet = (userId: string, label: string) => {
@@ -163,11 +159,13 @@ function ExamDetailContent() {
   );
 
   const [results, { refetch: refetchResults }] = createResource(
-    () => (hasCourseManagementRights() ? [id(), resultPage(), resultPageSize()] as const : null),
-    async (source) => {
-      if (!source) return { items: [], total: 0, limit: RESULT_PAGE_SIZE, offset: 0 };
-      const [examId, page, size] = source;
-      return getExamResults(examId, { limit: size, offset: page * size });
+    // One exam's results are bounded by its enrolled students, and the table
+    // searches and sorts them in the browser: read them all so the search
+    // sees every row, not just the page on screen.
+    () => (hasCourseManagementRights() ? id() : null),
+    async (examId) => {
+      const items = await loadAllPages((paging) => getExamResults(examId, paging));
+      return { items, total: items.length, limit: items.length, offset: 0 };
     },
   );
   const [gradeResults, { refetch: refetchGradeResults }] = createResource(
@@ -267,8 +265,6 @@ function ExamDetailContent() {
     () => (hasCourseManagementRights() && gradeOpen() && !isFinished() ? id() : null),
     async (examId) => examId ? getExamLive(examId) : null,
   );
-  const resultTotal = () => results()?.total ?? 0;
-  const resultTotalPages = () => Math.max(1, Math.ceil(resultTotal() / resultPageSize()));
   const setClampedAnswerMark = (value: string) => {
     if (value === "") {
       setAnswerMark(value);
@@ -299,9 +295,6 @@ function ExamDetailContent() {
       setAnswerPending(false);
     }
   };
-  createEffect(() => {
-    if (resultPage() >= resultTotalPages()) setResultPage(resultTotalPages() - 1);
-  });
   const gradeStudents = () => {
     if (gradeResults.loading) return [];
     const graded = new Set((gradeResults()?.items ?? []).map((row) => personId(row.user)));
@@ -730,12 +723,7 @@ function ExamDetailContent() {
                       filterColumn="user"
                       empty={t("exams.noResults")}
                       emptyIllustration="exams"
-                      manualPagination={{
-                        pageIndex: Math.min(resultPage(), resultTotalPages() - 1),
-                        pageSize: resultPageSize(),
-                        total: resultTotal(),
-                        onPageChange: setResultPage,
-                      }}
+                      filterHint={t("search.hint.examResults")}
                       actions={
                         <>
                           <Show when={isFinished()}>

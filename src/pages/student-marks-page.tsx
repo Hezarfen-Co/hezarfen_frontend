@@ -7,11 +7,11 @@ import type { MarksReport } from "@/api/client";
 import { cn } from "@/lib/cn";
 import { MarksReportView } from "@/components/marks/marks-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { Alert } from "@/components/ui/alert";
 import { FAN_OUT_LIMIT, mapConcurrent } from "@/lib/map-concurrent";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEye } from "@/components/ui/icons";
+import { DropdownSelect } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { studentDirectoryColumns } from "@/components/users/student-directory-columns";
 import { TableRowActions } from "@/components/ui/table-row-actions";
@@ -34,44 +34,65 @@ export default function StudentMarksPage() {
 
 const MARKS_FETCH_CAP = 200;
 
+// While the per-student marks load, a pulse rather than the empty-cell dash:
+// "-" would claim the student has no marks. Empty values use DataTable's own
+// faded "-", the same one the band column gets from its accessor.
+const CellPending = () => <span class="inline-block h-3 w-8 animate-pulse rounded bg-muted align-middle" />;
+const CellEmpty = () => <span class="text-muted-foreground/40">-</span>;
+
 function StudentMarksContent() {
   const t = useT();
   const { locale } = usePreferences();
   const [viewStudent, setViewStudent] = createSignal<StudentDirectoryRow | null>(null);
   const [error, setError] = createSignal("");
+  // The roster read's own failure: shown in place of the table with a retry,
+  // so a failed load does not read as "no students".
+  const [listError, setListError] = createSignal("");
 
-  const [list] = createResource(async () => {
+  const [list, { refetch: refetchList }] = createResource(async () => {
     try {
-      setError("");
+      setListError("");
       return await getStudentDirectory();
     } catch (err) {
-      setError(formatApiError(err));
+      setListError(formatApiError(err));
       return [];
     }
   }, { initialValue: [] as StudentDirectoryRow[] });
 
+  // The class filter Yoklamalar and Pomodorolar offer too. The directory is
+  // read whole, so it narrows client-side.
+  const [classFilter, setClassFilter] = createSignal("");
+  const filteredList = createMemo(() => {
+    const picked = classFilter();
+    return picked ? list().filter((row) => row.classes.some((cls) => cls.id === picked)) : list();
+  });
+
   // Per-student overall marks for the inline "average" column. No bulk endpoint
   // exists, so this is one getUserMarks call per listed student — at most
-  // FAN_OUT_LIMIT in flight, and skipped past the cap with a visible notice
-  // instead of a column that silently reads "—" for everyone.
+  // FAN_OUT_LIMIT in flight. The cap applies to the rows on screen, not the
+  // school: past it the whole-school list stays blank (the header's "i" says
+  // so), and picking a class fills the column for that class. Reports already
+  // read are kept, so switching classes only fetches the new students.
+  const marksCache = new Map<string, MarksReport | null>();
   const [marksMapRes] = createResource(
     () => {
-      const ids = list().map((row) => row.person.id);
+      const ids = filteredList().map((row) => row.person.id);
       return ids.length > 0 && ids.length <= MARKS_FETCH_CAP ? ids : null;
     },
     async (ids) => {
-      const pairs = await mapConcurrent(ids, FAN_OUT_LIMIT, async (id) => {
+      const missing = ids.filter((id) => !marksCache.has(id));
+      await mapConcurrent(missing, FAN_OUT_LIMIT, async (id) => {
         try {
-          return [id, await getUserMarks(id)] as const;
+          marksCache.set(id, await getUserMarks(id));
         } catch {
-          return [id, null] as const;
+          marksCache.set(id, null);
         }
       });
-      return Object.fromEntries(pairs) as Record<string, MarksReport | null>;
+      return Object.fromEntries(ids.map((id) => [id, marksCache.get(id) ?? null])) as Record<string, MarksReport | null>;
     },
   );
   // A memo: the columns read it, and must not rebuild on every list refetch.
-  const marksCapped = createMemo(() => !list.loading && (list() ?? []).length > MARKS_FETCH_CAP);
+  const marksCapped = createMemo(() => !list.loading && filteredList().length > MARKS_FETCH_CAP);
   const marksOf = (id: string) => marksMapRes()?.[id];
   const examCountOf = (id: string) => {
     const rep = marksOf(id);
@@ -100,9 +121,16 @@ function StudentMarksContent() {
   // data-array identity, so without a new reference the averages only appear once
   // something forces a re-derive (e.g. sorting). Track marksMapRes and hand back a
   // fresh array so the column fills in as soon as the marks load.
+  const classOptions = createMemo(() => {
+    const seen = new Map<string, string>();
+    for (const row of list()) for (const cls of row.classes) seen.set(cls.id, cls.name);
+    return [...seen]
+      .sort((a, b) => a[1].localeCompare(b[1], "tr", { numeric: true }))
+      .map(([value, label]) => ({ value, label }));
+  });
   const rows = () => {
     marksMapRes();
-    return [...list()];
+    return [...filteredList()];
   };
   const listLoading = () => list.loading;
   const searchPerson = (row: StudentDirectoryRow, query: string) =>
@@ -120,7 +148,7 @@ function StudentMarksContent() {
       meta: { align: "right", headerInfo: marksCapped() ? t("marks.averageCapped", { cap: MARKS_FETCH_CAP }) : undefined },
       cell: (cell) => {
         const average = marksOf(cell.row.original.person.id)?.overall_average;
-        if (average == null) return <span class="text-sm text-muted-foreground">—</span>;
+        if (average == null) return marksMapRes.loading ? <CellPending /> : <CellEmpty />;
         return <span class={cn("font-semibold tabular-nums", avgTone(average))}>{formatDecimal(average, locale())}</span>;
       },
     },
@@ -131,7 +159,7 @@ function StudentMarksContent() {
       header: t("marks.band"),
       accessorFn: (row) => marksOf(row.person.id)?.overall_grade ?? "",
       meta: { align: "right" },
-      cell: (cell) => <span class="tabular-nums text-muted-foreground">{marksOf(cell.row.original.person.id)?.overall_grade ?? "—"}</span>,
+      cell: (cell) => <span class="tabular-nums text-muted-foreground">{marksOf(cell.row.original.person.id)?.overall_grade}</span>,
     },
     // Graded exams behind the average, counted from the same report.
     {
@@ -139,7 +167,11 @@ function StudentMarksContent() {
       header: t("marks.examCount"),
       accessorFn: (row) => examCountOf(row.person.id) ?? -1,
       meta: { align: "right" },
-      cell: (cell) => <span class="tabular-nums text-muted-foreground">{examCountOf(cell.row.original.person.id) ?? "—"}</span>,
+      cell: (cell) => {
+        const count = examCountOf(cell.row.original.person.id);
+        if (count == null) return marksMapRes.loading ? <CellPending /> : <CellEmpty />;
+        return <span class="tabular-nums text-muted-foreground">{count}</span>;
+      },
     },
     {
       id: "actions",
@@ -169,11 +201,11 @@ function StudentMarksContent() {
   return (
     <div class="space-y-6">
       <section class="space-y-4 p-0">
-        <Show when={error() && !viewStudent()}>
-          <Alert variant="destructive">{error()}</Alert>
+        <Show when={listError()}>
+          <ErrorAlert message={listError()} onRetry={() => void refetchList()} />
         </Show>
 
-        <Show when={!listLoading()} fallback={<DataTableSkeleton columns={7} rows={6} />}>
+        <Show when={!listLoading() && !listError()} fallback={<Show when={!listError()}><DataTableSkeleton columns={7} rows={6} /></Show>}>
           <DataTable
             urlState
             title={t("nav.studentMarks")}
@@ -183,7 +215,19 @@ function StudentMarksContent() {
             tableClass="min-w-xl"
             empty={t("form.noStudents")}
             searchPredicate={searchPerson}
-            filterHint={t("search.hint.people")}
+            filterPlaceholder={t("roster.searchDirectory")}
+            filterHint={t("search.hint.studentDirectory")}
+            filters={
+              <DropdownSelect
+                labelPrefix={t("roster.class")}
+                value={classFilter()}
+                onChange={setClassFilter}
+                options={[{ value: "", label: t("common.all") }, ...classOptions()]}
+              />
+            }
+            filtersActive={classFilter() !== ""}
+            pageResetKey={classFilter()}
+            onClearFilters={() => setClassFilter("")}
             enablePagination
             pageSize={PAGE_SIZE}
             storageKey="student-marks"

@@ -25,7 +25,7 @@ export function RecordNotFound(props: { backTo?: string }) {
         title={tt("errors.recordNotFound.title")}
         description={tt("errors.recordNotFound.description")}
         action={
-          <Link to={backTo()} class={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-9 rounded-lg px-4")}>
+          <Link to={backTo()} class={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-9 rounded-lg px-4 text-sm")}>
             {backTo() === "/" ? tt("errors.recordNotFound.backHome") : tt("errors.recordNotFound.backToList")}
           </Link>
         }

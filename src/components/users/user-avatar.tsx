@@ -40,10 +40,13 @@ export function UserAvatar(props: {
 
   const showImage = () => props.hasAvatar !== false && !broken();
 
+  // grid + place-items, not flex + items/justify-center: DataTable's phone
+  // cards rewrite descendant .items-center/.justify-center to start, which
+  // pushed the initials into the circle's top-left corner.
   return (
     <span
       class={cn(
-        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 font-bold text-primary-text shadow-xs ring-1 ring-border/70 dark:bg-emerald-100 dark:text-emerald-950 dark:ring-white/20",
+        "relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-primary/15 font-bold text-primary-text shadow-xs ring-1 ring-border/70 dark:bg-emerald-100 dark:text-emerald-950 dark:ring-white/20",
         SIZES[props.size ?? "sm"],
         props.class,
       )}

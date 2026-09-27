@@ -31,7 +31,7 @@ export function QuickLinkColumn(props: QuickLinkColumnProps) {
             <button
               type="button"
               onClick={() => props.onOpen(row)}
-              class="flex w-full items-center gap-2.5 border-t border-border-hairline py-2.5 text-left first:border-t-0"
+              class="-mx-2 flex w-[calc(100%+1rem)] items-center gap-2.5 border-t border-border-hairline px-2 py-2.5 text-left outline-hidden transition-colors first:border-t-0 hover:bg-surface-tint focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
             >
               <row.Icon class="h-[15px] w-[15px] shrink-0 text-text-subtle" />
               <span class="min-w-0 flex-1 truncate text-sm text-text-default">{row.primary}</span>

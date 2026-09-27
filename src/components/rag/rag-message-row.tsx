@@ -45,13 +45,18 @@ export function RagMessageRow(props: {
   const copyable = () => assistant() && props.message.status === "complete" && !!props.message.content;
 
   const copy = async () => {
-    await navigator.clipboard.writeText(props.message.content);
+    try {
+      await navigator.clipboard.writeText(props.message.content);
+    } catch {
+      // No clipboard permission (or an insecure origin): nothing to confirm.
+      return;
+    }
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1_500);
   };
 
   const iconButton =
-    "inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring";
+    "inline-flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground sm:h-7 sm:w-7 touch:h-10 touch:w-10 outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring";
 
   return (
     // Vibe's turns: the question is a pill on the right; the answer runs the

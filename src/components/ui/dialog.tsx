@@ -3,18 +3,37 @@ import type { ComponentProps, ParentProps, ValidComponent } from "solid-js";
 import { Show, splitProps } from "solid-js";
 import { IconX } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
+import { useT } from "@/stores/preferences-context";
 
 export const Dialog = DialogPrimitive;
 export const DialogTrigger = DialogPrimitive.Trigger;
 export const DialogClose = DialogPrimitive.CloseButton;
 
+type DialogContentExtras = {
+  dismissable?: boolean;
+  closeButton?: boolean;
+  /** "top" pins the dialog high on the screen, so a panel whose height
+   * follows its content (the command palette's results) grows downward
+   * instead of jumping up and down around the centre while you type. */
+  position?: "center" | "top";
+};
+
 export function DialogContent<T extends ValidComponent = "div">(
-  props: ComponentProps<typeof DialogPrimitive.Content<T>> & { dismissable?: boolean; closeButton?: boolean },
+  props: ComponentProps<typeof DialogPrimitive.Content<T>> & DialogContentExtras,
 ) {
   const [local, rest] = splitProps(
-    props as ComponentProps<typeof DialogPrimitive.Content> & { dismissable?: boolean; closeButton?: boolean },
-    ["class", "children", "dismissable", "closeButton"],
+    props as ComponentProps<typeof DialogPrimitive.Content> & DialogContentExtras,
+    ["class", "children", "dismissable", "closeButton", "position"],
   );
+  // The close button speaks the app language; a bare render (unit tests,
+  // no PreferencesProvider) falls back to English instead of throwing.
+  let t: ReturnType<typeof useT> | undefined;
+  try {
+    t = useT();
+  } catch {
+    t = undefined;
+  }
+  const closeLabel = () => t?.("common.close") ?? "Close";
   return (
     <DialogPrimitive.Portal>
       {/* z-[70]: above the mobile nav sheet (z-60) and tab bar (z-40). */}
@@ -22,13 +41,18 @@ export function DialogContent<T extends ValidComponent = "div">(
       {/* flex center — animate-fade-up must not own transform positioning */}
       {/* The centring box is inset by the system bars, so a tall dialog is
           never clipped by the status bar or the gesture bar. */}
-      <div class="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center p-3 pb-[calc(0.75rem+max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] pt-[calc(0.75rem+env(safe-area-inset-top))] sm:p-4">
+      <div
+        class={cn(
+          "pointer-events-none fixed inset-0 z-[70] flex justify-center p-3 pb-[calc(0.75rem+max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] pt-[calc(0.75rem+env(safe-area-inset-top))] sm:p-4",
+          local.position === "top" ? "items-start sm:pt-[12vh]" : "items-center",
+        )}
+      >
         <DialogPrimitive.Content
           // Explicit: with any AlertDialog in the tree, Kobalte hands plain
           // dialogs its "alertdialog" role too.
           role="dialog"
           class={cn(
-            "pointer-events-auto relative flex max-h-[min(100%,48rem)] w-full max-w-[480px] flex-col overflow-hidden border border-border-line bg-surface-base text-foreground shadow-[0_16px_40px_rgba(0,0,0,0.16)] outline-hidden animate-fade-up sm:rounded-2xl",
+            "pointer-events-auto relative flex max-h-[min(100%,48rem)] w-full max-w-[480px] flex-col overflow-hidden border border-border-line bg-surface-base text-foreground shadow-[0_16px_40px_rgba(0,0,0,0.16)] outline-hidden animate-fade-up rounded-xl sm:rounded-2xl",
             local.class,
           )}
           // Standard dialogs dismiss outside/ESC; pass false only when losing
@@ -43,8 +67,9 @@ export function DialogContent<T extends ValidComponent = "div">(
           <Show when={local.closeButton !== false}>
           <DialogPrimitive.CloseButton
             type="button"
-            class="absolute right-4 top-4 z-10 inline-flex h-8 w-8 items-center justify-center rounded-sm text-muted-foreground transition-all hover:bg-accent hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            aria-label="Close"
+            class="absolute right-4 top-4 z-10 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-accent hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            aria-label={closeLabel()}
+            title={closeLabel()}
           >
             <IconX class="h-4 w-4" />
           </DialogPrimitive.CloseButton>

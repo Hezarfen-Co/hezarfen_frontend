@@ -473,7 +473,8 @@ export function CommandPalette(props: CommandPaletteProps) {
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <DialogContent
-        class="max-h-[min(85vh,38rem)] max-w-2xl overflow-hidden rounded-lg p-0 shadow-2xl border border-black/8 dark:border-white/12 bg-popover"
+        position="top"
+        class="max-h-[min(85vh,38rem)] max-w-2xl overflow-hidden rounded-xl p-0 shadow-2xl border border-black/8 dark:border-white/12 bg-popover"
         // The palette draws its own labelled close control: the dialog's
         // icon-only × sat beside the clear-search × and read as the same button.
         closeButton={false}
@@ -512,7 +513,7 @@ export function CommandPalette(props: CommandPaletteProps) {
           <Show when={query()}>
             <button
               type="button"
-              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted sm:h-6 sm:w-6 hover:text-foreground transition-colors"
               onClick={() => {
                 setQuery("");
                 inputRef?.focus();
@@ -528,7 +529,7 @@ export function CommandPalette(props: CommandPaletteProps) {
           </Show>
           <button
             type="button"
-            class="ml-1 inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-border/80 bg-background px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            class="ml-1 inline-flex h-10 shrink-0 items-center gap-1.5 rounded-md sm:h-7 border border-border/80 bg-background px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             onClick={() => props.onOpenChange(false)}
             aria-label={t("common.close")}
             title={t("common.close")}
@@ -614,7 +615,7 @@ export function CommandPalette(props: CommandPaletteProps) {
                             <div class="flex items-center gap-2">
                               <span class="truncate text-sm font-medium">{item.title}</span>
                               <Show when={item.roleBadge}>
-                                <span class="rounded-full bg-secondary border border-border px-2 py-0.2 text-[11px] font-semibold text-muted-foreground">
+                                <span class="rounded-full bg-secondary border border-border px-2 py-px text-[11px] font-semibold text-muted-foreground">
                                   {item.roleBadge}
                                 </span>
                               </Show>
@@ -643,7 +644,7 @@ export function CommandPalette(props: CommandPaletteProps) {
             phones where there are no arrow, enter or escape keys to press. */}
         <div class="hidden items-center justify-between border-t border-border/60 bg-muted/30 px-4 py-2 text-xs text-muted-foreground sm:flex">
           <span class="truncate">{t("command.shortcutHint")}</span>
-          <div class="flex items-center gap-2 font-mono shrink-0">
+          <div class="flex shrink-0 items-center gap-2 [&_kbd]:font-mono">
             <kbd class="rounded border border-border bg-background px-1.5 py-0.5 text-[11px] font-semibold">↑↓</kbd>
             <span>{t("command.key.navigate")}</span>
             <kbd class="rounded border border-border bg-background px-1.5 py-0.5 text-[11px] font-semibold">↵</kbd>

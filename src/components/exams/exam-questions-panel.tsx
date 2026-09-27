@@ -17,6 +17,7 @@ import { postExamQuestion } from "@/api/exams";
 import { ApiError, formatApiError } from "@/api/client";
 import type { ExamQuestion } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
+import { EmptyInline } from "@/components/ui/empty-inline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -127,7 +128,12 @@ export function ExamQuestionsPanel(props: {
   // has not been saved to it, so it must not offer "save another copy".
   const isSavedToBank = (question: ExamQuestion) => Boolean(question.banked_as) || bankedIds().includes(question.id);
   const isFromBank = (question: ExamQuestion) => Boolean(question.from_bank);
-  const subjectName = (subjectId: string) => catalogSubjects()?.find((subject) => subject.id === subjectId)?.name ?? subjectId;
+  // Either list may name the subject; an unnamed one drops its badge rather
+  // than print a raw id.
+  const subjectName = (subjectId: string) =>
+    sectionSubjects()?.find((subject) => subject.id === subjectId)?.name ??
+    catalogSubjects()?.find((subject) => subject.id === subjectId)?.name ??
+    null;
   const totalPages = createMemo(() => Math.max(1, Math.ceil(questionList().length / QUESTION_PAGE_SIZE)));
   const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
   const pageItems = createMemo(() => {
@@ -351,30 +357,20 @@ export function ExamQuestionsPanel(props: {
         />
       </SidePanel>
 
-      {error() && <p class="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>}
+      <Show when={error()}>
+        <Alert variant="destructive">{error()}</Alert>
+      </Show>
 
       <Suspense fallback={<PageSpinner />}>
         <Show
           when={questionList().length > 0}
           fallback={
-            <div class="rounded-xl border border-dashed border-border-line bg-surface-overlay p-6 text-center">
-              <p class="text-sm text-muted-foreground">{t("questions.empty")}</p>
-              <Show when={!props.readOnly}>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  class="mt-3 gap-1.5"
-                  onClick={() => {
-                    setEditing(null);
-                    setFormOpen(true);
-                  }}
-                >
-                  <IconPlus class="h-4 w-4" />
-                  {t("questions.add")}
-                </Button>
-              </Show>
-            </div>
+            // The add actions already sit in the header above; the empty
+            // state only says so, it does not repeat them.
+            <EmptyInline
+              class="rounded-xl border border-dashed border-border-line bg-surface-overlay"
+              title={t("questions.empty")}
+            />
           }
         >
           <div class="space-y-3">
@@ -388,17 +384,19 @@ export function ExamQuestionsPanel(props: {
                           <span class="font-mono text-xs font-semibold text-muted-foreground">
                             #{safePage() * QUESTION_PAGE_SIZE + index() + 1}
                           </span>
-                          <Badge variant="outline" class="capitalize">
+                          <Badge variant="outline">
                             {q.kind === "choice" ? t("questions.kind.choice") : t("questions.kind.text")}
                           </Badge>
-                          <Badge variant="secondary">{subjectName(q.subject)}</Badge>
+                          <Show when={subjectName(q.subject)}>
+                            {(name) => <Badge variant="secondary">{name()}</Badge>}
+                          </Show>
                           <Badge variant="outline" class="font-mono">
                             {q.points} {t("questions.points")}
                           </Badge>
                           {/* One badge per direction: a question can be both (added
                               from the bank, then saved back), so they stack. */}
                           <Show when={isFromBank(q)}>
-                            <Badge variant="outline" class="gap-1 border-brand/40 text-brand">
+                            <Badge variant="outline" class="gap-1 border-primary/40 text-primary-text">
                               <IconArchive class="h-3 w-3" />
                               {t("bank.fromBankBadge")}
                             </Badge>
@@ -422,7 +420,7 @@ export function ExamQuestionsPanel(props: {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            class="h-7 w-fit text-xs text-destructive-text"
+                            class="h-7 w-fit text-xs text-destructive-text touch:h-10"
                             disabled={imagePending() === `${q.id}:question`}
                             onClick={() => void removeQuestionImage(q)}
                           >
@@ -458,7 +456,7 @@ export function ExamQuestionsPanel(props: {
                                         type="button"
                                         variant="ghost"
                                         size="sm"
-                                        class="h-7 px-2 text-xs text-destructive-text"
+                                        class="h-7 px-2 text-xs text-destructive-text touch:h-10"
                                         disabled={imagePending() === `${q.id}:choice:${choice.id}`}
                                         onClick={() => void removeChoiceImage(q, choice.id)}
                                       >
@@ -481,7 +479,7 @@ export function ExamQuestionsPanel(props: {
                               type="button"
                               variant="outline"
                               size="sm"
-                              class="h-8 gap-1.5 px-2.5 text-xs"
+                              class="h-8 gap-1.5 px-2.5 text-xs touch:h-10"
                               disabled={banking() === q.id}
                               onClick={() => (isSavedToBank(q) ? setConfirmBank(q) : void saveToBank(q))}
                             >
@@ -498,7 +496,7 @@ export function ExamQuestionsPanel(props: {
                               type="button"
                               variant="outline"
                               size="sm"
-                              class="h-8 gap-1.5 px-2.5 text-xs"
+                              class="h-8 gap-1.5 px-2.5 text-xs touch:h-10"
                               disabled={banking() === q.id}
                               onClick={() => setConfirmRefresh(q)}
                             >
@@ -511,7 +509,7 @@ export function ExamQuestionsPanel(props: {
                               type="button"
                               variant="outline"
                               size="sm"
-                              class="h-8 px-2.5 text-xs"
+                              class="h-8 px-2.5 text-xs touch:h-10"
                               onClick={() => setEditing(q)}
                             >
                               {t("common.edit")}
@@ -520,7 +518,7 @@ export function ExamQuestionsPanel(props: {
                               type="button"
                               variant="ghost"
                               size="sm"
-                              class="h-8 w-8 p-0 text-destructive-text"
+                              class="h-8 w-8 p-0 text-destructive-text touch:h-10 touch:w-10"
                               onClick={() => setRemoveQuestion(q)}
                               aria-label={t("common.delete")}
                             >
@@ -541,7 +539,7 @@ export function ExamQuestionsPanel(props: {
                   type="button"
                   variant="outline"
                   size="sm"
-                class="h-8 gap-1 rounded-lg text-xs"
+                  class="h-8 gap-1 rounded-lg text-xs touch:h-10"
                   disabled={safePage() <= 0}
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
                 >
@@ -555,7 +553,7 @@ export function ExamQuestionsPanel(props: {
                   type="button"
                   variant="outline"
                   size="sm"
-                class="h-8 gap-1 rounded-lg text-xs"
+                  class="h-8 gap-1 rounded-lg text-xs touch:h-10"
                   disabled={safePage() >= totalPages() - 1}
                   onClick={() => setPage((p) => Math.min(totalPages() - 1, p + 1))}
                 >

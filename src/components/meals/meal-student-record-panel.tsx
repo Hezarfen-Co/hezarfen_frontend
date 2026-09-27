@@ -1,4 +1,4 @@
-import { Show, createEffect, createSignal } from "solid-js";
+import { Show, createEffect, createSignal, on } from "solid-js";
 import type { DietaryProfile, Limits } from "@/api/client";
 import { MealTagCheckboxes } from "@/components/meals/meal-tag-checkboxes";
 import { Alert } from "@/components/ui/alert";
@@ -40,6 +40,9 @@ export function MealStudentRecordPanel(props: {
   const [amount, setAmount] = createSignal("");
   const [method, setMethod] = createSignal("");
   const [creditNote, setCreditNote] = createSignal("");
+  // A different student starts from a blank form, so a student with no
+  // profile never shows the previous student's tags and note.
+  createEffect(on(() => props.studentId, () => { setTags([]); setNote(""); }, { defer: true }));
   createEffect(() => {
     const profile = props.profile;
     if (profile) { setTags([...profile.tags]); setNote(profile.note ?? ""); }

@@ -80,7 +80,7 @@ test("student course list filters on the server via kind, q and taught", async (
   expect(first.offset).toBe(0);
 
   // The kind tab refetches with `kind` and resets the offset.
-  fireEvent.click(screen.getByRole("tab", { name: "Study" }));
+  fireEvent.click(screen.getByRole("tab", { name: "Study sessions" }));
   await waitFor(() => expect(getCourses.mock.calls.at(-1)[0].kind).toBe("study"));
   expect(getCourses.mock.calls.at(-1)[0]).not.toHaveProperty("q");
   expect(getCourses.mock.calls.at(-1)[0].offset).toBe(0);
@@ -91,7 +91,7 @@ test("student course list filters on the server via kind, q and taught", async (
   // The kind tab keeps the search text and the sections choice, and restarts paging.
   expect(tabNavigation.search({ q: "alg", taught: "taught", page: 3, action: "new" })).toEqual({ q: "alg", taught: "taught", sort: undefined, action: undefined, kind: "study", page: undefined });
 
-  fireEvent.click(screen.getByRole("tab", { name: "Club" }));
+  fireEvent.click(screen.getByRole("tab", { name: "Clubs" }));
   await waitFor(() => expect(getCourses.mock.calls.at(-1)[0].kind).toBe("club"));
   expect(await screen.findByRole("button", { name: /^Robotics/ })).toBeTruthy();
 

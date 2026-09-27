@@ -1,3 +1,4 @@
+import { TOOLBAR_SLOT } from "@/components/ui/data-toolbar";
 import type { JSX, ParentProps } from "solid-js";
 import { Show } from "solid-js";
 import { cn } from "@/lib/cn";
@@ -55,7 +56,9 @@ export function PageHeader(
           {props.children}
         </div>
         <Show when={props.actions}>
-          <div class="flex min-w-0 flex-wrap items-center gap-2">{props.actions}</div>
+          {/* Header actions follow the toolbar pill standard, so a page's
+              plain size="sm" buttons sit at the same height as its lists. */}
+          <div class={cn("flex min-w-0 flex-wrap items-center gap-2", TOOLBAR_SLOT)}>{props.actions}</div>
         </Show>
       </div>
     </div>

@@ -97,7 +97,7 @@ function RegisterForm() {
             <Label for="register-school">{t("auth.school")}</Label>
             <Select
               id="register-school"
-              class="h-9"
+              class="h-10 sm:h-9 touch:h-10"
               required
               disabled={schools.loading || noSchoolOpen() || Boolean(schools.error)}
               value={school()}
@@ -118,7 +118,7 @@ function RegisterForm() {
             <Label for="register-username">{t("auth.username")}</Label>
             <Input
               id="register-username"
-              class="h-9"
+              class="h-10 sm:h-9 touch:h-10"
               autocomplete="username"
               minlength={limits()?.user.min_username_len}
               maxlength={limits()?.user.max_username_len}
@@ -133,7 +133,7 @@ function RegisterForm() {
             <div class="relative">
               <Input
                 id="register-password"
-                class="h-9 pr-10"
+                class="h-10 pr-10 sm:h-9 touch:h-10"
                 type={showPassword() ? "text" : "password"}
                 autocomplete="new-password"
                 minlength={minPasswordLength()}
@@ -148,7 +148,7 @@ function RegisterForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword())}
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                class="absolute right-0.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors outline-hidden hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label={showPassword() ? t("auth.hidePassword") : t("auth.showPassword")}
               >
                 <Show when={showPassword()} fallback={<IconEye class="h-4 w-4" />}>
@@ -169,7 +169,7 @@ function RegisterForm() {
             <div class="relative">
               <Input
                 id="register-confirm"
-                class="h-9 pr-10"
+                class="h-10 pr-10 sm:h-9 touch:h-10"
                 type={showConfirm() ? "text" : "password"}
                 autocomplete="new-password"
                 minlength={minPasswordLength()}
@@ -184,7 +184,7 @@ function RegisterForm() {
               <button
                 type="button"
                 onClick={() => setShowConfirm(!showConfirm())}
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                class="absolute right-0.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors outline-hidden hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label={showConfirm() ? t("auth.hideConfirmPassword") : t("auth.showConfirmPassword")}
               >
                 <Show when={showConfirm()} fallback={<IconEye class="h-4 w-4" />}>
@@ -200,10 +200,10 @@ function RegisterForm() {
           </div>
 
           {error() && (
-            <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>
+            <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>
           )}
 
-          <Button type="submit" class="h-9 w-full text-sm" disabled={pending() || schools.loading || noSchoolOpen() || Boolean(schools.error) || !school()}>
+          <Button type="submit" class="h-10 w-full text-sm sm:h-9 touch:h-10" disabled={pending() || schools.loading || noSchoolOpen() || Boolean(schools.error) || !school()}>
             {pending() ? t("common.loading") : t("auth.register")}
           </Button>
         </form>

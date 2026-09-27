@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TOOLBAR_CONTROL } from "@/components/ui/data-toolbar";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconAlert, IconPlus, IconTrash } from "@/components/ui/icons";
@@ -222,7 +223,7 @@ function SettingsContent() {
             <Button
               type="button"
               size="sm"
-              class="min-w-[7.5rem] rounded-lg"
+              class="min-w-[7.5rem]"
               disabled={pending() || !dirty()}
               onClick={() => void save()}
             >
@@ -752,7 +753,7 @@ function SettingsContent() {
               <p class="mt-1 max-w-64 text-xs text-destructive-text" role="alert">{error()}</p>
             </Show>
           </div>
-          <Button type="button" size="sm" class="shrink-0 rounded-lg" disabled={pending()} onClick={() => void save()}>
+          <Button type="button" size="sm" class={cn(TOOLBAR_CONTROL, "shrink-0 px-3.5")} disabled={pending()} onClick={() => void save()}>
             {t("common.save")}
           </Button>
         </div>

@@ -1,4 +1,5 @@
 import { For, Show, Suspense, createMemo } from "solid-js";
+import { Link } from "@tanstack/solid-router";
 import { createBoardResources } from "@/lib/board-resources";
 import { FAN_OUT_LIMIT, mapConcurrent } from "@/lib/map-concurrent";
 import { createInstanceLabels } from "@/lib/instance-labels";
@@ -72,14 +73,16 @@ const KIND_STYLES: Record<CalendarKind, KindStyle> = {
     heading: "text-sky-500",
     titleHover: "group-hover:text-sky-500",
   },
+  // Lime, not amber: amber sat next to homework's orange and the two read
+  // as one colour in the legend and the chips.
   study: {
     labelKey: "calendar.studies",
-    chip: "bg-amber-100 text-amber-700 dark:border dark:border-amber-800/50 dark:bg-amber-950/60 dark:text-amber-300",
-    dot: "bg-amber-500",
-    card: "border-amber-500/40 dark:border-amber-500/30",
-    hover: "hover:border-amber-500/70 dark:hover:border-amber-500/70",
-    heading: "text-amber-500",
-    titleHover: "group-hover:text-amber-500",
+    chip: "bg-lime-100 text-lime-700 dark:border dark:border-lime-800/50 dark:bg-lime-950/60 dark:text-lime-300",
+    dot: "bg-lime-500",
+    card: "border-lime-500/40 dark:border-lime-500/30",
+    hover: "hover:border-lime-500/70 dark:hover:border-lime-500/70",
+    heading: "text-lime-500",
+    titleHover: "group-hover:text-lime-500",
   },
   exam: {
     labelKey: "calendar.exams",
@@ -228,17 +231,39 @@ function CalendarContent() {
   // two-sided window cannot widen incrementally, so the source key is the
   // month and paging months refetches. Homework filters on its due date,
   // appointments on their start.
-  const monthWindow = () => ({
-    start: new Date(viewYear(), viewMonth(), 1).getTime(),
-    end: new Date(viewYear(), viewMonth() + 1, 1).getTime(),
+  // A week that crosses into the next (or previous) month is widened to its
+  // own days — bound to the month alone, a week view of 28 Sep – 4 Oct showed
+  // no homework or appointments from 1 Oct on. The key is a string so the
+  // source only changes when the window really moves.
+  const monthWindow = createMemo(() => {
+    let start = new Date(viewYear(), viewMonth(), 1).getTime();
+    let end = new Date(viewYear(), viewMonth() + 1, 1).getTime();
+    if (view() !== "month") {
+      const [y, m, d] = selected().split("-").map(Number);
+      const day = new Date(y, m, d);
+      const weekStart = new Date(y, m, d - ((day.getDay() + 6) % 7));
+      start = Math.min(start, weekStart.getTime());
+      end = Math.max(end, new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 7).getTime());
+    }
+    return `${start}|${end}`;
   });
+  const windowBounds = (key: string) => {
+    const [start, end] = key.split("|").map(Number);
+    return { start, end };
+  };
   const [appointments] = board.createResource(
     monthWindow,
-    async (bounds) => fetchWindow((page) => getAppointments({ ...page, starts_after: bounds.start, starts_before: bounds.end })),
+    async (key) => {
+      const bounds = windowBounds(key);
+      return fetchWindow((page) => getAppointments({ ...page, starts_after: bounds.start, starts_before: bounds.end }));
+    },
   );
   const [homework] = board.createResource(
     monthWindow,
-    async (bounds) => fetchWindow((page) => getHomework({ ...page, due_after: bounds.start, due_before: bounds.end })),
+    async (key) => {
+      const bounds = windowBounds(key);
+      return fetchWindow((page) => getHomework({ ...page, due_after: bounds.start, due_before: bounds.end }));
+    },
   );
 
   // Lessons and study/club meetings both come from course sessions; the course's
@@ -337,6 +362,9 @@ function CalendarContent() {
     const klass = sectionOf(item)?.className;
     return klass ? `${klass} · ${item.title}` : item.title;
   };
+  // A chip truncates its title, so its tooltip carries the whole title and
+  // the "<ders> — <şube>" line (the tooltip used to hold the section alone).
+  const chipTooltip = (item: CalendarItem) => [item.title, sectionOf(item)?.label].filter(Boolean).join(" — ");
 
   const itemsByDay = createMemo(() => {
     const map = new Map<string, CalendarItem[]>();
@@ -366,8 +394,14 @@ function CalendarContent() {
     const cells: { day: number; other: boolean }[] = [];
     for (let i = 0; i < firstDay(); i++) cells.push({ day: 0, other: true });
     for (let d = 1; d <= daysInMonth(); d++) cells.push({ day: d, other: false });
+    // Close the last week with blank cells, like the leading ones, so the
+    // grid ends on a full row instead of a ragged edge with no cell lines.
+    while (cells.length % 7 !== 0) cells.push({ day: 0, other: true });
     return cells;
   });
+
+  /** The grid's last week sits on the card's own bottom border. */
+  const lastRow = (index: number) => index >= grid().length - 7;
 
   const selectedDay = () => {
     const [y, m, d] = selected().split("-").map(Number);
@@ -437,11 +471,11 @@ function CalendarContent() {
           <div class="min-w-0">
             <h1 class="truncate text-lg font-semibold tracking-tight text-foreground sm:text-xl">{t("calendar.title")}</h1>
             <div class="mt-1.5 flex items-center gap-1 sm:gap-2">
-              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-full p-0" onClick={goPrev} aria-label={t("common.prev")}>
+              <Button type="button" variant="ghost" size="sm" class="h-10 w-10 rounded-full p-0 sm:h-8 sm:w-8 touch:h-10 touch:w-10" onClick={goPrev} aria-label={t("common.prev")}>
                 <IconChevronLeft class="h-4 w-4" />
               </Button>
               <span class="truncate text-sm font-semibold tracking-tight sm:text-base">{rangeLabel()}</span>
-              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-full p-0" onClick={goNext} aria-label={t("common.next")}>
+              <Button type="button" variant="ghost" size="sm" class="h-10 w-10 rounded-full p-0 sm:h-8 sm:w-8 touch:h-10 touch:w-10" onClick={goNext} aria-label={t("common.next")}>
                 <IconChevronRight class="h-4 w-4" />
               </Button>
             </div>
@@ -457,7 +491,7 @@ function CalendarContent() {
                     aria-pressed={view() === entry.id}
                     onClick={() => setView(entry.id)}
                     class={cn(
-                      "h-full rounded-full px-3 text-[13px] font-semibold transition-colors",
+                      "h-full rounded-full px-3 text-[13px] font-semibold outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                       view() === entry.id ? "bg-background text-foreground shadow-xs" : "text-muted-foreground",
                     )}
                   >
@@ -466,7 +500,7 @@ function CalendarContent() {
                 )}
               </For>
             </div>
-            <Button type="button" variant="outline" size="sm" class="h-10 shrink-0 gap-1 rounded-full px-3.5 text-[13px] font-semibold sm:h-8 touch:h-10" onClick={goToday}>
+            <Button type="button" variant="outline" size="sm" class="h-10 shrink-0 gap-1 rounded-full px-3.5 text-[13px] font-semibold sm:h-8 touch:h-10" onClick={goToday} aria-label={t("calendar.today")}>
               <IconCalendarDays class="h-3.5 w-3.5" />
               <span class="hidden sm:inline">{t("calendar.today")}</span>
             </Button>
@@ -483,6 +517,11 @@ function CalendarContent() {
               </span>
             )}
           </For>
+          {/* In the legend row, not a line of its own: a line that comes and
+              goes pushed the whole grid down and back on every month page. */}
+          <Show when={loadingFeeds()}>
+            <span role="status" class="ml-auto text-[11px] text-muted-foreground">{t("common.loading")}</span>
+          </Show>
         </div>
 
         <Show when={failedFeeds().length > 0}>
@@ -492,9 +531,6 @@ function CalendarContent() {
               {t("common.tryAgain")}
             </Button>
           </div>
-        </Show>
-        <Show when={loadingFeeds()}>
-          <p role="status" class="text-xs text-muted-foreground">{t("common.loading")}</p>
         </Show>
         <Suspense fallback={<PageSpinner />}>
           <div class={cn("grid min-h-0 flex-1 gap-4", view() === "month" && "xl:grid-cols-[minmax(0,1fr)_20rem]")}>
@@ -518,7 +554,7 @@ function CalendarContent() {
                           key === selected() ? "bg-sky-50 ring-1 ring-inset ring-sky-400/50 dark:bg-sky-950/40 dark:ring-sky-500/40" : "",
                         )}
                       >
-                        <button type="button" class="flex shrink-0 flex-col items-center gap-1 rounded-md py-1 hover:bg-muted/40" onClick={() => setSelected(key)}>
+                        <button type="button" class="flex shrink-0 flex-col items-center gap-1 rounded-md py-1 outline-hidden hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring" aria-pressed={key === selected()} onClick={() => setSelected(key)}>
                           <span class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                             {dayNames()[(day.getDay() + 6) % 7]}
                           </span>
@@ -534,13 +570,13 @@ function CalendarContent() {
                         <div class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
                           <For each={dayItems()}>
                             {(item) => (
-                              <a
-                                href={item.href}
-                                class={cn("block min-w-0 rounded px-1.5 py-1 text-[11px] leading-tight font-medium", KIND_STYLES[item.kind].chip)}
+                              <Link
+                                to={item.href}
+                                class={cn("block min-w-0 rounded px-1.5 py-1 text-[11px] leading-tight font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring", KIND_STYLES[item.kind].chip)}
                               >
                                 <span class="block truncate">{clock(item.at)}</span>
-                                <span class="block truncate" title={sectionOf(item)?.label}>{chipTitle(item)}</span>
-                              </a>
+                                <span class="block truncate" title={chipTooltip(item)}>{chipTitle(item)}</span>
+                              </Link>
                             )}
                           </For>
                         </div>
@@ -565,7 +601,7 @@ function CalendarContent() {
               </div>
               <div class="grid min-h-0 flex-1 auto-rows-fr grid-cols-7">
                 <For each={grid()}>
-                  {(cell) => {
+                  {(cell, index) => {
                     const key = cell.other ? "" : dateKey(new Date(viewYear(), viewMonth(), cell.day));
                     const dayItems = () => (cell.other ? [] : itemsByDay().get(key) ?? []);
                     const cellToday = !cell.other && isToday(cell.day);
@@ -574,7 +610,8 @@ function CalendarContent() {
                       <button
                         type="button"
                         class={cn(
-                          "relative flex min-h-12 min-w-0 flex-col overflow-hidden border-b border-r border-border/40 p-1 text-left transition-colors last:border-r-0 hover:bg-muted/40 sm:min-h-17 sm:p-1.5 lg:min-h-0",
+                          "relative flex min-h-12 min-w-0 flex-col overflow-hidden border-b border-r border-border/40 p-1 text-left outline-hidden transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:min-h-17 sm:p-1.5 lg:min-h-0 [&:nth-child(7n)]:border-r-0",
+                          lastRow(index()) && "border-b-0",
                           cell.other && "pointer-events-none bg-muted/20",
                           cellSelected() ? "bg-sky-50/60 ring-1 ring-inset ring-sky-400/50 dark:bg-sky-950/40 dark:ring-sky-500/40" : "",
                           cellToday ? "font-bold text-sky-600 dark:text-sky-400" : ""
@@ -604,7 +641,7 @@ function CalendarContent() {
                               {(item) => (
                                 <span class={cn("inline-flex min-w-0 items-center gap-1 rounded px-1 py-0.5 text-[11px] font-medium leading-none", KIND_STYLES[item.kind].chip)}>
                                   <span class={cn("h-1.5 w-1.5 shrink-0 rounded-full", KIND_STYLES[item.kind].dot)} />
-                                  <span class="truncate" title={sectionOf(item)?.label}>{chipTitle(item)}</span>
+                                  <span class="truncate" title={chipTooltip(item)}>{chipTitle(item)}</span>
                                 </span>
                               )}
                             </For>
@@ -625,11 +662,14 @@ function CalendarContent() {
 
             <div class="min-h-0 space-y-3 overflow-y-auto">
               <div class="rounded-xl border border-border/80 bg-card p-3 shadow-xs">
-                <h3 class="text-sm font-semibold">
-                  {selectedDay().toLocaleDateString(locale() === "tr" ? "tr-TR" : "en-US", { day: "numeric", month: "long", year: "numeric" })}
-                </h3>
+                {/* The day view already names this date in its header. */}
+                <Show when={view() !== "day"}>
+                  <h3 class="mb-2 text-sm font-semibold">
+                    {selectedDay().toLocaleDateString(locale() === "tr" ? "tr-TR" : "en-US", { day: "numeric", month: "long", year: "numeric" })}
+                  </h3>
+                </Show>
 
-                <div class="mt-2 space-y-2.5">
+                <div class="space-y-2.5">
                   <Show when={selectedGroups().length === 0}>
                     <p class="text-xs text-muted-foreground">{t("calendar.noEvents")}</p>
                   </Show>
@@ -642,16 +682,16 @@ function CalendarContent() {
                         </p>
                         <For each={group.rows}>
                           {(item) => (
-                            <a
-                              href={item.href}
+                            <Link
+                              to={item.href}
                               class={cn(
-                                "group flex items-start justify-between gap-2 rounded-lg border bg-card p-2.5 shadow-xs transition-all hover:shadow-md",
+                                "group flex items-start justify-between gap-2 rounded-lg border bg-card p-2.5 shadow-xs outline-hidden transition-all hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring",
                                 KIND_STYLES[item.kind].card,
                                 KIND_STYLES[item.kind].hover,
                               )}
                             >
                               <div class="min-w-0">
-                                <p class={cn("truncate text-xs font-semibold", KIND_STYLES[item.kind].titleHover)}>{item.title}</p>
+                                <p class={cn("truncate text-xs font-semibold", KIND_STYLES[item.kind].titleHover)} title={item.title}>{item.title}</p>
                                 <Show when={sectionOf(item)}>
                                   {(section) => <p class="mt-0.5 truncate text-[11px] text-text-default">{section().label}</p>}
                                 </Show>
@@ -668,7 +708,7 @@ function CalendarContent() {
                                   </Badge>
                                 )}
                               </Show>
-                            </a>
+                            </Link>
                           )}
                         </For>
                       </div>

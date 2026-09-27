@@ -430,9 +430,19 @@ function searchMatches(item: NavItem, search: Record<string, unknown> | undefine
   return Object.entries(item.search).every(([key, value]) => search?.[key] === value);
 }
 
+// Pages with no nav entry of their own that live under one: a şube×ders
+// instance is reached from Dersler, so the sidebar keeps Dersler lit there.
+const NAV_PARENT_PREFIXES: { prefix: string; parent: string }[] = [{ prefix: "/instances", parent: "/courses" }];
+
+function navPath(pathname: string) {
+  const alias = NAV_PARENT_PREFIXES.find((entry) => pathname === entry.prefix || pathname.startsWith(`${entry.prefix}/`));
+  return alias ? alias.parent : pathname;
+}
+
 export function routeNavItem(pathname: string, role: Role | undefined, search?: Record<string, unknown>): NavItem | undefined {
+  const path = navPath(pathname);
   return [...primaryNavItems(role), ...visibleNavItems(role)]
-    .filter((item) => pathActive(pathname, item.to, item.exact) && searchMatches(item, search))
+    .filter((item) => pathActive(path, item.to, item.exact) && searchMatches(item, search))
     .sort((a, b) => b.to.length - a.to.length || Number(!!b.search) - Number(!!a.search))[0];
 }
 
@@ -460,8 +470,19 @@ const UNLISTED_ROUTE_LABELS: { prefix: string; labelKey: MessageKey }[] = [
  * otherwise an explicit fallback. Returns undefined only for routes rendered
  * without the shell (login, register, the exam room).
  */
-export function routeLabelKey(pathname: string, role: Role | undefined): MessageKey | undefined {
-  const item = routeNavItem(pathname, role);
+export function routeLabelKey(
+  pathname: string,
+  role: Role | undefined,
+  search?: Record<string, unknown>,
+): MessageKey | undefined {
+  // The catalog filtered to one course kind is that kind's page.
+  if (pathname === "/courses" && (search?.kind === "club" || search?.kind === "study")) {
+    return search.kind === "club" ? "courses.kind.club" : "courses.kind.study";
+  }
+  // An aliased page (an instance) is named by its own heading, not the
+  // parent entry it keeps lit in the sidebar.
+  if (navPath(pathname) !== pathname) return undefined;
+  const item = routeNavItem(pathname, role, search);
   if (item) return item.labelKey;
 
   const unlisted = UNLISTED_ROUTE_LABELS.find(

@@ -75,14 +75,14 @@ export function CelebiComposer(props: {
           size="sm"
           aria-label={t("ai.send")}
           title={t("ai.send")}
-          class="h-8 w-8 shrink-0 rounded-full p-0"
+          class="h-8 w-8 shrink-0 rounded-full p-0 touch:h-10 touch:w-10"
           disabled={props.disabled}
         >
           <IconSend class="h-4 w-4" />
         </Button>
       </div>
       {/* Enter / Shift+Enter means nothing on a touch keyboard. */}
-      <p class="mt-1.5 px-1 text-[11px] leading-4 text-muted-foreground [@media(pointer:coarse)]:hidden">{t("ai.hint")}</p>
+      <p class="mt-1.5 px-1 text-[11px] leading-4 text-muted-foreground touch:hidden">{t("ai.hint")}</p>
     </form>
   );
 }

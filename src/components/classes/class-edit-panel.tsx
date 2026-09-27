@@ -33,6 +33,7 @@ export function ClassEditPanel(props: {
   const [yearId, setYearId] = createSignal("");
   const [teacherId, setTeacherId] = createSignal("");
   const [error, setError] = createSignal("");
+  const [nameError, setNameError] = createSignal("");
   const [pending, setPending] = createSignal(false);
 
   // Seed the form each time it opens, from the row it opens for.
@@ -44,6 +45,7 @@ export function ClassEditPanel(props: {
     setYearId(c.year ?? "");
     setTeacherId(c.teacher?.id ?? "");
     setError("");
+    setNameError("");
   });
 
   const submit = async (event: SubmitEvent) => {
@@ -51,6 +53,13 @@ export function ClassEditPanel(props: {
     const c = props.cls;
     if (!c || pending()) return;
     setError("");
+    // Same rule as the create form: a blank name is caught under the field,
+    // not sent for the backend to reject.
+    if (!name().trim()) {
+      setNameError(t("form.fieldRequired"));
+      document.getElementById("edit-class-name")?.focus();
+      return;
+    }
     setPending(true);
     try {
       const saved = await patchClassById(c.id, { name: name().trim(), ...(gradeLevel() !== null ? { grade_level: gradeLevel()! } : {}), year: yearId() || null, teacher_id: teacherId() || null });
@@ -65,15 +74,15 @@ export function ClassEditPanel(props: {
 
   return (
     <SidePanel guardUnsaved open={props.open && !!props.cls} onOpenChange={props.onOpenChange} title={t("common.edit")} description={props.cls?.name}>
-      <form class="space-y-4" onSubmit={submit}>
+      <form class="space-y-4" noValidate onSubmit={submit}>
         <div class="space-y-3">
-          <div class="space-y-1.5"><Label for="edit-class-name">{t("classGroups.className")}</Label><Input id="edit-class-name" maxlength={props.maxNameLen} value={name()} onInput={(e) => setName(e.currentTarget.value)} /></div>
+          <div class="space-y-1.5"><Label for="edit-class-name">{t("classGroups.className")}<span class="ml-0.5 text-destructive-text">*</span></Label><Input id="edit-class-name" required aria-required="true" maxlength={props.maxNameLen} value={name()} error={nameError()} onInput={(e) => { setName(e.currentTarget.value); setNameError(""); }} /></div>
           <div class="space-y-1.5"><Label for="edit-class-grade">{t("classGroups.grade")}</Label><GradeLevelSelect id="edit-class-grade" value={gradeLevel()} min={props.minGradeLevel} max={props.maxGradeLevel} onChange={setGradeLevel} /></div>
           <div class="space-y-1.5"><Label for="edit-class-year">{t("academicYears.year")}</Label><Select id="edit-class-year" value={yearId()} onChange={(e) => setYearId(e.currentTarget.value)}><option value="">{t("academicYears.unassigned")}</option><For each={props.years}>{(year) => <option value={year.id}>{year.name}</option>}</For></Select></div>
           <UserSearchSelect id="edit-class-teacher" label={t("classGroups.homeroomTeacher")} value={teacherId()} initialUser={props.cls?.teacher} onChange={setTeacherId} placeholder={t("classGroups.selectTeacher")} role="teacher" />
         </div>
         <Show when={error()}><Alert variant="destructive">{error()}</Alert></Show>
-        <div class="flex gap-2 border-t pt-4"><Button type="submit" disabled={pending()}>{t("common.save")}</Button><Button type="button" variant="outline" onClick={() => props.onOpenChange(false)}>{t("common.cancel")}</Button></div>
+        <div class="flex gap-2 border-t border-border-hairline pt-4"><Button type="submit" disabled={pending()}>{t("common.save")}</Button><Button type="button" variant="outline" onClick={() => props.onOpenChange(false)}>{t("common.cancel")}</Button></div>
       </form>
     </SidePanel>
   );

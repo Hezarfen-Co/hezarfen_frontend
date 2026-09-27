@@ -41,7 +41,7 @@ export function GradeForm(props: {
     const uid = userId().trim();
     const m = Number(mark());
     if (!uid) {
-      setError(t("form.studentId"));
+      setError(t("form.selectStudent"));
       return;
     }
     if (!Number.isInteger(m) || m < 0 || m > 100) {

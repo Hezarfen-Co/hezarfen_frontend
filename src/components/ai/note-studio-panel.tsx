@@ -175,7 +175,7 @@ export function NoteStudioDetail(props: { noteId: string; episode?: string }) {
               <div class="flex min-h-12 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-border-hairline pb-3 lg:px-6 lg:pb-0">
                 <Link
                   to="/ai/studio"
-                  class={cn(buttonVariants({ variant: "ghost", size: "sm" }), "-ml-2 h-8 gap-1 rounded-lg text-muted-foreground")}
+                  class={cn(buttonVariants({ variant: "ghost", size: "sm" }), "-ml-2 h-10 gap-1 rounded-lg text-muted-foreground sm:h-8 touch:h-10")}
                 >
                   <IconChevronLeft class="h-4 w-4" />
                   {t("aiStudio.backToLibrary")}

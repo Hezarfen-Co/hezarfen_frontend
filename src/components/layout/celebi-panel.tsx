@@ -357,12 +357,12 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
             when={view() === "chat"}
             fallback={
               <div class="flex min-w-0 items-center gap-2">
-                <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent" onClick={() => setView("chat")}>
+                <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground outline-hidden transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring touch:h-10" onClick={() => setView("chat")}>
                   <IconChevronLeft class="h-3.5 w-3.5" />
                   {t("common.back")}
                 </button>
                 <span class="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{t("ai.chats")}</span>
-                <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent" onClick={(event) => { event.preventDefault(); startNewChat(); }}>
+                <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground outline-hidden transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring touch:h-10" onClick={(event) => { event.preventDefault(); startNewChat(); }}>
                   <IconPlus class="h-3.5 w-3.5" />
                   {t("ai.newChat")}
                 </button>
@@ -371,11 +371,11 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
           >
             <div class="flex min-w-0 items-center justify-between gap-3">
               <div class="flex shrink-0 items-center gap-1.5">
-                <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent" onClick={(event) => { event.preventDefault(); startNewChat(); }}>
+                <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground outline-hidden transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring touch:h-10" onClick={(event) => { event.preventDefault(); startNewChat(); }}>
                   <IconPlus class="h-3.5 w-3.5" />
                   {t("ai.newChat")}
                 </button>
-                <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent" onClick={(event) => { event.preventDefault(); openThreads(); }}>
+                <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground outline-hidden transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring touch:h-10" onClick={(event) => { event.preventDefault(); openThreads(); }}>
                   <IconMessage class="h-3.5 w-3.5" />
                   {t("ai.chats")}
                 </button>
@@ -384,7 +384,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
                 <span class="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{threadTitle() || t("ai.untitledChat")}</span>
                 <button
                   type="button"
-                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground outline-hidden transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring touch:h-10 touch:w-10"
                   aria-label={t("ai.renameChat")}
                   title={t("ai.renameChat")}
                   onClick={(event) => { event.preventDefault(); renameActiveThread(); }}
@@ -396,12 +396,12 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
                 <Show
                   when={!searchOpen()}
                   fallback={
-                    <button type="button" class="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-xs font-medium text-foreground transition-colors hover:bg-accent" aria-label={t("common.close")} title={t("common.close")} onClick={() => { setSearchOpen(false); updateSearchQuery(""); }}>
+                    <button type="button" class="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-xs font-medium text-foreground outline-hidden transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring touch:h-10 touch:w-10" aria-label={t("common.close")} title={t("common.close")} onClick={() => { setSearchOpen(false); updateSearchQuery(""); }}>
                       <IconX class="h-3.5 w-3.5" />
                     </button>
                   }
                 >
-                  <button type="button" class="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-xs font-medium text-foreground transition-colors hover:bg-accent" aria-label={t("common.search")} title={t("common.search")} aria-expanded={searchOpen()} onClick={(event) => { event.preventDefault(); setSearchOpen(true); }}>
+                  <button type="button" class="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-xs font-medium text-foreground outline-hidden transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring touch:h-10 touch:w-10" aria-label={t("common.search")} title={t("common.search")} aria-expanded={searchOpen()} onClick={(event) => { event.preventDefault(); setSearchOpen(true); }}>
                     <IconSearch class="h-3.5 w-3.5" />
                   </button>
                 </Show>

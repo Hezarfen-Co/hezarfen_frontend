@@ -38,9 +38,9 @@ Active project reference docs (read the relevant one before changing that area):
 
 ## Buttons
 
-- Header create actions: compact icon+label, consistent size and current radius.
-- Page header primary create/add: `size="sm" class="min-w-[7.5rem] rounded-lg"`. Secondary/import: `variant="outline"` with the same size/class.
-- Section/sub-panel header actions: `variant="outline" size="sm" class="rounded-lg"` unless matching a page header button.
+- **Pill standard (2026-09-26):** every toolbar / header control — search, filter chips, action buttons, "Sütunlar", the "İşlem" row-action trigger — is a pill: `rounded-full`, `text-[13px]`, `h-8` from `sm`, `h-10` below `sm` and on touch. Use `TOOLBAR_CONTROL` (one control) / `TOOLBAR_SLOT` (wrapper sizing nested buttons+links) / `TOOLBAR_CARD` from `src/components/ui/data-toolbar.tsx`. DataTable `actions`/`filters`, DataSection/DataToolbar slots and PageHeader `actions` already apply it — pass plain `<Button size="sm">` and never add `rounded-lg`/`rounded-md`/`h-9` overrides.
+- Primary create/add is the default (filled) variant; secondary/import is `variant="outline"`. Filled buttons carry a transparent border with `bg-clip-padding` — never a border in the fill's own colour (it makes the button look bigger than its outlined neighbours).
+- An active filter chip (a `DropdownSelect` with `labelPrefix` whose value is not its first option) gets `data-filter-active` and a primary border.
 - Actions inside sub-panels must not duplicate section headers — primary create/add/assign actions go in the header `actions` prop of the parent disclosure or page header.
 
 ## Tables
@@ -48,7 +48,8 @@ Active project reference docs (read the relevant one before changing that area):
 - Application tables must use `src/components/ui/data-table.tsx` `DataTable`.
 - Actions columns stay fixed at `w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap` to prevent localized headers like `"İŞLEMLER"` from changing their size.
 - Table-page headers fold into the `DataTable` title/description/actions area; do not render a separate `PageHeader` above table-primary pages.
-- Search inputs, dropdown filters, filter buttons, and column controls share the same compact height/radius (`h-8 rounded-lg`, `text-[13px]`) unless the shared component changes the standard globally. Page-header primary actions may stay `h-9`.
+- Every list toolbar is one card (`TOOLBAR_CARD`), even when "Sütunlar" is its only control; its controls follow the pill standard above.
+- Lists have no page numbers: server lists fetch as you scroll (`createInfiniteList` + DataTable `infinite`, or `InfiniteSentinel` for card lists), only when the backend applies every filter the list offers (sorting is off there); client tables reveal 50 rows at a time. Back from a detail page restores rows and scroll (`restoreKey`, `createScrollRestore`).
 - Pages/domain components must not import or render `Table` primitives directly; only the `DataTable` wrapper and table primitive files may.
 - Every list page uses one card: optional `Tabs` above, then `section.data-shell` holding the `DataTable` (its `title`/`description`/`actions`). Card-grid lists use `DataSection` from `src/components/ui/data-section.tsx` for the same header. No standalone `PageHeader`/`h1` above a list, and no row counts in descriptions (the pager shows them).
 

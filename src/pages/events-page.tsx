@@ -30,8 +30,6 @@ import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-stat
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const EVENT_PAGE_SIZE = 10;
-
 export default function EventsPage() {
   return (
     <RouteGuard>
@@ -131,7 +129,7 @@ function EventsContent() {
   const columns = createMemo<ColumnDef<Event>[]>(() => [
     {
       accessorKey: "title",
-      header: t("events.title"),
+      header: t("form.title"),
       size: 220,
       minSize: 180,
       meta: { cellClass: "max-w-0" },
@@ -211,7 +209,7 @@ function EventsContent() {
 
   return (
     <div class="space-y-6">
-      <SidePanel guardUnsaved open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("events.create")} description={t("events.subtitle")}>
+      <SidePanel guardUnsaved open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("events.create")} description={t("events.createHint")}>
         <EventForm
           submitLabel={t("common.create")}
           onCancel={() => setShowForm(false)}
@@ -300,7 +298,6 @@ function EventsContent() {
             searchPredicate={searchEvent}
             filterHint={t("search.hint.events")}
             enablePagination
-            pageSize={EVENT_PAGE_SIZE}
             empty={t("events.empty")}
             pageResetKey={timeFilter()}
             filtersActive={timeFilter() !== "all"}

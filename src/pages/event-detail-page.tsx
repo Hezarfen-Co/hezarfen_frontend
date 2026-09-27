@@ -207,15 +207,15 @@ function EventDetailContent() {
               />
               <div class="grid gap-3 border-t border-border-hairline pt-3 text-sm sm:grid-cols-3">
                 <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.audience")}</p>
+                  <p class="text-xs font-medium text-muted-foreground">{t("events.audience")}</p>
                   <p class="mt-1 font-medium">{audienceLabel(ev().audience, t)}</p>
                 </div>
                 <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.starts")}</p>
+                  <p class="text-xs font-medium text-muted-foreground">{t("events.starts")}</p>
                   <p class="mt-1 font-medium">{formatDateTime(ev().starts_at, locale())}</p>
                 </div>
                 <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.ends")}</p>
+                  <p class="text-xs font-medium text-muted-foreground">{t("events.ends")}</p>
                   <p class="mt-1 font-medium">{formatDateTime(ev().ends_at, locale())}</p>
                 </div>
               </div>

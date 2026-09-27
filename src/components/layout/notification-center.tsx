@@ -16,7 +16,10 @@ export function NotificationCenter() {
   const [open, setOpen] = createSignal(false);
 
   createEffect(() => {
-    if (open()) feed.refreshAll();
+    if (open()) {
+      feed.opened();
+      feed.refreshAll();
+    }
   });
 
   const unreadCount = feed.unreadCount;

@@ -50,6 +50,9 @@ export function RagStudyPanel() {
   const [sending, setSending] = createSignal(false);
   const [error, setError] = createSignal("");
   const [studyUnavailable, setStudyUnavailable] = createSignal(false);
+  // An opened chat's transcript is on its way: without this the landing
+  // greeting flashed in its place until the messages arrived.
+  const [loadingThread, setLoadingThread] = createSignal(false);
   const [renaming, setRenaming] = createSignal<RagThread | null>(null);
   const [removing, setRemoving] = createSignal<RagThread | null>(null);
   // Below lg the history is a drawer from the left edge, the way a chat app
@@ -160,11 +163,14 @@ export function RagStudyPanel() {
     setThreadId(id);
     setActiveThread(knownThreads().find((thread) => thread.id === id));
     setMessages([]);
+    setLoadingThread(true);
     try {
       const page = await getRagThreadMessages(id, { limit: 500 });
       if (threadId() === id) setMessages(page.items);
     } catch (err) {
       if (threadId() === id) setError(formatApiError(err));
+    } finally {
+      if (threadId() === id) setLoadingThread(false);
     }
   };
   const resetThread = () => {
@@ -174,6 +180,7 @@ export function RagStudyPanel() {
     setThreadId(undefined);
     setActiveThread(undefined);
     setMessages([]);
+    setLoadingThread(false);
   };
   // The URL is the source of truth for which chat is open. A chat this panel
   // just created is already open when its URL lands, so it is not reloaded.
@@ -362,7 +369,10 @@ export function RagStudyPanel() {
           <IconPlus class="h-4 w-4 shrink-0" />
           <span class="truncate">{copy().newThread}</span>
         </button>
-        <h3 class="px-2.5 pb-0.5 pt-4 text-xs font-medium text-muted-foreground">{copy().recents}</h3>
+        {/* No "Recents" heading over an empty list: the empty state says it. */}
+        <Show when={knownThreads().length > 0}>
+          <h3 class="px-2.5 pb-0.5 pt-4 text-xs font-medium text-muted-foreground">{copy().recents}</h3>
+        </Show>
         <RagThreadList
           activeId={threadId()}
           version={threadsVersion()}
@@ -467,8 +477,16 @@ export function RagStudyPanel() {
           <Show
             when={messages().length > 0}
             fallback={
-              // The landing screen centres the mark and the composer instead of
-              // stranding the composer at the bottom of an empty page.
+              <Show
+                when={!loadingThread()}
+                fallback={
+                  <p class="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground lg:min-h-[calc(100dvh-16rem)]" role="status">
+                    {copy().loadingMessages}
+                  </p>
+                }
+              >
+              {/* The landing screen centres the mark and the composer instead of
+                  stranding the composer at the bottom of an empty page. */}
               <div class="flex min-h-[60vh] flex-col justify-center lg:min-h-[calc(100dvh-16rem)]">
                 <RagStudyWelcome title={greeting()} />
                 <RagComposer
@@ -483,6 +501,7 @@ export function RagStudyPanel() {
                   onSubmit={() => void send()}
                 />
               </div>
+              </Show>
             }
           >
             <For each={messages()}>

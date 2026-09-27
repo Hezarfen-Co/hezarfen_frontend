@@ -11,6 +11,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEdit, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createFlash } from "@/lib/flash";
@@ -47,7 +48,9 @@ export function CourseOfferingsPanel(props: { courseId: string; courseTitle: str
       id: "grade",
       accessorFn: (row) => row.grade_level,
       header: t("classGroups.grade"),
-      meta: { cellClass: "font-medium whitespace-nowrap" },
+      // The table has no header row of its own (DataTable draws none), so
+      // the note on inherited, muted values rides on the first column.
+      meta: { cellClass: "font-medium whitespace-nowrap", headerInfo: t("offerings.help") },
       cell: (cell) => gradeLevelLabel(cell.row.original.grade_level, t),
     },
     {
@@ -95,12 +98,14 @@ export function CourseOfferingsPanel(props: { courseId: string; courseTitle: str
     <div class="space-y-3">
       <Show when={flash()}><Alert variant="success">{flash()}</Alert></Show>
       <Show when={error()}><Alert variant="destructive">{error()}</Alert></Show>
-      <Show when={!offerings.loading || offerings.latest} fallback={<DataTableSkeleton />}>
+      <Show when={offerings.error}>
+        <ErrorAlert message={formatApiError(offerings.error)} onRetry={() => void refetch()} />
+      </Show>
+      <Show when={!offerings.error && (!offerings.loading || offerings.latest)} fallback={<Show when={!offerings.error}><DataTableSkeleton /></Show>}>
         <DataTable
           columns={columns()}
           data={offerings.latest ?? []}
           title={t("offerings.tab")}
-          description={t("offerings.help")}
           empty={t("offerings.empty")}
           onRowClick={(offering) => open(offering)}
           actions={
@@ -124,9 +129,10 @@ export function CourseOfferingsPanel(props: { courseId: string; courseTitle: str
         courseTitle={props.courseTitle}
         offering={selected()}
         canEdit={props.canEdit}
-        courseSubjects={subjects.latest ?? []}
-        examKinds={(settings.latest?.exam_kinds ?? []).map((kind) => kind.name)}
-        limits={limits.latest ?? undefined}
+        courseSubjects={subjects.error ? [] : subjects.latest ?? []}
+        courseSubjectsLoading={subjects.loading && !subjects.latest}
+        examKinds={((settings.error ? undefined : settings.latest)?.exam_kinds ?? []).map((kind) => kind.name)}
+        limits={(limits.error ? undefined : limits.latest) ?? undefined}
         onSaved={async (saved) => {
           const created = selected() === null;
           await refetch();

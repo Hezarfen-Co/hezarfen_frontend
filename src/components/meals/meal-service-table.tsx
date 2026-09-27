@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MealSectionHeading } from "@/components/meals/meal-section-heading";
 import { DataTable } from "@/components/ui/data-table";
+import { TOOLBAR_SLOT } from "@/components/ui/data-toolbar";
+import { cn } from "@/lib/cn";
 import { IconCheck, IconPlus, IconTrash, IconX } from "@/components/ui/icons";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { mealBookingStateLabel, mealServiceStatusLabel } from "@/lib/meals";
@@ -71,11 +73,11 @@ export function MealServiceTable(props: {
       cell: (cell) => {
         const status = () => cell.row.original.attendance?.status;
         return (
-          <div class="flex gap-1.5">
+          // Row marks sit at the row-actions trigger's pill height.
+          <div class={cn("flex gap-1.5", TOOLBAR_SLOT)}>
             <Button
               size="sm"
               variant={status() === "served" ? "default" : "outline"}
-              class="rounded-lg"
               disabled={props.pending}
               aria-pressed={status() === "served"}
               onClick={(event) => { event.stopPropagation(); props.onMark(cell.row.original.student.id, "served"); }}
@@ -86,7 +88,7 @@ export function MealServiceTable(props: {
             <Button
               size="sm"
               variant="outline"
-              class={status() === "missed" ? "rounded-lg border-warning/60 bg-warning/10 text-warning-text" : "rounded-lg"}
+              class={status() === "missed" ? "border-warning/60 bg-warning/10 text-warning-text" : undefined}
               disabled={props.pending}
               aria-pressed={status() === "missed"}
               onClick={(event) => { event.stopPropagation(); props.onMark(cell.row.original.student.id, "missed"); }}
@@ -125,7 +127,7 @@ export function MealServiceTable(props: {
       <MealSectionHeading id="meal-service-title" title={t("meals.service")} description={t("meals.serviceHelp")} />
       <DataTable
         actions={
-          <Button variant="outline" size="sm" class="rounded-lg" onClick={props.onAddWalkIn}>
+          <Button variant="outline" size="sm" onClick={props.onAddWalkIn}>
             <IconPlus class="h-4 w-4" />
             {t("meals.addWalkIn")}
           </Button>

@@ -99,25 +99,25 @@ describe("StudioOutputLibrary", () => {
     expect(current.length).toBe(2);
   });
 
-  it("pages a long history ten rows at a time", async () => {
+  it("reveals a long history fifty rows at a time", async () => {
     podcastApi.listPodcastJobs.mockResolvedValue(page(
-      Array.from({ length: 12 }, (_, index) =>
+      Array.from({ length: 52 }, (_, index) =>
         podcast({ job_id: `job-${index}`, source_title: `Bölüm ${index + 1}`, source_id: `other-${index}`, created_at: Date.UTC(2026, 0, 1, index), finished_at: Date.UTC(2026, 0, 1, index) }),
       ),
     ));
     courseNotesApi.getCourseNoteRag.mockResolvedValue(page([]));
     renderLibrary();
 
-    // Newest first: episode 12 leads page one, episode 2 closes it.
-    await waitFor(() => expect(screen.getByText("Bölüm 12")).toBeTruthy());
+    // Newest first: episode 52 leads, episode 3 closes the first fifty.
+    await waitFor(() => expect(screen.getByText("Bölüm 52")).toBeTruthy());
     expect(screen.getByText("Bölüm 3")).toBeTruthy();
     expect(screen.queryByText("Bölüm 2")).toBeNull();
-    expect(screen.getByText("1-10 / 12")).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: "Sonraki" }));
+    // jsdom has no IntersectionObserver, so the next rows wait for a button.
+    fireEvent.click(screen.getByRole("button", { name: "Devamını yükle" }));
     expect(screen.getByText("Bölüm 2")).toBeTruthy();
     expect(screen.getByText("Bölüm 1")).toBeTruthy();
-    expect(screen.queryByText("Bölüm 12")).toBeNull();
+    expect(screen.getByText("Bölüm 52")).toBeTruthy();
   });
 
   it("opens an episode's note page with that episode picked", async () => {

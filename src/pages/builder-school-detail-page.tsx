@@ -104,9 +104,9 @@ function BuilderSchoolDetailContent() {
                 title={current().name}
                 description={`${current().id} · ${t("builder.createdAt")}: ${formatDateTime(current().created_at, locale())}`}
                 actions={
-                  // One pill height for every header control: the buttons and
-                  // the row-actions trigger (h-8 on its own) sit in one row.
-                  <div class="flex flex-wrap items-center gap-2 [&_button]:h-10 [&_button]:rounded-full [&_button]:px-3.5 [&_button]:text-[13px] sm:[&_button]:h-8 touch:[&_button]:h-10">
+                  // PageHeader's actions slot sizes every button here, the
+                  // row-actions trigger included, as one toolbar pill row.
+                  <>
                     <SchoolStatusBadge status={current().status} />
                     <Button type="button" variant="outline" size="sm" onClick={openEdit}>
                       <IconEdit class="h-4 w-4" />
@@ -129,7 +129,7 @@ function BuilderSchoolDetailContent() {
                         onSelect: () => setDeleteOpen(true),
                       }]}
                     />
-                  </div>
+                  </>
                 }
               />
               <Show when={flash()}>

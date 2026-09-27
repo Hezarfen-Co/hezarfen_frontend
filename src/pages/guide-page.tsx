@@ -37,16 +37,17 @@ type GuideStep = {
   studentOnly?: boolean;
 };
 
-const CARD_TONE = "border-sky-500/40 dark:border-sky-500/30 hover:border-sky-500/70 ring-1 ring-sky-500/20";
-const BADGE_TONE = "border-sky-500/40 text-foreground bg-card";
+// Brand tones, so a custom accent palette recolours the guide like the rest of the app.
+const CARD_TONE = "border-primary/40 dark:border-primary/30 hover:border-primary/70 ring-1 ring-primary/20";
+const BADGE_TONE = "border-primary/40 text-foreground bg-card";
 
 const STEPS: GuideStep[] = [
-  { id: "ai", stepNumber: "01", borderTone: CARD_TONE, icon: IconSparkles, iconColor: "text-sky-400", to: "/ai/study" },
-  { id: "notes", stepNumber: "02", borderTone: CARD_TONE, icon: IconNote, iconColor: "text-sky-400", to: "/notes" },
-  { id: "questions", stepNumber: "03", borderTone: CARD_TONE, icon: IconBook, iconColor: "text-sky-400", to: "/questions" },
-  { id: "courses", stepNumber: "04", borderTone: CARD_TONE, icon: IconCalendarDays, iconColor: "text-sky-400", to: "/courses" },
-  { id: "exams", stepNumber: "05", borderTone: CARD_TONE, icon: IconExam, iconColor: "text-sky-400", to: "/exams" },
-  { id: "marks", stepNumber: "06", borderTone: CARD_TONE, icon: IconReportAnalytics, iconColor: "text-sky-400", to: "/marks", studentOnly: true },
+  { id: "ai", stepNumber: "01", borderTone: CARD_TONE, icon: IconSparkles, iconColor: "text-primary-text", to: "/ai/study" },
+  { id: "notes", stepNumber: "02", borderTone: CARD_TONE, icon: IconNote, iconColor: "text-primary-text", to: "/notes" },
+  { id: "questions", stepNumber: "03", borderTone: CARD_TONE, icon: IconBook, iconColor: "text-primary-text", to: "/questions" },
+  { id: "courses", stepNumber: "04", borderTone: CARD_TONE, icon: IconCalendarDays, iconColor: "text-primary-text", to: "/courses" },
+  { id: "exams", stepNumber: "05", borderTone: CARD_TONE, icon: IconExam, iconColor: "text-primary-text", to: "/exams" },
+  { id: "marks", stepNumber: "06", borderTone: CARD_TONE, icon: IconReportAnalytics, iconColor: "text-primary-text", to: "/marks", studentOnly: true },
 ];
 
 type RoleTab = {
@@ -57,17 +58,17 @@ type RoleTab = {
 };
 
 const ROLE_TABS: RoleTab[] = [
-  { id: "student", tabKey: "role.student", icon: IconSchool, checkColor: "text-emerald-400" },
-  { id: "teacher", tabKey: "role.teacher", icon: IconClipboardCheck, checkColor: "text-sky-400" },
-  { id: "parent", tabKey: "role.parent", icon: IconUsers, checkColor: "text-violet-400" },
-  { id: "admin", tabKey: "guide.roles.adminTab", icon: IconUserCog, checkColor: "text-amber-400" },
+  { id: "student", tabKey: "role.student", icon: IconSchool, checkColor: "text-emerald-600 dark:text-emerald-400" },
+  { id: "teacher", tabKey: "role.teacher", icon: IconClipboardCheck, checkColor: "text-sky-600 dark:text-sky-400" },
+  { id: "parent", tabKey: "role.parent", icon: IconUsers, checkColor: "text-violet-600 dark:text-violet-400" },
+  { id: "admin", tabKey: "guide.roles.adminTab", icon: IconUserCog, checkColor: "text-amber-600 dark:text-amber-400" },
 ];
 
 const TIPS = [
-  { id: "locale", icon: IconGlobe, tone: "text-violet-400" },
-  { id: "sync", icon: IconClock, tone: "text-sky-400" },
-  { id: "import", icon: IconFileText, tone: "text-amber-400" },
-  { id: "weights", icon: IconChart, tone: "text-emerald-400" },
+  { id: "locale", icon: IconGlobe, tone: "text-violet-600 dark:text-violet-400" },
+  { id: "sync", icon: IconClock, tone: "text-sky-600 dark:text-sky-400" },
+  { id: "import", icon: IconFileText, tone: "text-amber-600 dark:text-amber-400" },
+  { id: "weights", icon: IconChart, tone: "text-emerald-600 dark:text-emerald-400" },
 ] satisfies { id: string; icon: Component<{ class?: string }>; tone: string }[];
 
 const ITEM_INDEXES = [1, 2, 3, 4] as const;

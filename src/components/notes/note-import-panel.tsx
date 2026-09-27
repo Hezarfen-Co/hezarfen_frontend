@@ -86,8 +86,18 @@ export function NoteImportPanel(props: {
     <div class="space-y-5">
       <Show when={!file()}>
         <div
-          class="flex min-h-56 cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-amber-500/50 ring-1 ring-amber-500/25 bg-muted/30 p-6 text-center transition-all hover:border-amber-400 hover:ring-amber-400/40 hover:bg-muted/50"
+          role="button"
+          tabindex="0"
+          aria-busy={processing()}
+          class="flex min-h-56 cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-primary/40 bg-muted/30 p-6 text-center outline-hidden transition-colors hover:border-primary/70 hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring"
           onClick={() => fileInput?.click()}
+          onKeyDown={(event) => {
+            if (event.target !== event.currentTarget) return;
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              fileInput?.click();
+            }
+          }}
         >
           <input
             ref={(el) => {
@@ -98,15 +108,15 @@ export function NoteImportPanel(props: {
             class="hidden"
             onChange={(e) => void handleFileSelect(e.currentTarget.files?.[0])}
           />
-          <span class="flex h-12 w-12 items-center justify-center rounded-lg border border-amber-500/50 ring-1 ring-amber-500/30 bg-muted/40 text-foreground shadow-xs">
+          <span class="flex h-12 w-12 items-center justify-center rounded-lg border border-primary/40 bg-primary/10 text-primary-text shadow-xs">
             <IconUploadCloud class="h-6 w-6" />
           </span>
           <div class="space-y-1 max-w-sm mx-auto">
             <p class="text-sm font-semibold text-foreground">
               {t("notes.import")} (PDF, TXT, Markdown)
             </p>
-            <p class="text-xs leading-normal text-muted-foreground">
-              {t("notes.importHelp")}
+            <p class="text-xs leading-normal text-muted-foreground" aria-live="polite">
+              {processing() ? t("notes.importReading") : t("notes.importHelp")}
             </p>
           </div>
         </div>
@@ -114,7 +124,7 @@ export function NoteImportPanel(props: {
 
       <Show when={file()}>
         <div class="space-y-4">
-          <div class="flex items-center justify-between rounded-xl border border-amber-500/40 ring-1 ring-amber-500/25 bg-card px-4 py-3 text-xs">
+          <div class="flex items-center justify-between gap-2 rounded-xl border border-border-line bg-card px-4 py-3 text-xs">
             <div class="flex items-center gap-2.5 min-w-0">
               <IconFileText class="h-4 w-4 shrink-0 text-foreground" />
               <span class="truncate font-medium text-foreground">{file()?.name}</span>
@@ -124,7 +134,7 @@ export function NoteImportPanel(props: {
               type="button"
               variant="ghost"
               size="sm"
-              class="h-7 text-xs rounded-lg"
+              class="h-8 shrink-0 rounded-full px-3 text-xs touch:h-10"
               onClick={() => {
                 setFile(null);
                 setError("");
@@ -133,17 +143,17 @@ export function NoteImportPanel(props: {
                 setHasGarbled(false);
               }}
             >
-              {t("common.edit")}
+              {t("notes.importChangeFile")}
             </Button>
           </div>
 
           <Show when={hasGarbled()}>
-            <p class="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2.5 text-xs font-medium text-amber-700 dark:text-amber-300">
-              ⚠️ Some content may be unreadable due to OCR/extraction issues
+            <p class="rounded-xl border border-warning/30 bg-warning/10 px-3.5 py-2.5 text-xs font-medium text-warning-text">
+              {t("notes.importGarbled")}
             </p>
           </Show>
 
-          <div class="space-y-1.5 rounded-xl border border-border/80 bg-card p-4 shadow-xs">
+          <div class="space-y-1.5 rounded-xl border border-border-line bg-card p-4 shadow-xs">
             <Label for="import-title">{t("form.title")}</Label>
             <Input
               id="import-title"
@@ -154,7 +164,7 @@ export function NoteImportPanel(props: {
             />
           </div>
 
-          <div class="space-y-1.5 rounded-xl border border-border/80 bg-card p-4 shadow-xs">
+          <div class="space-y-1.5 rounded-xl border border-border-line bg-card p-4 shadow-xs">
             <Label for="import-content">{t("form.content")} (Markdown)</Label>
             <Textarea
               id="import-content"

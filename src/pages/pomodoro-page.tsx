@@ -1,5 +1,6 @@
-import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
+import { createInfiniteList } from "@/lib/infinite-list";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getPomodoroMe } from "@/api/pomodoro";
 import { getLimits } from "@/api/limits";
@@ -12,6 +13,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconCheck, IconClock } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,7 +53,10 @@ function PomodoroContent() {
   const [pending, setPending] = createSignal(false);
   const [flash, setFlash] = createFlash();
   const now = createNow(1000);
+  // The newest sessions feed the clock and the stat cards; the history table
+  // below pages through the whole log as the reader scrolls.
   const [log, { refetch }] = createResource(() => getPomodoroMe({ limit: 20 }));
+  const history = createInfiniteList(() => "pomodoro", (_key, paging) => getPomodoroMe(paging));
   const [limits] = createResource(() => getLimits().catch(() => null));
   const [focusLabel, setFocusLabel] = createSignal("");
   const running = createMemo(() => log()?.items.find((item) => item.finished_at == null) ?? null);
@@ -155,6 +160,7 @@ function PomodoroContent() {
     try {
       await action();
       await refetch();
+      history.reload();
       setFlash(ok);
       if (action === postPomodoroFinish) {
         triggerConfetti();
@@ -188,9 +194,12 @@ function PomodoroContent() {
         <Alert variant="success">{flash()}</Alert>
       </Show>
       {error() && <Alert variant="destructive">{error()}</Alert>}
+      <Show when={log.error}>
+        <ErrorAlert message={formatApiError(log.error)} onRetry={() => void refetch()} />
+      </Show>
 
       <section class="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.55fr)]">
-        <div class="overflow-hidden rounded-lg border border-border bg-card shadow-xs">
+        <div class="overflow-hidden rounded-xl border border-border-line bg-card shadow-xs">
           <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 px-5 py-4">
             <div class="flex min-w-0 items-center gap-3">
               <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-muted/40 text-muted-foreground">
@@ -282,7 +291,7 @@ function PomodoroContent() {
                       type="button"
                       size="sm"
                       variant={targetMinutes() === minutes ? "default" : "outline"}
-                      class="h-7 min-w-11 rounded-lg px-2 text-xs"
+                      class="h-10 min-w-11 rounded-full px-3 text-[13px] sm:h-8 touch:h-10"
                       disabled={!!running()}
                       onClick={() => setTargetMinutes(minutes)}
                     >
@@ -296,8 +305,9 @@ function PomodoroContent() {
                   max={MAX_MINUTES}
                   value={targetMinutes()}
                   disabled={!!running()}
-                  class="h-7 w-16 rounded-lg px-2 text-xs"
+                  class="h-10 w-16 rounded-full px-3 text-[13px] sm:h-8 touch:h-10"
                   title={t("pomodoro.customMinutes")}
+                  aria-label={t("pomodoro.customMinutes")}
                   onInput={(event) => {
                     const value = Number(event.currentTarget.value);
                     if (Number.isFinite(value) && value > 0 && value <= MAX_MINUTES) setTargetMinutes(value);
@@ -335,9 +345,17 @@ function PomodoroContent() {
             </p>
           </div>
         </div>
-        <Suspense fallback={<DataTableSkeleton />}>
-          <DataTable columns={columns()} data={log()?.items ?? []} empty={t("pomodoro.empty")} enablePagination pageSize={10} urlState />
-        </Suspense>
+        <Show when={history.error()}>
+          {(err) => <ErrorAlert message={formatApiError(err())} onRetry={() => history.reload()} />}
+        </Show>
+        <Show when={!history.initialLoading()} fallback={<DataTableSkeleton />}>
+          <DataTable
+            columns={columns()}
+            data={history.items()}
+            empty={t("pomodoro.empty")}
+            infinite={{ hasMore: history.hasMore(), loading: history.loading(), total: history.total(), onLoadMore: history.loadMore }}
+          />
+        </Show>
       </section>
     </div>
   );

@@ -9,6 +9,8 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { TOOLBAR_SLOT } from "@/components/ui/data-toolbar";
+import { cn } from "@/lib/cn";
 import { IconChevronLeft } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { useAuth } from "@/stores/auth-context";
@@ -67,9 +69,11 @@ function ExamRoomContent() {
                 title={ex().title}
                 description={ex().description || undefined}
                 actions={
-                  <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-background/80 p-1 shadow-xs sm:w-auto">
-                    <Link to="/exams/$id" params={{ id: id() }}>
-                      <Button variant="ghost" size="sm" class="w-full rounded-md sm:w-auto">
+                  // The toolbar pill, like the live monitor's Back; the Link is
+                  // `contents` so the slot sizes the Button, not the anchor.
+                  <div class={cn("flex w-full flex-wrap items-center gap-2 sm:w-auto", TOOLBAR_SLOT)}>
+                    <Link to="/exams/$id" params={{ id: id() }} class="contents">
+                      <Button variant="outline" size="sm" class="w-full sm:w-auto">
                         <IconChevronLeft class="h-4 w-4" />
                         {t("common.back")}
                       </Button>

@@ -1,4 +1,5 @@
 import { For, Show, Suspense, createEffect, createSignal, lazy } from "solid-js";
+import { createScrollRestore } from "@/lib/scroll-restore";
 import { createResource } from "@/lib/create-resource";
 import { createInfiniteList } from "@/lib/infinite-list";
 import { InfiniteSentinel } from "@/components/ui/infinite-sentinel";
@@ -22,7 +23,9 @@ import { hasMinRole } from "@/lib/roles";
 
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { showToast } from "@/components/ui/toast";
-import { useT } from "@/stores/preferences-context";
+import { usePreferences, useT } from "@/stores/preferences-context";
+import { formatDate } from "@/lib/format";
+import { Alert } from "@/components/ui/alert";
 import { useAuth } from "@/stores/auth-context";
 import { cn } from "@/lib/cn";
 import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
@@ -40,6 +43,7 @@ export default function QuestionsPage() {
 
 function QuestionsContent() {
   const t = useT();
+  const { locale } = usePreferences();
   const auth = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -55,6 +59,8 @@ function QuestionsContent() {
     { restoreKey: "questions" },
   );
   const list = () => questions.items();
+  // Back from a question lands on the same row once the list is drawn.
+  createScrollRestore(`questions:${statusFilter()}`, () => list().length > 0);
   const refetch = () => questions.refresh();
 
   const [askOpen, setAskOpen] = createSignal(location().searchStr.includes("action=new"));
@@ -65,6 +71,14 @@ function QuestionsContent() {
       setAskOpen(true);
     }
   });
+
+  const poolTabClass = (active: boolean) =>
+    cn(
+      "inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap border-b-2 border-r border-r-border-line px-3 text-sm font-medium transition-colors last:border-r-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+      active
+        ? "border-b-primary bg-surface-base text-foreground"
+        : "border-b-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+    );
 
   const canDelete = (question: any) =>
     question.asker.id === auth.user()?.id || hasMinRole(auth.user()?.role, "teacher");
@@ -85,22 +99,26 @@ function QuestionsContent() {
 
   return (
     <div class="space-y-6">
-      <div class="inline-flex max-w-full items-center gap-1 rounded-xl border border-border/70 bg-card/80 p-1 shadow-xs">
+      {/* Links, since the status lives in the URL, drawn like the app's Tabs
+          (TabsList / TabsTrigger) so this row matches every other tab row. */}
+      <nav aria-label={t("pool.title")} class="inline-flex h-auto w-full max-w-full items-stretch overflow-x-auto rounded-lg border border-border-line bg-surface-base sm:w-fit">
         <Link
           to="/questions"
           search={{ status: "approved" }}
-          class={cn("group inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-lg border px-3 text-sm font-medium transition-colors", statusFilter() === "approved" ? "border-border bg-surface-base text-foreground shadow-xs" : "border-transparent text-muted-foreground hover:bg-muted/70 hover:text-foreground")}
+          aria-current={statusFilter() === "approved" ? "page" : undefined}
+          class={poolTabClass(statusFilter() === "approved")}
         >
           {t("pool.approved")}
         </Link>
         <Link
           to="/questions"
           search={{ status: "pending" }}
-          class={cn("group inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-lg border px-3 text-sm font-medium transition-colors", statusFilter() === "pending" ? "border-border bg-surface-base text-foreground shadow-xs" : "border-transparent text-muted-foreground hover:bg-muted/70 hover:text-foreground")}
+          aria-current={statusFilter() === "pending" ? "page" : undefined}
+          class={poolTabClass(statusFilter() === "pending")}
         >
           {t("pool.pending")}
         </Link>
-      </div>
+      </nav>
 
       <DataSection
         title={t("pool.title")}
@@ -116,7 +134,7 @@ function QuestionsContent() {
       >
         <div class="-mx-4 -mb-4 border-t border-border-hairline">
         <Show when={questions.error()}>
-          {(err) => <p class="p-4 text-sm text-destructive-text">{formatApiError(err())}</p>}
+          {(err) => <Alert variant="destructive" class="m-4">{formatApiError(err())}</Alert>}
         </Show>
         <Show when={!questions.initialLoading()} fallback={<PageSpinner />}>
             <Show when={list().length > 0} fallback={<EmptyState kind="search" title={t("pool.noQuestions")} />}>
@@ -128,7 +146,7 @@ function QuestionsContent() {
                         <div class="flex items-center gap-2">
                           <h3 class="truncate text-base font-semibold text-foreground group-hover:text-primary-text transition-colors">{question.title}</h3>
                           <Show when={question.image}>
-                            <IconPhoto class="h-4 w-4 text-muted-foreground" />
+                            <IconPhoto class="h-4 w-4 shrink-0 text-muted-foreground" aria-label={t("pool.image")} />
                           </Show>
                         </div>
                         <p class="mt-1 line-clamp-2 text-sm text-muted-foreground">{question.body}</p>
@@ -140,16 +158,16 @@ function QuestionsContent() {
                             {personLabel(question.asker)}
                           </span>
                           <span>&bull;</span>
-                          <span>{new Date(question.asked_at).toLocaleDateString()}</span>
+                          <span>{formatDate(question.asked_at, locale())}</span>
                         </div>
                       </Link>
 
                       <div class="mt-2 flex items-center gap-3 sm:mt-0 sm:pl-4 shrink-0">
                         <Show
                           when={question.status === "approved"}
-                          fallback={<span class="inline-flex items-center rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400"><IconClock class="mr-1 h-3 w-3" /> {t("pool.pending")}</span>}
+                          fallback={<span class="inline-flex items-center rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning-text"><IconClock class="mr-1 h-3 w-3" /> {t("pool.pending")}</span>}
                         >
-                          <span class="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400"><IconCheck class="mr-1 h-3 w-3" /> {t("pool.approved")}</span>
+                          <span class="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success-text"><IconCheck class="mr-1 h-3 w-3" /> {t("pool.approved")}</span>
                         </Show>
 
                         <Show when={canDelete(question)}>
@@ -157,8 +175,9 @@ function QuestionsContent() {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            class="h-8 w-8 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text rounded-lg"
+                            class="h-8 w-8 rounded-lg p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text touch:h-10 touch:w-10"
                             title={t("common.delete")}
+                            aria-label={t("common.delete")}
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
@@ -278,7 +297,7 @@ function AskQuestionDialog(props: { onClose: () => void; onSuccess: () => void }
                       type="button"
                       variant="ghost"
                       size="icon"
-                      class="h-6 w-6 rounded-full hover:bg-destructive/10 hover:text-destructive-text z-10"
+                      class="z-10 h-6 w-6 rounded-full hover:bg-destructive/10 hover:text-destructive-text touch:h-10 touch:w-10"
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault();

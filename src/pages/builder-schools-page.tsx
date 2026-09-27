@@ -99,7 +99,10 @@ function BuilderSchoolsContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap" },
+      meta: {
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+      },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -134,7 +137,7 @@ function BuilderSchoolsContent() {
       </Show>
 
       <section class="space-y-4 p-0">
-        <Suspense fallback={<DataTableSkeleton columns={5} rows={6} />}>
+        <Suspense fallback={<DataTableSkeleton columns={6} rows={6} />}>
           <Show when={list.error}>
             <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
           </Show>
@@ -151,7 +154,7 @@ function BuilderSchoolsContent() {
               }
               columns={columns()}
               data={list() ?? []}
-            tableClass="min-w-[52rem]"
+              tableClass="min-w-[52rem]"
               empty={t("builder.noSchools")}
               filterColumn="name"
               enablePagination

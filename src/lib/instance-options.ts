@@ -1,8 +1,8 @@
-import { getClasses, getClassInstances, getMyClasses } from "@/api/classes";
-import { getCourseById } from "@/api/courses";
+import { getClasses, getMyClasses } from "@/api/classes";
 import { getMyInstances } from "@/api/instances";
 import type { ClassGroup, Role } from "@/api/client";
 import { hasMinRole } from "@/lib/roles";
+import { loadSchoolSections } from "@/lib/instance-labels";
 import { compareClasses } from "@/lib/student-directory";
 
 /** One pickable section: "<ders> — <şube>", plus the ids behind the label. */
@@ -25,24 +25,18 @@ export async function loadInstanceOptions(role: Role | undefined): Promise<Insta
   if (!role) return [];
   const office = hasMinRole(role, "manager");
 
-  const rows: { id: string; course: string; class: string }[] = [];
+  // Each section carries its resolved display title, so no per-course read.
+  const rows: { id: string; course: string; class: string; title: string }[] = [];
   const classesById = new Map<string, ClassGroup>();
 
   if (office) {
-    const classes = (await getClasses({ limit: 200 })).items;
-    const perClass = await Promise.all(
-      classes.map(async (klass) => {
-        classesById.set(klass.id, klass);
-        try {
-          return (await getClassInstances(klass.id, { limit: 200 })).items;
-        } catch {
-          // One unreadable şube must not empty the whole picker.
-          return [];
-        }
-      }),
-    );
-    for (const instance of perClass.flat()) {
-      rows.push({ id: instance.id, course: instance.course, class: instance.class });
+    // Shared with the label cache: the school is walked once per tab. One
+    // unreadable şube comes back empty instead of emptying the picker.
+    for (const { klass, sections } of await loadSchoolSections()) {
+      classesById.set(klass.id, klass);
+      for (const instance of sections) {
+        rows.push({ id: instance.id, course: instance.course, class: instance.class, title: instance.title });
+      }
     }
   } else {
     const [mine, classes] = await Promise.all([
@@ -53,25 +47,15 @@ export async function loadInstanceOptions(role: Role | undefined): Promise<Insta
     ]);
     for (const klass of classes.items) classesById.set(klass.id, klass);
     for (const instance of mine.items) {
-      rows.push({ id: instance.id, course: instance.course, class: instance.class });
+      rows.push({ id: instance.id, course: instance.course, class: instance.class, title: instance.title });
     }
   }
 
-  const titles = new Map<string, string>();
-  await Promise.all(
-    [...new Set(rows.map((row) => row.course))].map(async (courseId) => {
-      try {
-        titles.set(courseId, (await getCourseById(courseId)).title);
-      } catch {
-        // Shows as a dash in the label below, never the raw id.
-      }
-    }),
-  );
 
   // Class by class (9-A, 9-B, 10-A…), then by ders inside a class, the order a
   // school reads its timetable in; a şube this caller cannot name goes last.
   const collator = new Intl.Collator("tr", { numeric: true, sensitivity: "base" });
-  const courseTitle = (row: { course: string }) => titles.get(row.course) ?? "—";
+  const courseTitle = (row: { title: string }) => row.title?.trim() || "—";
   return rows
     .sort((a, b) => {
       const classA = classesById.get(a.class);
@@ -85,7 +69,9 @@ export async function loadInstanceOptions(role: Role | undefined): Promise<Insta
       return collator.compare(courseTitle(a), courseTitle(b));
     })
     .map((row) => ({
-      ...row,
+      id: row.id,
+      course: row.course,
+      class: row.class,
       label: `${courseTitle(row)} — ${classesById.get(row.class)?.name ?? "—"}`,
     }));
 }

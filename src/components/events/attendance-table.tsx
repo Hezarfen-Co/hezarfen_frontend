@@ -3,6 +3,7 @@ import type { ColumnDef } from "@tanstack/solid-table";
 import type { Attendance } from "@/api/client";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { IconTrash } from "@/components/ui/icons";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +22,7 @@ export function AttendanceTable(props: {
   onRemove?: (userId: string) => Promise<void>;
 }) {
   const t = useT();
-  const [targetUser, setTargetUser] = createSignal<string | null>(null);
+  const [target, setTarget] = createSignal<Attendance | null>(null);
   const columns = createMemo<ColumnDef<Attendance>[]>(() => [
     {
       id: "attendee",
@@ -64,7 +65,7 @@ export function AttendanceTable(props: {
                   label: t("common.remove"),
                   icon: <IconTrash class="h-4 w-4" />,
                   destructive: true,
-                  onSelect: () => setTargetUser(personId(cell.row.original.user)),
+                  onSelect: () => setTarget(cell.row.original),
                 },
               ]}
             />
@@ -78,27 +79,25 @@ export function AttendanceTable(props: {
       <Show
         when={props.rows.length > 0}
         fallback={
-          <p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-            {props.emptyLabel ?? t("events.noAttendance")}
-          </p>
+          <EmptyState kind="people" title={props.emptyLabel ?? t("events.noAttendance")} />
         }
       >
-        <DataTable columns={columns()} data={props.rows} filterColumn="attendee" enablePagination pageSize={10} />
+        <DataTable columns={columns()} data={props.rows} filterColumn="attendee" filterHint={t("events.attendanceSearchHint")} enablePagination />
       </Show>
 
       <ConfirmDialog
-        open={targetUser() != null}
+        open={target() != null}
         onOpenChange={(open) => {
-          if (!open) setTargetUser(null);
+          if (!open) setTarget(null);
         }}
         title={t("confirm.deleteTitle")}
         variant="destructive"
-        summary={t("confirm.removeAttendance", { user: targetUser() ?? "" })}
+        summary={t("confirm.removeAttendance", { user: target() ? personLabel(target()!.user) : "" })}
         onConfirm={async () => {
-          const userId = targetUser();
-          if (!userId) return;
-          await props.onRemove?.(userId);
-          setTargetUser(null);
+          const row = target();
+          if (!row) return;
+          await props.onRemove?.(personId(row.user));
+          setTarget(null);
         }}
       />
     </>

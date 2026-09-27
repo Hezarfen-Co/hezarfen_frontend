@@ -108,7 +108,7 @@ export function NotificationList(props: {
         when={previewNotification()}
         fallback={
           <div class="p-2">
-        <div class={cn("mt-0 space-y-1 overflow-y-auto", props.scrollClass ?? "max-h-80")}>
+        <div class={cn("mt-0 space-y-1 overflow-y-auto", props.scrollClass ?? "max-h-[min(30rem,calc(100dvh-9rem))]")}>
           <Suspense
             fallback={
               <div class="p-8 text-center text-xs text-text-subtle">
@@ -172,7 +172,7 @@ export function NotificationList(props: {
                                   select(item);
                                 }
                               }}
-                              class="group relative flex cursor-pointer select-none items-start gap-3 rounded-lg p-2 text-xs transition-colors hover:bg-background/70"
+                              class="group relative flex cursor-pointer select-none items-start gap-3 rounded-lg p-2 text-xs outline-hidden transition-colors hover:bg-background/70 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                             >
                               <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-background/75 text-text-subtle transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                                 <Show when={item.type === "message"}>
@@ -202,7 +202,7 @@ export function NotificationList(props: {
                                 type="button"
                                 // A thumb-sized target on touch screens, where
                                 // there is no hover to reveal it either.
-                                class="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-md text-text-subtle/70 opacity-80 transition-all hover:bg-destructive/10 hover:text-destructive-text sm:opacity-0 sm:group-hover:opacity-100 touch:right-0 touch:top-0 touch:h-11 touch:w-11 touch:opacity-80"
+                                class="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-md text-text-subtle/70 opacity-80 transition-all hover:bg-destructive/10 hover:text-destructive-text outline-hidden focus-visible:ring-2 focus-visible:ring-ring sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:focus-visible:opacity-100 touch:right-0 touch:top-0 touch:h-11 touch:w-11 touch:opacity-80"
                                 title={t("notifications.dismiss")}
                                 aria-label={t("notifications.dismiss")}
                                 onClick={(e) => dismissOne(e, item.id)}

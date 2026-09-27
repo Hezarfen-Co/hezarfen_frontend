@@ -52,7 +52,7 @@ function MarksContent() {
     <div class="space-y-5">
       <PageHeader
         title={t("marks.title")}
-        description={tab() === "marks" ? t("marks.subtitle") : t("attendance.subtitle")}
+        description={tab() === "marks" ? t("marks.subtitle") : tab() === "karne" ? t("karne.subtitle") : t("attendance.subtitle")}
       />
 
       <Tabs
@@ -106,7 +106,9 @@ function MarksContent() {
         <TabsContent value="attendance" class="mt-0 border-0 bg-transparent p-0 shadow-none">
           <Suspense fallback={<PageSpinner />}>
             <Show when={!attendance.error} fallback={<Alert variant="destructive">{formatApiError(attendance.error)}</Alert>}>
-              <Show when={attendance()}>{(report) => <AttendanceReportView report={report()} />}</Show>
+              <Show when={attendance()} fallback={<EmptyState kind="exams" title={t("attendance.emptyCourses")} />}>
+                {(report) => <AttendanceReportView report={report()} />}
+              </Show>
             </Show>
           </Suspense>
         </TabsContent>

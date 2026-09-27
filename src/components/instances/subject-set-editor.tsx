@@ -18,6 +18,8 @@ export function SubjectSetEditor(props: {
   /** The catalog course's subjects — the only ones a set may hold. */
   available: Subject[];
   canEdit: boolean;
+  /** Either list is still loading: draw nothing rather than "no topics" / "all taken". */
+  loading?: boolean;
   onAdd: (subjectId: string) => Promise<void>;
   onRemove: (subject: Subject) => Promise<void>;
 }) {
@@ -44,7 +46,8 @@ export function SubjectSetEditor(props: {
   };
 
   return (
-    <div class="space-y-3">
+    <div class="space-y-3" aria-busy={props.loading || undefined}>
+      <Show when={!props.loading} fallback={<div class="h-8 w-full max-w-sm animate-pulse rounded-full bg-surface-tint" />}>
       <Show when={props.selected.length > 0} fallback={<p class="text-sm text-muted-foreground">{t("instances.noSubjects")}</p>}>
         <ul class="flex flex-wrap gap-1.5">
           <For each={props.selected}>
@@ -76,7 +79,7 @@ export function SubjectSetEditor(props: {
               class={cn(TOOLBAR_CONTROL, "min-w-56 flex-1 sm:max-w-sm [&_input]:text-[13px]")}
               value={pick()}
               onChange={setPick}
-              placeholder={t("instances.addSubject")}
+              placeholder={t("subjects.select")}
               options={addable().map((subject) => ({ value: subject.id, label: subject.name }))}
             />
             <Button
@@ -92,6 +95,7 @@ export function SubjectSetEditor(props: {
             </Button>
           </div>
         </Show>
+      </Show>
       </Show>
       <Show when={error()}><Alert variant="destructive">{error()}</Alert></Show>
     </div>

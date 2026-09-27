@@ -36,7 +36,9 @@ export function InsightsBoard() {
   const [flashMessage, flash] = createFlash();
 
   const [selfInsight, { refetch: refetchSelfInsight }] = createResource(
-    () => auth.user()?.id ?? null,
+    // Only a student (their analysis) or a teacher (their recommendations)
+    // is shown this read; other roles never render it, so never ask.
+    () => (role() === "student" || role() === "teacher" ? auth.user()?.id ?? null : null),
     async () => getMyInsight(),
   );
   const [students, { refetch: refetchStudents }] = createResource(

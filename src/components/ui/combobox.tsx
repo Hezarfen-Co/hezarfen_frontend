@@ -38,6 +38,7 @@ export function ComboboxControl<T extends ValidComponent = "div">(
   const [local, rest] = splitProps(props as ComponentProps<typeof ComboboxPrimitive.Control>, ["class"]);
   return (
     <ComboboxPrimitive.Control
+      data-slot="combobox-control"
       class={cn(
         "relative flex h-9 w-full items-center rounded-md border border-input bg-background/90 shadow-sm transition-all",
         "hover:border-ring/45 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 data-disabled:cursor-not-allowed data-disabled:opacity-50",

@@ -10,6 +10,8 @@ import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Button } from "@/components/ui/button";
+import { TOOLBAR_CONTROL, TOOLBAR_SLOT } from "@/components/ui/data-toolbar";
+import { cn } from "@/lib/cn";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Label } from "@/components/ui/label";
@@ -29,11 +31,9 @@ import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
 // Lazy so the drawing pad rides its own chunk, off the question detail's initial load.
 const DrawCanvas = lazy(() => import("@/components/ui/draw-canvas").then((m) => ({ default: m.DrawCanvas })));
 
-// Approve and the actions menu share one row: the toolbar pill, touch-sized
-// (h-10) below `sm` and on touch screens, h-8 above. The menu trigger is a
-// <button> too, so one rule sizes both.
-const HEADER_CONTROLS =
-  "flex flex-wrap items-center gap-2 [&_button]:h-10 [&_button]:rounded-full [&_button]:px-3.5 [&_button]:text-[13px] sm:[&_button]:h-8 touch:[&_button]:h-10";
+// Approve and the actions menu share one row of toolbar pills. The menu
+// trigger is a <button> too, so the slot rule sizes both.
+const HEADER_CONTROLS = cn("flex flex-wrap items-center gap-2", TOOLBAR_SLOT);
 
 export default function QuestionDetailPage() {
   return (
@@ -216,8 +216,8 @@ function QuestionDetailContent() {
                 <div class="mt-8">
                   <div class="flex items-center justify-between mb-4">
                     <h2 class="text-xl font-semibold ">{t("pool.solutions")}</h2>
-                    <Button variant="outline" onClick={() => setOfferOpen(true)}>
-                      <IconMessage class="mr-2 h-4 w-4" />
+                    <Button variant="outline" size="sm" class={cn(TOOLBAR_CONTROL, "px-3.5")} onClick={() => setOfferOpen(true)}>
+                      <IconMessage class="h-4 w-4" />
                       {t("pool.offerSolution")}
                     </Button>
                   </div>

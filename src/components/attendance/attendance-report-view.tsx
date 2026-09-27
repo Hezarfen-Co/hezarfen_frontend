@@ -46,15 +46,21 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
       id: "course",
       accessorFn: (row) => row.course.title,
       header: t("nav.courses"),
+      // The name gets the room; six short count columns share the rest. Equal
+      // widths cut every name to "Mate…" in the side panel.
+      size: 260,
+      minSize: 140,
       meta: { stickyLeft: true },
       cell: (cell) => (
-        <Link to="/courses/$id" params={{ id: cell.row.original.course.id }} class="block truncate font-medium hover:text-primary-text hover:underline">
+        <Link to="/courses/$id" params={{ id: cell.row.original.course.id }} title={cell.row.original.course.title} class="block truncate font-medium hover:text-primary-text hover:underline">
           {cell.row.original.course.title}
         </Link>
       ),
     },
     ...ATTENDANCE_STATUSES.map((status, index) => ({
       id: status.value,
+      size: 72,
+      minSize: 48,
       header: () => <span title={t(status.detailKey)}>{compact() ? t(status.key).slice(0, 1) : t(status.key)}</span>,
       meta: { align: "right" as const, divider: index === 0 ? ("left" as const) : undefined },
       cell: (cell) => (
@@ -65,12 +71,16 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
     } satisfies ColumnDef<CourseAttendanceRow>)),
     {
       id: "total",
+      size: 72,
+      minSize: 48,
       header: () => <span>{compact() ? "Σ" : t("common.all")}</span>,
       meta: { align: "right", cellClass: "" },
       cell: (cell) => cell.row.original.counts.total,
     },
     {
       id: "rate",
+      size: 80,
+      minSize: 56,
       header: () => <span>%</span>,
       meta: { align: "right", cellClass: "font-semibold" },
       cell: (cell) => percent(cell.row.original.counts.rate),
@@ -79,20 +89,20 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
 
   return (
     <div class="min-w-0 space-y-4">
-      <dl class="grid grid-cols-1 gap-3 sm:grid-cols-4">
-        <div class={cn("rounded-lg border border-border bg-card p-4 shadow-xs", compact() && "p-3 shadow-none")}>
+      <dl class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div class={cn("rounded-xl border border-border bg-card p-4 shadow-xs", compact() && "p-3 shadow-none")}>
           <dt class="text-xs font-medium text-muted-foreground">{t("attendance.overallRate")}</dt>
           <dd class={cn("mt-2 text-3xl font-semibold tabular-nums", compact() && "text-2xl")}>{percent(combined().rate)}</dd>
         </div>
-        <div class={cn("rounded-lg border border-border bg-card p-4 shadow-xs", compact() && "p-3 shadow-none")}>
+        <div class={cn("rounded-xl border border-border bg-card p-4 shadow-xs", compact() && "p-3 shadow-none")}>
           <dt class="text-xs font-medium text-muted-foreground">{t("attendance.totalAbsence")}</dt>
           <dd class={cn("mt-2 text-3xl font-semibold tabular-nums", compact() && "text-2xl")}>{combined().totalAbsence}</dd>
         </div>
-        <div class={cn("rounded-lg border border-border bg-card p-4 shadow-xs", compact() && "p-3 shadow-none")}>
+        <div class={cn("rounded-xl border border-border bg-card p-4 shadow-xs", compact() && "p-3 shadow-none")}>
           <dt class="text-xs font-medium text-muted-foreground">{t("status.excused")}</dt>
           <dd class={cn("mt-2 text-3xl font-semibold tabular-nums", compact() && "text-2xl")}>{combined().excused}</dd>
         </div>
-        <div class={cn("rounded-lg border border-border bg-card p-4 shadow-xs", compact() && "p-3 shadow-none")}>
+        <div class={cn("rounded-xl border border-border bg-card p-4 shadow-xs", compact() && "p-3 shadow-none")}>
           <dt class="text-xs font-medium text-muted-foreground">{t("status.absent")}</dt>
           <dd class={cn("mt-2 text-3xl font-semibold tabular-nums", compact() && "text-2xl")}>{combined().absent}</dd>
         </div>
@@ -101,13 +111,13 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
       <div class={cn("grid gap-3", !compact() && "lg:grid-cols-2")}>
         <For each={blocks()}>
           {(block) => (
-            <article class="rounded-lg border border-border bg-card p-4 shadow-xs">
+            <article class="rounded-xl border border-border bg-card p-4 shadow-xs">
               <header class="flex items-end justify-between gap-3">
                 <div>
                   <p class="text-xs font-medium text-muted-foreground">{block.title}</p>
                   <p class="mt-1 text-2xl font-semibold tabular-nums">{percent(block.counts.rate)}</p>
                 </div>
-                <p class="text-xs text-muted-foreground">{block.counts.total} {t("common.all").toLocaleLowerCase()}</p>
+                <p class="text-xs text-muted-foreground">{t("attendance.recordCount", { count: block.counts.total })}</p>
               </header>
               <div class="mt-3 h-2 overflow-hidden rounded-full bg-muted">
                 <div class={cn("h-full rounded-full", block.color)} style={{ width: rateWidth(block.counts.rate) }} />
@@ -137,7 +147,7 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
       {/* Devamsızlık is counted in *days*, not marks: two absences in one
           calendar day count once, which is what the regulation counts. */}
       <Show when={(props.report.devamsizlik ?? []).length > 0}>
-        <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
+        <section class="rounded-xl border border-border bg-card p-4 shadow-xs">
           <h3 class="text-base font-semibold">{t("attendance.devamsizlik")}</h3>
           <div class="mt-3 grid gap-2 sm:grid-cols-2">
             <For each={props.report.devamsizlik ?? []}>
@@ -176,7 +186,7 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
         </section>
       </Show>
 
-      <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
+      <section class="rounded-xl border border-border bg-card p-4 shadow-xs">
         <h3 class="text-base font-semibold">{t("attendance.courseBreakdown")}</h3>
         <div class="mt-3">
           <Show

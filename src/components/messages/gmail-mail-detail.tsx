@@ -7,8 +7,16 @@ import { IconSend, IconTrash, IconMessage, IconArchive, IconChevronLeft, IconChe
 import { postMessage } from "@/api/messages";
 import { formatApiError } from "@/api/client";
 import { personLabel } from "@/lib/person";
-import { useT } from "@/stores/preferences-context";
-import { sanitizeRichText } from "@/lib/rich-text";
+import type { MessageKey } from "@/i18n/messages";
+import { usePreferences, useT } from "@/stores/preferences-context";
+import { toRichTextHtml } from "@/lib/rich-text";
+
+const FOLDER_LABEL: Record<string, MessageKey> = {
+  inbox: "messages.inbox",
+  sent: "messages.sent",
+  archive: "messages.archive",
+  trash: "messages.trash",
+};
 
 interface GmailMailDetailProps {
   message: Message;
@@ -22,6 +30,7 @@ interface GmailMailDetailProps {
 
 export function GmailMailDetail(props: GmailMailDetailProps) {
   const t = useT();
+  const { locale } = usePreferences();
   const [isReplying, setIsReplying] = createSignal(false);
   const [replyBody, setReplyBody] = createSignal("");
   const [sending, setSending] = createSignal(false);
@@ -63,7 +72,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
 
   const formattedDate = (ts: number) => {
     const date = new Date(ts);
-    return date.toLocaleString([], {
+    return date.toLocaleString(locale(), {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -121,8 +130,8 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
             class="h-8 rounded-lg text-xs"
             onClick={props.onBack}
           >
-            <IconChevronLeft class="mr-1 h-4 w-4" />
-            Gelen Kutusu
+            <IconChevronLeft class="h-4 w-4" />
+            {t(FOLDER_LABEL[props.folder] ?? "messages.inbox")}
           </Button>
 
           <div class="h-4 w-px bg-border mx-1" />
@@ -138,9 +147,9 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
             >
               <Show
                 when={props.message.read}
-                fallback={<IconCheck class="mr-1.5 h-3.5 w-3.5" />}
+                fallback={<IconCheck class="h-3.5 w-3.5" />}
               >
-                <IconMessage class="mr-1.5 h-3.5 w-3.5" />
+                <IconMessage class="h-3.5 w-3.5" />
               </Show>
               {props.message.read ? t("messages.markAsUnread") : t("messages.markAsRead")}
             </Button>
@@ -155,7 +164,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
               onClick={() => props.onAction({ folder: "archive" })}
               title={t("messages.moveToArchive")}
             >
-              <IconArchive class="mr-1.5 h-3.5 w-3.5" />
+              <IconArchive class="h-3.5 w-3.5" />
               {t("messages.moveToArchive")}
             </Button>
           </Show>
@@ -169,7 +178,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
               onClick={() => props.onAction({ folder: restoreFolder() })}
               title={t("messages.moveOutOfArchive")}
             >
-              <IconArchive class="mr-1.5 h-3.5 w-3.5" />
+              <IconArchive class="h-3.5 w-3.5" />
               {t("messages.moveOutOfArchive")}
             </Button>
           </Show>
@@ -183,7 +192,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
               onClick={() => props.onAction({ folder: restoreFolder() })}
               title={t("messages.restoreFromTrash")}
             >
-              <IconMessage class="mr-1.5 h-3.5 w-3.5" />
+              <IconMessage class="h-3.5 w-3.5" />
               {t("messages.restoreFromTrash")}
             </Button>
           </Show>
@@ -197,7 +206,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
               onClick={() => props.onAction({ folder: "trash" })}
               title={t("messages.moveToTrash")}
             >
-              <IconTrash class="mr-1.5 h-3.5 w-3.5" />
+              <IconTrash class="h-3.5 w-3.5" />
               {t("messages.moveToTrash")}
             </Button>
           </Show>
@@ -211,7 +220,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
               onClick={() => props.onAction({ delete: true })}
               title={t("messages.deleteForever")}
             >
-              <IconTrash class="mr-1.5 h-3.5 w-3.5" />
+              <IconTrash class="h-3.5 w-3.5" />
               {t("messages.deleteForever")}
             </Button>
           </Show>
@@ -226,8 +235,8 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
       <div class="flex-1 p-4 sm:p-6 max-w-4xl mx-auto w-full space-y-6">
         {/* Email Subject Title Header */}
         <div class="flex items-center justify-between gap-3 border-b border-border-hairline pb-4">
-          <div class="flex items-center gap-3">
-            <h1 class="text-xl font-bold tracking-tight text-foreground">
+          <div class="flex min-w-0 flex-wrap items-center gap-3">
+            <h1 class="min-w-0 break-words text-xl font-bold tracking-tight text-foreground">
               {props.message.subject}
             </h1>
             <Show when={props.message.label}>
@@ -256,7 +265,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
                 </Show>
               </div>
               <p class="text-xs text-muted-foreground">
-                {isSent() ? `${t("messages.to")}: ` : `${t("messages.from")}: `}
+                {isSent() ? t("messages.to") : t("messages.from")}
                 <span class="font-medium text-foreground">{peerName()}</span>
               </p>
             </div>
@@ -269,15 +278,17 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
               class="h-8 rounded-lg text-xs"
               onClick={handleStartReply}
             >
-              <IconMessage class="mr-1.5 h-3.5 w-3.5" />
+              <IconMessage class="h-3.5 w-3.5" />
               {t("messages.reply")}
             </Button>
           </Show>
         </div>
 
         {/* Email Body Card */}
-        <div class="rounded-xl border border-border-line bg-surface-base p-6 leading-relaxed text-sm text-foreground/90 whitespace-pre-wrap min-h-[140px]">
-          <div innerHTML={sanitizeRichText(props.message.body)} />
+        <div class="min-h-[140px] rounded-xl border border-border-line bg-surface-base p-4 text-sm leading-relaxed text-foreground/90 sm:p-6">
+          {/* Stored HTML (or older plain text) as paragraphs; source newlines
+              between tags no longer turn into blank lines. */}
+          <div class="note-prose break-words" innerHTML={toRichTextHtml(props.message.body)} />
         </div>
 
         {/* Gmail Style Inline Reply Area */}
@@ -293,7 +304,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
                     class="rounded-lg px-5 h-9 text-xs font-semibold hover:bg-accent"
                     onClick={handleStartReply}
                   >
-                    <IconMessage class="mr-2 h-4 w-4" />
+                    <IconMessage class="h-4 w-4" />
                     {t("messages.reply")}
                   </Button>
                 </div>
@@ -338,7 +349,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
                     class="rounded-lg px-5 h-9 font-semibold"
                     disabled={sending() || !replyBody().trim()}
                   >
-                    <IconSend class="mr-2 h-4 w-4" />
+                    <IconSend class="h-4 w-4" />
                     {t("messages.send")}
                   </Button>
 
@@ -347,6 +358,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
                     class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text"
                     onClick={() => setIsReplying(false)}
                     title={t("common.cancel")}
+                    aria-label={t("common.cancel")}
                   >
                     <IconTrash class="h-4 w-4" />
                   </button>

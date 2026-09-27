@@ -6,10 +6,9 @@ import type { PodcastJobSummary } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { IconSparkles, IconWaveform } from "@/components/ui/icons";
+import { InfiniteSentinel } from "@/components/ui/infinite-sentinel";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { TablePagination } from "@/components/ui/table-pagination";
 import { cn } from "@/lib/cn";
-import { createResponsivePageSize } from "@/lib/create-page-size";
 import { formatDateTime } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -35,7 +34,8 @@ type StudioArtifact = {
 };
 
 const LIBRARY_LIMIT = 100;
-const LIBRARY_PAGE_SIZE = 10;
+/** Client lists reveal this many rows at a time, like client DataTables. */
+const LIBRARY_REVEAL = 50;
 
 export function StudioOutputLibrary(props: {
   notes: StudioLibraryNote[];
@@ -114,19 +114,14 @@ export function StudioOutputLibrary(props: {
     return rows.sort((a, b) => b.at - a.at);
   });
 
-  // The history is merged here from two sources, so it pages in memory.
-  const [page, setPage] = createSignal(0);
-  const pageSize = createResponsivePageSize(LIBRARY_PAGE_SIZE);
+  // The history is merged here from two sources, so it is revealed in
+  // memory as the reader scrolls — the app's client-list standard.
+  const [shown, setShown] = createSignal(LIBRARY_REVEAL);
   const total = () => items()?.length ?? 0;
-  const pageCount = createMemo(() => Math.max(1, Math.ceil(total() / pageSize())));
-  const pageItems = createMemo(() => (items() ?? []).slice(page() * pageSize(), (page() + 1) * pageSize()));
+  const pageItems = createMemo(() => (items() ?? []).slice(0, shown()));
   createEffect(() => {
     source();
-    pageSize();
-    setPage(0);
-  });
-  createEffect(() => {
-    if (page() > pageCount() - 1) setPage(pageCount() - 1);
+    setShown(LIBRARY_REVEAL);
   });
 
   const open = (item: StudioArtifact) => {
@@ -180,6 +175,11 @@ export function StudioOutputLibrary(props: {
                       <span class="block truncate text-sm font-medium text-text-strong">{item.title}</span>
                       <span class="mt-0.5 block truncate text-xs text-muted-foreground">
                         {item.courseTitle}
+                        {/* Phones fold the date under the title so the title keeps the row's width. */}
+                        <span class="tabular-nums sm:hidden">
+                          {item.courseTitle ? " · " : ""}
+                          {formatDateTime(item.at, locale())}
+                        </span>
                       </span>
                     </span>
                     <span class="hidden shrink-0 items-center gap-1.5 sm:flex">
@@ -207,7 +207,7 @@ export function StudioOutputLibrary(props: {
                         )}
                       </Show>
                     </span>
-                    <span class="shrink-0 text-xs tabular-nums text-muted-foreground">
+                    <span class="hidden shrink-0 text-xs tabular-nums text-muted-foreground sm:block">
                       {formatDateTime(item.at, locale())}
                     </span>
                   </button>
@@ -215,15 +215,14 @@ export function StudioOutputLibrary(props: {
               )}
             </For>
           </ul>
-          <Show when={pageCount() > 1}>
-            <div class="border-t border-border-hairline p-2">
-              <TablePagination
-                pageIndex={page()}
-                pageCount={pageCount()}
-                pageSize={pageSize()}
+          <Show when={total() > LIBRARY_REVEAL}>
+            <div class="flex flex-col items-start gap-2 border-t border-border-hairline px-4 py-3">
+              <InfiniteSentinel
+                hasMore={shown() < total()}
+                loading={false}
+                shown={Math.min(shown(), total())}
                 total={total()}
-                onPageChange={setPage}
-                class="border-0 bg-transparent"
+                onLoadMore={() => setShown((count) => count + LIBRARY_REVEAL)}
               />
             </div>
           </Show>

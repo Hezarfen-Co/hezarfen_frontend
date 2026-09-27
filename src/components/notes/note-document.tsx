@@ -7,6 +7,7 @@ import { NoteFilesPanel } from "@/components/notes/note-files-panel";
 import { NoteRichEditor } from "@/components/notes/note-rich-editor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { TOOLBAR_SLOT } from "@/components/ui/data-toolbar";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IconAlert, IconChevronLeft, IconPlus, IconTrash } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
@@ -139,16 +140,17 @@ export function NoteDocument(props: { note?: Note }) {
 
   return (
     <div class="space-y-4">
-      <div class="flex items-center gap-3">
-        <Link to="/notes" class="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+      {/* Header row controls are toolbar pills, the back link included. */}
+      <div class={cn("flex items-center gap-3", TOOLBAR_SLOT)}>
+        <Link to="/notes" class="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
           <IconChevronLeft class="h-4 w-4" />
           {t("notes.backToNotebook")}
         </Link>
-        <span class={cn("ml-auto text-xs", dirty() ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground")} aria-live="polite">
+        <span class={cn("ml-auto text-xs", dirty() ? "text-warning-text" : "text-muted-foreground")} aria-live="polite">
           {status()}
         </span>
         <Show when={props.note}>
-          <Button type="button" variant="outline" size="sm" class="rounded-lg text-destructive-text hover:text-destructive-text" onClick={() => setDeleteOpen(true)}>
+          <Button type="button" variant="outline" size="sm" class="text-destructive-text hover:text-destructive-text" onClick={() => setDeleteOpen(true)}>
             <IconTrash class="h-4 w-4" />
             {t("common.delete")}
           </Button>
@@ -178,10 +180,10 @@ export function NoteDocument(props: { note?: Note }) {
             value={content()}
             onChange={setContent}
             placeholder={t("notes.bodyPlaceholder")}
-            toolbarClass="top-[45px]"
+            toolbarClass="top-[calc(49px+env(safe-area-inset-top))]"
             actions={
               <>
-                <Button type="button" size="sm" class="min-w-[6.5rem] rounded-lg" disabled={saving() || (!dirty() && !isNew())} onClick={() => void save()}>
+                <Button type="button" size="sm" class="h-8 min-w-[6.5rem] rounded-full px-3.5 text-[13px]" disabled={saving() || (!dirty() && !isNew())} onClick={() => void save()}>
                   {saving() ? t("notes.saving") : t("common.save")}
                 </Button>
               </>
@@ -189,11 +191,11 @@ export function NoteDocument(props: { note?: Note }) {
           />
         </div>
 
-        <aside class="min-w-0 space-y-4 xl:sticky xl:top-[61px] xl:self-start">
+        <aside class="min-w-0 space-y-4 xl:sticky xl:top-[calc(61px+env(safe-area-inset-top))] xl:self-start">
           <Show
             when={props.note}
             fallback={
-              <section class="space-y-3 rounded-lg border border-border/80 bg-card p-4 shadow-xs dark:border-white/8">
+              <section class="space-y-3 rounded-xl border border-border-line bg-card p-4 shadow-xs">
                 <div>
                   <h3 class="text-sm font-semibold">{t("notes.files")}</h3>
                   <p class="mt-1 text-xs text-muted-foreground">{t("notes.filesHelp", { size: formatBytes(maxFileBytes()) })}</p>
@@ -208,12 +210,10 @@ export function NoteDocument(props: { note?: Note }) {
                   disabled={saving() || atFileLimit()}
                   onChange={(event) => addFiles(event.currentTarget.files)}
                 />
-                <div class="grid w-full grid-cols-2 gap-2">
-                  <Button type="button" size="sm" class="col-span-2 w-full rounded-lg" disabled={saving() || atFileLimit()} onClick={() => fileInput?.click()}>
-                    <IconPlus class="h-4 w-4 shrink-0" />
-                    <span class="truncate">{t("notes.addFile")}</span>
-                  </Button>
-                </div>
+                <Button type="button" size="sm" class="h-10 w-full rounded-full text-[13px] sm:h-8 touch:h-10" disabled={saving() || atFileLimit()} onClick={() => fileInput?.click()}>
+                  <IconPlus class="h-4 w-4 shrink-0" />
+                  <span class="truncate">{t("notes.addFile")}</span>
+                </Button>
                 <p class="text-xs text-muted-foreground">{t("notes.filesUploadOnSave")}</p>
                 <Show when={atFileLimit()}>
                   <p class="text-xs text-muted-foreground">{t("notes.fileLimit")}</p>

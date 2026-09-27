@@ -73,8 +73,11 @@ export function CourseHomeworkPanel(props: {
   // A homework subject must sit in the section's resolved subject set.
   const [subjects] = createResource(
     () => (props.active ? props.instanceId : null),
-    async (instanceId) => (instanceId ? (await getInstanceSubjects(instanceId)).subjects : []),
+    // Without subjects the form says so and cannot be sent; a refusal is the same case.
+    async (instanceId) => (instanceId ? (await getInstanceSubjects(instanceId).catch(() => ({ subjects: [] }))).subjects : []),
   );
+  // An errored resource throws when read, so the rows are read through here.
+  const rows = () => (homework.error ? [] : homework() ?? []);
   const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
   const [editing, setEditing] = createSignal<Homework | null>(null);
   const [deleteTarget, setDeleteTarget] = createSignal<Homework | null>(null);
@@ -112,7 +115,7 @@ export function CourseHomeworkPanel(props: {
     if (!open) resetForm();
   };
 
-  createEffect(() => props.onCountChange(homework()?.length ?? 0));
+  createEffect(() => props.onCountChange(rows().length));
   createEffect(() => {
     if (!subjectId()) setSubjectId(subjects()?.[0]?.id ?? "");
   });
@@ -127,7 +130,7 @@ export function CourseHomeworkPanel(props: {
     }
     const current = editing();
     if ((!current || due_at !== current.due_at) && due_at < (serverTime()?.now ?? Date.now())) {
-      setError(t("form.timePast"));
+      setError(t("homework.duePast"));
       return;
     }
     setPending(true);
@@ -211,12 +214,15 @@ export function CourseHomeworkPanel(props: {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
+      <Show when={homework.error}>
+        <Alert variant="destructive">{formatApiError(homework.error)}</Alert>
+      </Show>
       <Suspense fallback={<DataTableSkeleton />}>
         {/* The add button rides in the table's toolbar card, so it stays
             reachable on an empty list too. */}
         <DataTable
           columns={columns()}
-          data={homework() ?? []}
+          data={rows()}
           filterColumn="title"
           enablePagination
           pageSize={10}
@@ -245,6 +251,9 @@ export function CourseHomeworkPanel(props: {
             <Select id="homework-subject" required value={subjectId()} onChange={(event) => setSubjectId(event.currentTarget.value)}>
               <For each={subjects() ?? []}>{(subject: Subject) => <option value={subject.id}>{subject.name}</option>}</For>
             </Select>
+            <Show when={subjects.state === "ready" && (subjects() ?? []).length === 0}>
+              <p class="text-xs text-text-subtle">{t("subjects.empty")}</p>
+            </Show>
           </div>
           <div class="space-y-1.5">
             <Label for="homework-description">{t("form.description")}</Label>
@@ -254,7 +263,7 @@ export function CourseHomeworkPanel(props: {
             <Label for="homework-due-date">{t("homework.dueAt")}</Label>
             <div class="grid grid-cols-2 gap-2">
               <DatePicker id="homework-due-date" class="h-9" placeholder={t("form.datePlaceholder")} value={dueDate()} required onChange={setDueDate} />
-              <Input class="h-9 rounded-md font-mono placeholder:text-text-placeholder" placeholder="17:00" value={dueTime()} required onInput={(event) => setDueTime(event.currentTarget.value)} />
+              <Input id="homework-due-time" class="h-9 rounded-md font-mono placeholder:text-muted-foreground/45" inputMode="numeric" maxlength={5} placeholder="17:00" aria-label={t("homework.dueTime")} value={dueTime()} required onInput={(event) => setDueTime(event.currentTarget.value)} />
             </div>
           </div>
           <p class="rounded-xl border border-border-line bg-surface-tint px-3 py-2 text-xs text-text-subtle">{t("homework.wholeCourseHelp")}</p>

@@ -28,7 +28,7 @@ export function WeeklyPlanTable(props: { slots: WeeklySlot[]; onRemove?: (slot: 
       id: "time",
       accessorFn: (row) => row.starts_at,
       header: t("weeklyPlan.time"),
-      meta: { cellClass: "font-mono whitespace-nowrap" },
+      meta: { cellClass: "tabular-nums whitespace-nowrap" },
       cell: (cell) => `${minutesToHHmm(cell.row.original.starts_at)}–${minutesToHHmm(cell.row.original.ends_at)}`,
     },
     {

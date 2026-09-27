@@ -78,7 +78,7 @@ display-font, translucent surface, or custom shadow rules.
 ## DataTable
 
 - Table shell: `rounded-xl border-border-line bg-surface-base`
-- Header: sticky, `text-xs` medium **Title Case** (no uppercase transform),
+- Header: sticky under the 49px top bar, centred, `text-xs` medium **Title Case** (no uppercase transform),
   `tracking-normal`, muted foreground/background
 - Body: flat rows (no zebra), restrained hover, `tabular-nums` cells so digits
   align vertically without a monospace font
@@ -87,9 +87,14 @@ display-font, translucent surface, or custom shadow rules.
   right, and inherits the exact opaque row surface
 - Data columns fill the available table width at a consistent proportional width.
   Column resizing is not offered (no resize handles, no width persistence)
-- Search / filter / column controls: compact `h-8 rounded-lg` + `text-[13px]` (not pill)
-- Pagination includes range, optional page-size selector, previous/next, and page
-  count
+- Toolbar controls (search, filter chips, actions, "Sütunlar") are pills:
+  `rounded-full` + `text-[13px]`, `h-8` from `sm`, `h-10` below `sm` and on
+  touch screens (`TOOLBAR_CONTROL` / `TOOLBAR_SLOT` / `TOOLBAR_CARD` in
+  `src/components/ui/data-toolbar.tsx`). Every list toolbar is one card.
+- Filled buttons carry a transparent border with `bg-clip-padding`, so they
+  match an outlined pill's height; a border never matches its fill colour.
+- No page numbers: server lists fetch as you scroll (`createInfiniteList` +
+  `infinite`), client lists reveal 50 rows at a time. Empty cells show `—`.
 - `storageKey` remains optional. When provided, only column visibility persists
   under `hezarfen.table.<storageKey>`.
 - Application tables use `DataTable`; page/domain components do not render table

@@ -42,7 +42,7 @@ export function DropdownMenuItem<T extends ValidComponent = "div">(
   return (
     <DropdownMenuPrimitive.Item
       class={cn(
-        "relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors",
+        "relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors max-sm:min-h-10 touch:min-h-10",
         "focus:bg-accent focus:text-accent-foreground data-highlighted:bg-accent data-highlighted:text-accent-foreground",
         "data-disabled:pointer-events-none data-disabled:opacity-40",
         local.inset && "pl-9",
@@ -62,7 +62,7 @@ export function DropdownMenuCheckboxItem<T extends ValidComponent = "div">(
   return (
     <DropdownMenuPrimitive.CheckboxItem
       class={cn(
-        "relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-hidden transition-colors",
+        "relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-hidden transition-colors max-sm:min-h-10 touch:min-h-10",
         "focus:bg-accent focus:text-accent-foreground data-highlighted:bg-accent data-highlighted:text-accent-foreground",
         "data-disabled:pointer-events-none data-disabled:opacity-40",
         local.class,
@@ -103,7 +103,7 @@ export function DropdownMenuRadioItem<T extends ValidComponent = "div">(
   return (
     <DropdownMenuPrimitive.RadioItem
       class={cn(
-        "relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-hidden transition-colors",
+        "relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-hidden transition-colors max-sm:min-h-10 touch:min-h-10",
         "focus:bg-accent focus:text-accent-foreground data-highlighted:bg-accent data-highlighted:text-accent-foreground",
         "data-disabled:pointer-events-none data-disabled:opacity-40",
         local.class,
@@ -129,7 +129,7 @@ export function DropdownMenuSubTrigger<T extends ValidComponent = "div">(
   return (
     <DropdownMenuPrimitive.SubTrigger
       class={cn(
-        "flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors",
+        "flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors max-sm:min-h-10 touch:min-h-10",
         "focus:bg-accent focus:text-accent-foreground data-highlighted:bg-accent data-highlighted:text-accent-foreground data-expanded:bg-accent",
         local.inset && "pl-9",
         local.class,

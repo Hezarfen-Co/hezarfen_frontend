@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { TOOLBAR_SLOT } from "@/components/ui/data-toolbar";
 import { DetailField } from "@/components/ui/detail-field";
+import { EmptyInline } from "@/components/ui/empty-inline";
 import { IconAlert, IconCheck, IconChevronLeft, IconClock, IconExam, IconEye, IconUsers } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -27,7 +28,6 @@ import { examStatusTone, liveDisplayStatus, type LiveDisplayStatus } from "@/lib
 import { formatDateTime } from "@/lib/format";
 import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
 
-const PAGE_SIZE = 10;
 
 export default function LiveMonitorPage() {
   return (
@@ -92,16 +92,11 @@ function liveRosterName(entry: LiveRosterEntry, fallback: string): string {
   );
 }
 
-function minutesLabel(ms: number): string {
-  if (ms <= 0) return "0dk";
-  return `${Math.ceil(ms / 60000)}dk`;
-}
-
-function remainingMinutesLabel(entry: LiveRosterRow): string {
+function remainingMinutesLabel(entry: LiveRosterRow, t: ReturnType<typeof useT>): string {
   const remaining = entry.remaining_ms;
   if (entry.displayStatus !== "not_started" && entry.displayStatus !== "in_progress") return "—";
   if (remaining == null) return "—";
-  return minutesLabel(remaining);
+  return t("exams.minutesLeft", { minutes: remaining <= 0 ? 0 : Math.ceil(remaining / 60000) });
 }
 
 function isLowRemaining(entry: LiveRosterRow): boolean {
@@ -212,7 +207,8 @@ function LiveMonitorContent() {
         header: t("attempt.progress"),
         meta: { headerClass: "text-center", cellClass: "min-w-32 tabular-nums" },
         cell: (cell) => (
-          <div class="flex items-center gap-2">
+          // Centred under its centred header, like the status and time columns.
+          <div class="flex items-center gap-2 sm:justify-center">
             <span>{cell.row.original.answered}/{questionCount}</span>
             <div class="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
               <div class="h-full rounded-full bg-primary" style={{ width: `${progressPercent(cell.row.original, questionCount)}%` }} />
@@ -226,8 +222,8 @@ function LiveMonitorContent() {
         header: t("attempt.remaining"),
         meta: { headerClass: "text-center", cellClass: "tabular-nums text-center" },
         cell: (cell) => (
-          <span class={isLowRemaining(cell.row.original) ? "rounded-full bg-amber-500/10 px-2 py-1 text-amber-700 dark:text-amber-300" : ""}>
-            {remainingMinutesLabel(cell.row.original)}
+          <span class={isLowRemaining(cell.row.original) ? "rounded-full bg-warning/10 px-2 py-1 text-warning-text" : ""}>
+            {remainingMinutesLabel(cell.row.original, t)}
           </span>
         ),
       },
@@ -252,9 +248,6 @@ function LiveMonitorContent() {
   return (
     <Suspense fallback={<PageSpinner />}>
       <div class="space-y-6">
-        <Show when={!snapshot() && !error()}>
-          <PageSpinner />
-        </Show>
         <Show when={exam()}>
           {(ex) => (
             <div class="space-y-2">
@@ -283,51 +276,56 @@ function LiveMonitorContent() {
 
         {error() && <Alert variant="destructive">{error()}</Alert>}
 
+        {/* Under the header, not above it: the header lands first and the
+            spinner held the top of the page, so the title jumped down. */}
+        <Show when={!snapshot() && !error()}>
+          <PageSpinner />
+        </Show>
+
         <Show when={snapshot()}>
               <>
-                <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                  <div class="data-shell bg-card/80 p-3">
+                <section class="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+                  <div class="data-shell bg-card p-3">
                     <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconClock class="h-3.5 w-3.5" />{t("exams.notStarted")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().not_started}</p>
                   </div>
-                  <div class="data-shell bg-card/80 p-3">
+                  <div class="data-shell bg-card p-3">
                     <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconExam class="h-3.5 w-3.5 text-info-text" />{t("attempt.inProgress")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().in_progress}</p>
                   </div>
-                  <div class="data-shell bg-card/80 p-3">
+                  <div class="data-shell bg-card p-3">
                     <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconCheck class="h-3.5 w-3.5 text-success-text" />{t("attempt.submitted")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().submitted}</p>
                   </div>
-                  <div class="data-shell bg-card/80 p-3">
+                  <div class="data-shell bg-card p-3">
                     <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconClock class="h-3.5 w-3.5 text-destructive-text" />{t("attempt.expired")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().expired}</p>
                   </div>
-                  <div class="data-shell bg-card/80 p-3">
+                  <div class="data-shell bg-card p-3">
                     <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconAlert class="h-3.5 w-3.5 text-destructive-text" />{t("attempt.noAttemptsLeft")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().no_attempts_left}</p>
                   </div>
-                  <div class="data-shell bg-card/80 p-3">
+                  <div class="data-shell bg-card p-3">
                     <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconUsers class="h-3.5 w-3.5" />{t("attempt.absent")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().absent}</p>
                   </div>
                 </section>
 
                 <section class="space-y-4 p-0">
-                  <div class="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <h2 class="text-lg font-semibold">{t("exams.liveRoster")}</h2>
-                      <p class="mt-1 text-sm text-muted-foreground">{t("attempt.progress")}</p>
-                    </div>
-                  </div>
+                  <h2 class="text-lg font-semibold">{t("exams.liveRoster")}</h2>
                   <Show
                     when={liveRows().length > 0}
                     fallback={
-                      <p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-                        {t("exams.emptyRoster")}
-                      </p>
+                      <EmptyInline
+                        size="md"
+                        class="data-shell"
+                        illustration="empty"
+                        title={t("exams.emptyRoster")}
+                      />
                     }
                   >
                     <DataTable
                       columns={columns()}
                       data={liveRows()}
                       filterColumn="student"
+                      filterPlaceholder={t("exams.liveSearch")}
+                      filterHint={t("search.hint.liveRoster")}
                       storageKey="live-exam-roster"
                       enablePagination
-                      pageSize={PAGE_SIZE}
                       onRowClick={(row) => setSelectedUserId(row.user.id)}
                     />
                   </Show>

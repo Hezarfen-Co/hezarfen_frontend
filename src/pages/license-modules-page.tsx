@@ -77,7 +77,8 @@ function LicenseModulesContent() {
       meta: { cellClass: "max-w-0 text-text-subtle" },
       cell: (cell) => {
         const text = cell.row.original.requires.map((name) => moduleLabel(name, t)).join(", ");
-        return text ? <span class="block truncate" title={text}>{text}</span> : "—";
+        // Phone cards have room to wrap; the table row stays one line.
+        return text ? <span class="block truncate max-sm:whitespace-normal" title={text}>{text}</span> : "—";
       },
     },
     {
@@ -96,7 +97,7 @@ function LicenseModulesContent() {
 
   return (
     <div class="space-y-5">
-      <Suspense fallback={<DataTableSkeleton columns={2} rows={8} />}>
+      <Suspense fallback={<DataTableSkeleton columns={4} rows={8} />}>
         <Show when={data.error}>
           <ErrorAlert message={formatApiError(data.error)} onRetry={() => void refetch()} />
         </Show>
@@ -115,7 +116,7 @@ function LicenseModulesContent() {
                     <p class="text-sm text-text-subtle">{enabledPackages().join(" + ") || "—"}</p>
                   </div>
                 </div>
-                <div class="h-2 overflow-hidden rounded-full bg-surface-tint" role="progressbar" aria-valuemin={0} aria-valuemax={totalCount()} aria-valuenow={enabledCount()}>
+                <div class="h-2 overflow-hidden rounded-full bg-surface-tint" role="progressbar" aria-label={t("nav.licenseModules")} aria-valuemin={0} aria-valuemax={totalCount()} aria-valuenow={enabledCount()}>
                   <div class="h-full rounded-full bg-primary" style={{ width: `${totalCount() ? (enabledCount() / totalCount()) * 100 : 0}%` }} />
                 </div>
                 <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
@@ -132,6 +133,9 @@ function LicenseModulesContent() {
                   data={value().rows}
                   tableClass="min-w-md"
                   enablePagination={false}
+                  // No search or filters on 21 fixed rows: without this the
+                  // toolbar was a card holding only "Sütunlar".
+                  enableColumnVisibility={false}
                   storageKey="license-modules"
                 />
               </section>

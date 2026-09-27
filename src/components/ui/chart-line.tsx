@@ -1,4 +1,4 @@
-import { For, Show, createMemo, type Component } from "solid-js";
+import { For, Show, createMemo, createSignal, onCleanup, type Component } from "solid-js";
 import { cn } from "@/lib/cn";
 import { usePreferences } from "@/stores/preferences-context";
 import { formatDecimal } from "@/lib/format";
@@ -20,7 +20,13 @@ export type ChartLineProps = {
   class?: string;
 };
 
-const VIEW_WIDTH = 720;
+// The drawing is laid out in real pixels: the viewBox follows the measured
+// width, so a wide card is filled edge to edge (a fixed 720-wide viewBox in a
+// 240px-tall box letterboxed it) and axis text keeps its 11px size.
+const DEFAULT_VIEW_WIDTH = 720;
+const MIN_VIEW_WIDTH = 260;
+// Room one x-axis caption needs, so a phone gets fewer ticks, not overlaps.
+const TICK_SLOT = 96;
 const VIEW_HEIGHT = 240;
 const PADDING = { top: 18, right: 18, bottom: 34, left: 38 };
 const Y_TICKS = [0, 25, 50, 75, 100];
@@ -34,12 +40,22 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
   const maxValue = () => props.maxScale != null && props.maxScale > 0
     ? props.maxScale
     : Math.max(...props.items.map((item) => item.value), 1);
-  const plotWidth = VIEW_WIDTH - PADDING.left - PADDING.right;
+  const [viewWidth, setViewWidth] = createSignal(DEFAULT_VIEW_WIDTH);
+  const observeWidth = (el: HTMLDivElement) => {
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver((entries) => {
+      const width = Math.round(entries[0]?.contentRect.width ?? 0);
+      if (width > 0) setViewWidth(Math.max(MIN_VIEW_WIDTH, width));
+    });
+    observer.observe(el);
+    onCleanup(() => observer.disconnect());
+  };
+  const plotWidth = () => viewWidth() - PADDING.left - PADDING.right;
   const plotHeight = VIEW_HEIGHT - PADDING.top - PADDING.bottom;
   const pointFor = (item: ChartLineItem, index: number) => {
     const x = props.items.length === 1
-      ? PADDING.left + plotWidth / 2
-      : PADDING.left + (index / (props.items.length - 1)) * plotWidth;
+      ? PADDING.left + plotWidth() / 2
+      : PADDING.left + (index / (props.items.length - 1)) * plotWidth();
     const y = PADDING.top + (1 - Math.min(1, Math.max(0, item.value / maxValue()))) * plotHeight;
     return { x, y };
   };
@@ -50,7 +66,7 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
   const areaPoints = createMemo(() => {
     if (props.items.length < 2) return "";
     const baseline = PADDING.top + plotHeight;
-    return `${PADDING.left},${baseline} ${points()} ${PADDING.left + plotWidth},${baseline}`;
+    return `${PADDING.left},${baseline} ${points()} ${PADDING.left + plotWidth()},${baseline}`;
   });
   const summary = createMemo(() => {
     if (props.items.length === 0) return null;
@@ -64,7 +80,8 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
   });
   const xTickIndexes = createMemo(() => {
     if (props.items.length <= 1) return [0];
-    const step = Math.max(1, Math.ceil((props.items.length - 1) / 5));
+    const slots = Math.max(1, Math.min(5, Math.floor(plotWidth() / TICK_SLOT)));
+    const step = Math.max(1, Math.ceil((props.items.length - 1) / slots));
     const indexes = Array.from({ length: props.items.length }, (_, index) => index)
       .filter((index) => index % step === 0);
     if (indexes[indexes.length - 1] !== props.items.length - 1) indexes.push(props.items.length - 1);
@@ -118,12 +135,13 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
               </div>
             </dl>
 
-            {/* The floor only keeps axis text legible on a phone: at 640px it
-                forced a sideways scroller into the card on a 1280px screen. */}
-            <div class="overflow-x-auto pb-1">
+            {/* Fits any width: the viewBox follows the box and a narrow
+                screen gets fewer x ticks, so a phone needs no sideways
+                scroller (a 480px floor cut the line with no scroll cue). */}
+            <div ref={observeWidth} class="pb-1">
               <svg
-                class="h-60 min-w-[480px] w-full"
-                viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
+                class="h-60 w-full"
+                viewBox={`0 0 ${viewWidth()} ${VIEW_HEIGHT}`}
                 role="img"
                 aria-label={props.items.map((item) => `${item.label}${item.caption ? ` (${item.caption})` : ""}: ${item.formattedValue ?? item.value}`).join(", ")}
               >
@@ -132,7 +150,7 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
                     const y = () => PADDING.top + (1 - tick / 100) * plotHeight;
                     return (
                       <g>
-                        <line x1={PADDING.left} x2={PADDING.left + plotWidth} y1={y()} y2={y()} class="stroke-border/70" stroke-width="1" />
+                        <line x1={PADDING.left} x2={PADDING.left + plotWidth()} y1={y()} y2={y()} class="stroke-border/70" stroke-width="1" />
                         <text x={PADDING.left - 8} y={y() + 3} text-anchor="end" class="fill-muted-foreground text-[11px]">{tick}</text>
                       </g>
                     );
@@ -143,7 +161,7 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
                   <polygon points={areaPoints()} class="fill-primary opacity-10" />
                   <line
                     x1={PADDING.left}
-                    x2={PADDING.left + plotWidth}
+                    x2={PADDING.left + plotWidth()}
                     y1={averageY()}
                     y2={averageY()}
                     class="stroke-muted-foreground"
@@ -157,7 +175,7 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
                   {(item, index) => {
                     const point = () => pointFor(item, index());
                     const tooltipX = () => Math.min(
-                      VIEW_WIDTH - PADDING.right - TOOLTIP_WIDTH,
+                      viewWidth() - PADDING.right - TOOLTIP_WIDTH,
                       Math.max(PADDING.left, point().x - TOOLTIP_WIDTH / 2),
                     );
                     const tooltipY = () => {

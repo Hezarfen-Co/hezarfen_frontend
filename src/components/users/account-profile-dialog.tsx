@@ -27,7 +27,7 @@ export function AccountProfileDialog(props: { open: boolean; onOpenChange: (open
       onClick={() => setSection(id)}
       aria-current={section() === id ? "page" : undefined}
       class={cn(
-        "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+        "flex h-10 min-w-0 items-center gap-2.5 rounded-lg px-3 text-left text-sm font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring max-sm:flex-1 max-sm:justify-center sm:h-9 sm:w-full touch:h-10",
         section() === id ? "bg-primary/10 text-primary-text" : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
       )}
     >
@@ -42,7 +42,7 @@ export function AccountProfileDialog(props: { open: boolean; onOpenChange: (open
       aria-pressed={active}
       onClick={onClick}
       class={cn(
-        "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+        "h-10 flex-1 rounded-md px-3 text-sm font-medium sm:h-8 touch:h-10 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
         active ? "bg-background text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground",
       )}
     >
@@ -55,9 +55,13 @@ export function AccountProfileDialog(props: { open: boolean; onOpenChange: (open
       {(user) => (
         <Dialog open={props.open} onOpenChange={props.onOpenChange}>
           <DialogContent class="max-w-2xl p-0">
-            <div class="flex h-[min(80vh,32rem)] min-h-0">
-              <nav class="flex w-40 shrink-0 flex-col gap-1 border-r border-border/70 bg-muted/20 p-2">
-                <DialogTitle class="px-3 pb-2 pt-1.5 text-sm">{t("nav.settings")}</DialogTitle>
+            {/* Phones stack the section rail above the panel as one row (the
+                close button keeps the row's right end); from `sm` it is a
+                left column. A 160px column beside a 390px screen left the
+                form ~130px wide and clipped its fields. */}
+            <div class="flex h-[min(85dvh,36rem)] min-h-0 flex-col sm:h-[min(80vh,32rem)] sm:flex-row">
+              <nav class="flex shrink-0 items-center gap-1 border-b border-border/70 bg-muted/20 p-2 pr-14 sm:w-40 sm:flex-col sm:items-stretch sm:border-b-0 sm:border-r sm:pr-2">
+                <DialogTitle class="px-3 pb-2 pt-1.5 text-sm max-sm:sr-only">{t("nav.settings")}</DialogTitle>
                 {navItem("account", t("nav.account"), <IconUserCog class="h-4 w-4 shrink-0" />)}
                 {navItem("appearance", t("settings.tabAppearance"), <IconSun class="h-4 w-4 shrink-0" />)}
               </nav>
@@ -65,12 +69,12 @@ export function AccountProfileDialog(props: { open: boolean; onOpenChange: (open
               {/* The account form's save bar is sticky at the bottom of this
                   scroll area, so that section drops the bottom padding — any
                   padding under a sticky bar shows content scrolling past it. */}
-              <div class={cn("min-w-0 flex-1 overflow-y-auto p-5 pr-12", section() === "account" && "pb-0")}>
+              <div class={cn("min-w-0 flex-1 overflow-y-auto p-5 sm:pr-12", section() === "account" && "pb-0")}>
                 <Switch>
                   <Match when={section() === "account"}>
                     <ProfileForm
                       user={user}
-                      footerClass="-mr-12 pr-12 pb-5"
+                      footerClass="pb-5 sm:-mr-12 sm:pr-12"
                       onSaved={async () => {
                         await auth.refresh();
                         props.onOpenChange(false);
@@ -128,7 +132,7 @@ export function AccountProfileDialog(props: { open: boolean; onOpenChange: (open
                         </div>
                         <button
                           type="button"
-                          class="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-40"
+                          class="h-10 rounded-lg border border-border px-3 text-xs font-medium text-muted-foreground transition-colors outline-hidden hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40 sm:h-8 touch:h-10"
                           disabled={prefs.paletteColor() === null}
                           onClick={() => prefs.setPaletteColor(null)}
                         >

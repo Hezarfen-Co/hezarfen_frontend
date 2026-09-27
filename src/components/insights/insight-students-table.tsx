@@ -21,6 +21,8 @@ import { usePreferences } from "@/stores/preferences-context";
 
 type Filter = "all" | "attention" | "none";
 
+const CONFIDENCE_RANK: Record<string, number> = { none: 1, exploratory: 2, stable: 3 };
+
 /**
  * Every student's analysis at a glance: status, attention items, cards, the
  * marks, attendance and focus their summary measured, confidence and when it
@@ -80,7 +82,7 @@ export function InsightStudentsTable(props: {
     },
     {
       id: "status",
-      size: 118,
+      size: 112,
       accessorFn: (row) => row.state,
       header: rt("status" as never),
       meta: { align: "center" },
@@ -110,7 +112,7 @@ export function InsightStudentsTable(props: {
     },
     {
       id: "attention",
-      size: 95,
+      size: 91,
       accessorFn: (row) => row.attention,
       header: rt("attention"),
       meta: { align: "center" },
@@ -122,15 +124,19 @@ export function InsightStudentsTable(props: {
     },
     {
       id: "cards",
-      size: 95,
+      size: 94,
       accessorFn: (row) => row.cards,
       header: rt("cards"),
       meta: { align: "center" },
-      cell: (cell) => <span class="tabular-nums">{cell.row.original.state === "not_loaded" ? "—" : cell.row.original.cards}</span>,
+      cell: (cell) => (
+        <span class={cn("tabular-nums", (cell.row.original.state === "not_loaded" || cell.row.original.cards === 0) && muted)}>
+          {cell.row.original.state === "not_loaded" ? "—" : cell.row.original.cards}
+        </span>
+      ),
     },
     {
       id: "marks",
-      size: 148,
+      size: 146,
       accessorFn: (row) => row.marks.average ?? -1,
       header: rt("marksAverage"),
       meta: { align: "center" },
@@ -153,7 +159,7 @@ export function InsightStudentsTable(props: {
     },
     {
       id: "study",
-      size: 95,
+      size: 97,
       accessorFn: (row) => row.study.stints,
       header: t("insights.studyStints"),
       meta: { align: "center" },
@@ -161,19 +167,24 @@ export function InsightStudentsTable(props: {
     },
     {
       id: "confidence",
-      size: 97,
-      accessorFn: (row) => row.confidence ?? "",
+      // "Güven" truncated to "Güv…" at 97px; the width comes from the two
+      // count columns, whose short labels had room to spare.
+      size: 108,
+      // A numeric rank: an empty "" key made the table swap the cell for its
+      // own faint "-" placeholder, unlike the "—" every other column shows.
+      accessorFn: (row) => CONFIDENCE_RANK[row.confidence ?? ""] ?? 0,
       header: rt("confidence"),
       meta: { align: "center" },
       cell: (cell) => <span class={muted}>{cell.row.original.confidence ? confidenceText(locale(), cell.row.original.confidence) : "—"}</span>,
     },
     {
       id: "computedAt",
-      size: 100,
+      size: 97,
       accessorFn: (row) => row.computed_at ?? 0,
       header: t("insights.computedAt"),
-      meta: { align: "center", cellClass: "text-xs text-muted-foreground whitespace-nowrap" },
-      cell: (cell) => calculatedDate(cell.row.original.computed_at),
+      meta: { align: "center", cellClass: "whitespace-nowrap" },
+      // The muted tone rides a span: set on the cell it lost to the row's text colour.
+      cell: (cell) => <span class="text-xs tabular-nums text-muted-foreground">{calculatedDate(cell.row.original.computed_at)}</span>,
     },
     {
       id: "actions",

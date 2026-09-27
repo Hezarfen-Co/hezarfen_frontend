@@ -52,14 +52,14 @@ export function DataTableSearch(props: DataTableSearchProps) {
         // Touch screens get a touch-sized box at 16px (index.css): below that
         // iOS Safari zooms the page into a focused field. Compact otherwise.
         // A pill, like every other toolbar control beside it.
-        class={cn("h-10 rounded-full bg-muted/40 text-base sm:h-8 sm:text-[13px] md:text-[13px] touch:h-10", props.value ? "pl-9 pr-8" : "pl-9")}
+        class={cn("h-10 rounded-full bg-muted/40 text-base shadow-none sm:h-8 sm:text-[13px] md:text-[13px] touch:h-10", props.value ? "pl-9 pr-10 sm:pr-8" : "pl-9")}
       />
       <Show when={props.value}>
         <button
           type="button"
           aria-label={t("common.clearSearch")}
           onClick={() => props.onChange("")}
-          class="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+          class="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground outline-hidden transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring sm:h-6 sm:w-6 touch:h-8 touch:w-8"
         >
           <IconX class="h-4 w-4" />
         </button>

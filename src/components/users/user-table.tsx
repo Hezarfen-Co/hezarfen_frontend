@@ -37,7 +37,8 @@ function UserRoleActions(props: {
       <div class="flex min-w-0 items-center gap-1.5">
         <Select
           wrapperClass="min-w-0 flex-1"
-          class="h-8 rounded-md text-xs"
+          // 40px on phones and touch screens (touch-target minimum), 32px from sm.
+          class="h-10 rounded-md text-xs sm:h-8 touch:h-10"
           value={pendingRole()}
           disabled={isSelf()}
           onChange={(e) => setPendingRole(e.currentTarget.value as Role)}
@@ -51,7 +52,7 @@ function UserRoleActions(props: {
           <Button
             type="button"
             size="icon"
-            class="h-8 w-8 shrink-0 rounded-md"
+            class="h-10 w-10 shrink-0 rounded-md sm:h-8 sm:w-8 touch:h-10 touch:w-10"
             aria-label={t("common.update")}
             title={t("common.update")}
             onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}

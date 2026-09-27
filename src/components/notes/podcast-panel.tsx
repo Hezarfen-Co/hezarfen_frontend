@@ -168,14 +168,10 @@ export function PodcastPanel(props: {
       }
     >
     <section class={props.flat ? "space-y-4" : "space-y-4 rounded-xl border border-border-line bg-surface-base p-3 sm:p-4"}>
-      <div class="flex items-start gap-3">
-        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-text">
-          <IconWaveform class="h-5 w-5" />
-        </div>
-        <div>
-          <h2 class="font-semibold">{t("podcast.title")}</h2>
-          <p class="mt-0.5 text-sm text-muted-foreground">{t("podcast.description")}</p>
-        </div>
+      {/* Same head as the AI summary section beside it: title over a one-line hint. */}
+      <div>
+        <h3 class="text-sm font-semibold">{t("podcast.title")}</h3>
+        <p class="mt-0.5 text-xs text-muted-foreground">{t("podcast.description")}</p>
       </div>
 
       <Show when={error()}>{(message) => <Alert variant="destructive">{message()}</Alert>}</Show>

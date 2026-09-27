@@ -51,7 +51,7 @@ export function KarneView(props: {
     <div class="space-y-4">
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div class="min-w-0 space-y-1.5">
-          <label class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground" for="karne-term">
+          <label class="block text-xs font-medium text-muted-foreground" for="karne-term">
             {t("terms.term")}
           </label>
           <Select
@@ -78,7 +78,7 @@ export function KarneView(props: {
 
       <Show
         when={props.report.instances.length > 0}
-        fallback={<DataTableEmpty class="rounded-lg border border-border bg-card py-10">{t("karne.empty")}</DataTableEmpty>}
+        fallback={<DataTableEmpty class="rounded-xl border border-border bg-card py-10">{t("karne.empty")}</DataTableEmpty>}
       >
         <DataTable
           columns={columns()}

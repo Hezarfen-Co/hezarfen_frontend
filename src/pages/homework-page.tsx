@@ -88,7 +88,9 @@ function HomeworkContent() {
   // class: the şube filter lists them all, the create form only for teachers.
   const [instances] = createResource(
     () => auth.user()?.role ?? null,
-    (role) => loadInstanceOptions(role ?? undefined),
+    // A failed section list only empties the picker; the homework list
+    // still loads and shows its own error.
+    (role) => loadInstanceOptions(role ?? undefined).catch(() => []),
   );
   const manageableCourses = createMemo(() => (hasMinRole(auth.user()?.role, "teacher") ? instances() ?? [] : []));
   // The şube filter, as on /exams; it lives in the URL beside the table's own
@@ -97,7 +99,7 @@ function HomeworkContent() {
   // A homework subject must sit in the chosen section's resolved subject set.
   const [subjects] = createResource(
     () => selectedCourseId() || null,
-    async (instanceId) => (instanceId ? (await getInstanceSubjects(instanceId)).subjects : []),
+    async (instanceId) => (instanceId ? (await getInstanceSubjects(instanceId).catch(() => ({ subjects: [] }))).subjects : []),
   );
   const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
   const courseName = (id: string) => courseNames()[id] ?? "—";
@@ -129,12 +131,14 @@ function HomeworkContent() {
       return { items, total: items.length };
     },
   );
+  // An errored resource throws when read: every read of the list goes through here.
+  const listItems = () => (list.error ? [] : list()?.items ?? []);
   const courseFilterOptions = createMemo(() => {
     const known = instances() ?? [];
     const knownIds = new Set(known.map((row) => row.id));
     // Homework in a şube the picker does not list (e.g. one the caller only
     // sees through an assignment) still gets its own entry, after the rest.
-    const extra = [...new Set((list()?.items ?? []).map((item) => item.class_course))]
+    const extra = [...new Set(listItems().map((item) => item.class_course))]
       .filter((id) => !knownIds.has(id) && courseNames()[id])
       .map((id) => ({ value: id, label: courseNames()[id] }));
     return [{ value: "all", label: t("common.all") }, ...known.map((row) => ({ value: row.id, label: row.label })), ...extra];
@@ -169,7 +173,7 @@ function HomeworkContent() {
     if (!selectedCourseId()) return setError(t("exams.missingCourse"));
     if (!subjectId()) return setError(t("subjects.select"));
     if (due_at == null) return setError(t("homework.dueRequired"));
-    if (due_at < (serverTime()?.now ?? Date.now())) return setError(t("form.timePast"));
+    if (due_at < (serverTime()?.now ?? Date.now())) return setError(t("homework.duePast"));
     setPending(true);
     try {
       await postInstanceHomework(selectedCourseId(), {
@@ -255,6 +259,9 @@ function HomeworkContent() {
           <div class="space-y-1.5">
             <Label for="homework-subject-global">{t("subjects.subject")}</Label>
             <SearchableSelect id="homework-subject-global" required value={subjectId()} onChange={setSubjectId} placeholder={t("subjects.select")} options={(subjects() ?? []).map((subject) => ({ value: subject.id, label: subject.name }))} />
+            <Show when={selectedCourseId() && subjects.state === "ready" && (subjects() ?? []).length === 0}>
+              <p class="text-xs text-text-subtle">{t("subjects.empty")}</p>
+            </Show>
           </div>
           <div class="space-y-1.5">
             <Label for="homework-title-global">{t("form.title")}</Label>
@@ -268,7 +275,7 @@ function HomeworkContent() {
             <Label for="homework-due-global">{t("homework.dueAt")}</Label>
             <div class="grid grid-cols-2 gap-2">
               <DatePicker id="homework-due-global" class="h-9" placeholder={t("form.datePlaceholder")} value={dueDate()} required onChange={setDueDate} />
-              <Input class="h-9 rounded-md font-mono placeholder:text-text-placeholder" placeholder="17:00" value={dueTime()} required onInput={(event) => setDueTime(event.currentTarget.value)} />
+              <Input id="homework-due-time-global" class="h-9 rounded-md font-mono placeholder:text-muted-foreground/45" inputMode="numeric" maxlength={5} placeholder="17:00" aria-label={t("homework.dueTime")} value={dueTime()} required onInput={(event) => setDueTime(event.currentTarget.value)} />
             </div>
           </div>
           <p class="rounded-xl border border-border-line bg-surface-tint px-3 py-2 text-xs text-text-subtle">{t("homework.wholeCourseHelp")}</p>
@@ -294,7 +301,7 @@ function HomeworkContent() {
             <DataTable
               urlState
               columns={columns()}
-              data={list()?.items ?? []}
+              data={listItems()}
               tableClass="table-fixed min-w-[44rem]"
               filterColumn="title"
               filterHint={t("search.hint.homework")}
@@ -307,9 +314,9 @@ function HomeworkContent() {
               onClearFilters={() => setCourseFilter("all")}
               filters={
                 <div class="flex flex-wrap items-center gap-2.5">
-                  <label for="homework-course-filter" class="text-xs font-semibold text-muted-foreground">{t("nav.courses")}:</label>
                   <SearchableSelect
                     id="homework-course-filter"
+                    labelPrefix={t("nav.courses")}
                     class={cn(COURSE_FILTER_CLASS, courseFilter() !== "all" && "border-primary text-primary-text")}
                     value={courseFilter()}
                     onChange={(val) => setCourseFilter(val)}

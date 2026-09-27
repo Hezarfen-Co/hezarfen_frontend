@@ -20,7 +20,7 @@ export function MealMenuRow(props: { menu: MealMenu; locale: string }) {
     <Link
       to="/meals/$id"
       params={{ id: props.menu.id }}
-      class="group grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-2 px-4 py-4 transition-colors hover:bg-surface-tint focus-visible:bg-surface-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:grid-cols-[8rem_minmax(0,1fr)_auto_auto] sm:items-center"
+      class="group grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-2 px-4 py-4 transition-colors hover:bg-surface-tint focus-visible:bg-surface-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:grid-cols-[8rem_minmax(0,1fr)_8rem_7rem] sm:items-center"
     >
       <span class="col-start-1 row-start-1 font-semibold text-text-strong sm:col-start-auto sm:row-start-auto">{mealSlotLabel(props.menu.slot, t)}</span>
       <span class="col-span-2 col-start-1 row-start-2 min-w-0 text-sm text-foreground sm:col-span-1 sm:col-start-auto sm:row-start-auto">

@@ -131,24 +131,28 @@ export function BoardSettingsPanel(props: {
     <SidePanel open={props.open} onOpenChange={props.onOpenChange} title={t("whiteboard.edit")} size="wide">
       <div class="space-y-6">
         <Show when={error()}><ErrorAlert message={error()} /></Show>
-        <section class="space-y-3 rounded-lg border border-border/70 bg-card p-4 shadow-sm">
-          <div>
-            <h3 class="text-sm font-semibold">{t("whiteboard.titleLabel")}</h3>
-            <p class="mt-1 text-xs text-muted-foreground">{t("whiteboard.edit")}</p>
-          </div>
+        <section class="space-y-3 rounded-xl border border-border-line bg-card p-4 shadow-xs">
+          <h3 class="text-sm font-semibold">{t("whiteboard.titleLabel")}</h3>
           <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
             <div class="space-y-1.5">
               <Label for="whiteboard-title" class="sr-only">{t("whiteboard.titleLabel")}</Label>
               <Input id="whiteboard-title" maxlength={200} value={title()} onInput={(event) => setTitle(event.currentTarget.value)} />
             </div>
-            <Button type="button" size="sm" class="rounded-lg" disabled={pending() || !title().trim() || title().trim() === props.title()} onClick={() => void saveTitle()}>
+            <Button type="button" size="sm" class="h-9 rounded-lg px-4 text-sm touch:h-10" disabled={pending() || !title().trim() || title().trim() === props.title()} onClick={() => void saveTitle()}>
               {t("common.save")}
             </Button>
           </div>
         </section>
 
-        <section class="space-y-3">
-          <Show when={props.canManageParticipants()} fallback={<p class="text-xs text-muted-foreground">{t("whiteboard.creator")}</p>}>
+        {/* One card: heading, picker, then the roster table. The table's own
+            title is not drawn (DataTable keeps headers off), so the card
+            names the section. */}
+        <section class="space-y-3 rounded-xl border border-border-line bg-card p-4 shadow-xs">
+          <div>
+            <h3 class="text-sm font-semibold">{t("whiteboard.participants")}</h3>
+            <p class="mt-1 text-xs text-muted-foreground">{t("whiteboard.participantsHint")}</p>
+          </div>
+          <Show when={props.canManageParticipants()}>
             <Show
               when={props.canSearchPeople()}
               fallback={<p class="rounded-lg border border-dashed border-border/70 px-3 py-2 text-xs text-muted-foreground">{t("form.searchNoPermission")}</p>}
@@ -171,7 +175,6 @@ export function BoardSettingsPanel(props: {
             empty={t("whiteboard.empty")}
             title={t("whiteboard.participants")}
             description={t("whiteboard.participantsHint")}
-            class="rounded-lg border border-border/70 bg-card p-4 shadow-sm"
             tableClass="min-w-[26rem]"
             enableColumnVisibility={false}
             enableSorting={false}

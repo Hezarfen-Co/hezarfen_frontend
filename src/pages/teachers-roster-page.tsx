@@ -86,12 +86,14 @@ function TeachersRosterContent() {
     {
       id: "sections",
       size: 260,
-      accessorFn: (row) => row.sections.length,
+      // Empty lists read as "" so DataTable draws its one empty-cell dash,
+      // the same one the homeroom column gets.
+      accessorFn: (row) => row.sections.join(", "),
       header: t("roster.taughtSections"),
       meta: { cellClass: "max-w-0" },
       cell: (cell) => {
         const list = cell.row.original.sections;
-        return list.length ? <span class="block truncate text-sm" title={list.join("\n")}>{list.join(", ")}</span> : "—";
+        return <span class="block truncate text-sm" title={list.join("\n")}>{list.join(", ")}</span>;
       },
     },
     {
@@ -100,7 +102,7 @@ function TeachersRosterContent() {
       accessorFn: (row) => row.homeroom.join(", "),
       header: t("roster.homeroomOf"),
       meta: { cellClass: "max-w-0" },
-      cell: (cell) => <span class="block truncate text-sm" title={cell.row.original.homeroom.join(", ") || undefined}>{cell.row.original.homeroom.join(", ") || "—"}</span>,
+      cell: (cell) => <span class="block truncate text-sm" title={cell.row.original.homeroom.join(", ")}>{cell.row.original.homeroom.join(", ")}</span>,
     },
     {
       id: "actions",

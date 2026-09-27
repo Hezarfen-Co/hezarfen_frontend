@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createSignal, on, onCleanup, onMount } from "solid-js";
+import { For, Show, createEffect, createSignal, on, onCleanup } from "solid-js";
 import type { JSX, ParentProps } from "solid-js";
 import {
   type Column,
@@ -24,6 +24,7 @@ import { InfoTip } from "@/components/ui/info-tip";
 import { cn } from "@/lib/cn";
 import { createMediaQuery } from "@/lib/create-media-query";
 import { COMPACT_SCREEN_QUERY } from "@/lib/create-page-size";
+import { createScrollRestore } from "@/lib/scroll-restore";
 import { createTablePreferences } from "@/lib/table-preferences";
 import { createUrlParam, createUrlString, decodeSort, encodeSort, listParamKeys } from "@/lib/url-state";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -183,15 +184,6 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     }
   }, { defer: true }));
   const resetReveal = () => setRevealed(REVEAL_STEP);
-  // The router's own scroll restoration runs before a list's rows arrive, so
-  // a long list came back at the top. Remember the page offset against this
-  // history entry and put it back once the rows are drawn — only on a return
-  // to the same entry (Back), never on a fresh visit.
-  const scrollKey = revealKey ? `${revealKey}:scroll` : null;
-  const historyEntry = () => {
-    const state = history.state as Record<string, unknown> | null;
-    return String(state?.__TSR_key ?? state?.key ?? "");
-  };
   createEffect(on(() => props.pageResetKey, resetReveal, { defer: true }));
   // The search box's text when the table owns it — the `searchPredicate`
   // query, or the `filterColumn` filter value.
@@ -401,47 +393,8 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     if (busy === false && observing) queueMicrotask(revealMore);
   }, { defer: true }));
   if (!observing) setRevealed(Number.MAX_SAFE_INTEGER);
-  if (scrollKey) {
-    let saveTimer: ReturnType<typeof setTimeout> | undefined;
-    const saveScroll = () => {
-      clearTimeout(saveTimer);
-      saveTimer = setTimeout(() => {
-        try {
-          sessionStorage.setItem(scrollKey, JSON.stringify({ y: Math.round(window.scrollY), entry: historyEntry() }));
-        } catch {
-          // storage blocked: no restore, nothing else breaks
-        }
-      }, 150);
-    };
-    onMount(() => {
-      window.addEventListener("scroll", saveScroll, { passive: true });
-      onCleanup(() => {
-        clearTimeout(saveTimer);
-        window.removeEventListener("scroll", saveScroll);
-      });
-    });
-    let restored = false;
-    createEffect(() => {
-      if (restored || visibleRows().length === 0) return;
-      restored = true;
-      try {
-        const saved = JSON.parse(sessionStorage.getItem(scrollKey) ?? "null") as { y?: number; entry?: string } | null;
-        // The router may already have tried, clamped to a page that was still
-        // short; correct it once the rows are laid out, and once more after
-        // late content (avatars, badges) settles.
-        const target = saved?.y;
-        if (target && saved.entry === historyEntry()) {
-          const settle = () => {
-            if (Math.abs(window.scrollY - target) > 8) window.scrollTo(0, target);
-          };
-          requestAnimationFrame(settle);
-          setTimeout(settle, 300);
-        }
-      } catch {
-        // malformed entry: start at the top
-      }
-    });
-  }
+  // Back from a detail page lands on the same row once the rows are drawn.
+  createScrollRestore(revealKey, () => visibleRows().length > 0);
   const searchFieldValue = () => {
     if (props.onSearchInput || props.searchPredicate || props.filterColumn) return searchValue();
     return "";
@@ -592,7 +545,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
             />
           </Show>
           <Show when={props.filters}>
-            <div class="order-3 -my-1 flex w-full items-center gap-2 overflow-x-auto py-1 [scrollbar-width:none] sm:my-0 sm:py-0 sm:flex-wrap sm:overflow-visible lg:order-2 lg:w-auto [&_button]:h-10 [&_button]:shrink-0 [&_button]:rounded-full [&_button]:px-3 [&_button]:text-[13px] [&_[data-filter-active]]:border-primary [&_[data-filter-active]]:text-primary-text sm:[&_button]:h-8 touch:[&_button]:h-10 [&_select]:h-10 [&_select]:rounded-full [&_select]:text-[13px] sm:[&_select]:h-8 touch:[&_select]:h-10 max-sm:[&>*]:flex-nowrap max-sm:[&>*]:shrink-0">{props.filters}</div>
+            <div class="order-3 -my-1 flex w-full items-center gap-2 overflow-x-auto py-1 [scrollbar-width:none] sm:my-0 sm:py-0 sm:flex-wrap sm:overflow-visible lg:order-2 lg:w-auto [&_button]:h-10 [&_button]:shrink-0 [&_button]:rounded-full [&_button]:px-3 [&_button]:text-[13px] [&_[data-filter-active]]:border-primary [&_[data-filter-active]]:text-primary-text [&_[data-slot=combobox-control]]:h-10 [&_[data-slot=combobox-control]]:rounded-full [&_[data-slot=combobox-control]]:text-[13px] sm:[&_[data-slot=combobox-control]]:h-8 touch:[&_[data-slot=combobox-control]]:h-10 sm:[&_button]:h-8 touch:[&_button]:h-10 [&_select]:h-10 [&_select]:rounded-full [&_select]:text-[13px] sm:[&_select]:h-8 touch:[&_select]:h-10 max-sm:[&>*]:flex-nowrap max-sm:[&>*]:shrink-0">{props.filters}</div>
           </Show>
           <Show when={props.actions || showColumnMenu()}>
             {/* Beside the search the actions keep their own width (the search
@@ -798,7 +751,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                               else el.removeAttribute("title");
                             }}
                           >
-                            <Show when={!isEmpty} fallback={<span class="text-muted-foreground/40">-</span>}>
+                            <Show when={!isEmpty} fallback={<span class="text-muted-foreground">—</span>}>
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
                             </Show>
                           </TableCell>
@@ -827,7 +780,10 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
         )}
       </Show>
       <Show when={(revealing() || props.infinite) && totalRows() > 0}>
-        <div ref={sentinel} aria-hidden="true" class="h-px" />
+        {/* One block, so the parent's space-y gap is paid once: the sentinel
+            and the count as siblings put two gaps under the scroll hint. */}
+        <div class="-mt-1.5 flex flex-col gap-2">
+        <div ref={sentinel} aria-hidden="true" class="-mb-2 h-px" />
         <p class="px-1 text-xs font-medium tabular-nums text-muted-foreground sm:text-[11px]" aria-live="polite">
           {props.infinite?.loading
             ? t("common.loadingMore")
@@ -842,6 +798,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
             {t("common.loadMore")}
           </Button>
         </Show>
+        </div>
       </Show>
     </div>
   );

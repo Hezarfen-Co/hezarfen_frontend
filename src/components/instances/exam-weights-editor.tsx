@@ -111,7 +111,7 @@ export function ExamWeightsEditor(props: {
   return (
     <>
       <Show when={removeError()}><Alert variant="destructive">{removeError()}</Alert></Show>
-      <DataTable columns={columns()} data={props.weights} empty={t("common.noMatches")} actions={props.actions} />
+      <DataTable columns={columns()} data={props.weights} empty={t("instances.noWeights")} actions={props.actions} />
       <SidePanel
         open={props.editing !== null}
         onOpenChange={(open) => !open && props.onEditingChange(null)}

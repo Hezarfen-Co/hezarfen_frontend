@@ -524,7 +524,7 @@ export function WhiteboardCanvas(props: {
     );
 
   const plainButton =
-    "flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground";
+    "flex h-10 w-10 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:h-9 sm:w-9";
 
   const Section = (sectionProps: { label: string; children: JSX.Element }) => (
     <div role="group" aria-label={sectionProps.label}>
@@ -592,7 +592,7 @@ export function WhiteboardCanvas(props: {
                   <button
                     type="button"
                     class={cn(
-                      "relative flex h-9 w-9 items-center justify-center rounded-md transition-colors sm:h-10 sm:w-10 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                      "relative flex h-10 w-10 items-center justify-center rounded-md transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
                       activeTool() === entry.tool
                         ? "bg-primary/15 text-primary-text"
                         : "text-foreground/80 hover:bg-muted",
@@ -639,8 +639,8 @@ export function WhiteboardCanvas(props: {
           <div
             class={cn(
               ISLAND,
-              "absolute left-2 z-10 w-44 space-y-3 p-3",
-              toolbarRow2() ? "top-26" : "top-14",
+              "absolute left-2 z-10 w-52 space-y-3 p-3 sm:w-44",
+              toolbarRow2() ? "top-28" : "top-14",
               styleOpen() ? "block" : "hidden sm:block",
             )}
           >
@@ -653,7 +653,7 @@ export function WhiteboardCanvas(props: {
                     aria-label={`${t("draw.color")}: ${t(COLOR_NAMES[swatch])}`}
                     aria-pressed={color() === swatch}
                     class={cn(
-                      "h-6 w-6 rounded-md transition-shadow focus-visible:outline-hidden",
+                      "h-8 w-8 rounded-md transition-shadow focus-visible:outline-hidden sm:h-6 sm:w-6",
                       color() === swatch
                         ? "ring-2 ring-primary ring-offset-2 ring-offset-card"
                         : "hover:ring-2 hover:ring-border hover:ring-offset-1 hover:ring-offset-card focus-visible:ring-2 focus-visible:ring-ring",
@@ -733,7 +733,7 @@ export function WhiteboardCanvas(props: {
           </div>
         </Show>
 
-        {/* Bottom-left: zoom, then paper and (phones) the style toggle. */}
+        {/* Bottom-left: zoom, then paper and (phones) the style and full-screen toggles. */}
         <div class="absolute bottom-2 left-2 z-10 flex items-center gap-2">
           <div class={cn(ISLAND, "flex items-center overflow-hidden")}>
             <button type="button" class={plainButton} title={t("draw.zoomOut")} aria-label={t("draw.zoomOut")} onClick={() => zoomBy(1 / ZOOM_STEP)}>
@@ -775,11 +775,14 @@ export function WhiteboardCanvas(props: {
                 <span class="h-4.5 w-4.5 rounded-md border border-border" style={{ "background-color": color() }} />
               </button>
             </Show>
+            {/* Phones: full screen joins this island — the bottom-right corner
+                belongs to the app's floating action button there. */}
+            <FullscreenToggle class="h-10 w-10 sm:hidden" active={fullscreen.active()} onToggle={fullscreen.toggle} />
           </div>
         </div>
 
         {/* Bottom-right: full screen. */}
-        <div class={cn(ISLAND, "absolute bottom-2 right-2 z-10 overflow-hidden")}>
+        <div class={cn(ISLAND, "absolute bottom-2 right-2 z-10 hidden overflow-hidden sm:block")}>
           <FullscreenToggle active={fullscreen.active()} onToggle={fullscreen.toggle} />
         </div>
       </div>

@@ -11,7 +11,7 @@ export function MealTagCheckboxes(props: { tags: string[]; selected: string[]; o
     <div class="flex flex-wrap gap-2">
       <For each={props.tags}>
         {(tag) => (
-          <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-border-line px-3 py-1.5 text-sm has-[:checked]:border-primary/50 has-[:checked]:bg-primary/5">
+          <label class="flex cursor-pointer items-center gap-2 min-h-10 rounded-lg border border-border-line px-3 py-1.5 text-sm sm:min-h-8 touch:min-h-10 has-[:checked]:border-primary/50 has-[:checked]:bg-primary/5">
             <input type="checkbox" checked={props.selected.includes(tag)} onChange={() => toggle(tag)} />
             {dietaryTagLabel(tag, t)}
           </label>

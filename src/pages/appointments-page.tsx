@@ -61,7 +61,7 @@ function AppointmentsContent() {
   const { locale } = usePreferences();
   const now = createNow();
   const [error, setError] = createSignal("");
-  const [, setFlash] = createFlash();
+  const [flash, setFlash] = createFlash();
   const [showPublish, setShowPublish] = createSignal(false);
   const [section, setSection] = createSignal<"appointments" | "availability">("appointments");
   const [bookSlot, setBookSlot] = createSignal<AppointmentSlot | null>(null);
@@ -208,7 +208,19 @@ function AppointmentsContent() {
   const mySlots = () => slots();
   const slotBooking = (slotId: string) => appts().find((a) => a.slot === slotId && isLive(a.status));
 
+  // Managers see every teacher's slots and requests, so those tables name the
+  // teacher; a teacher's own view does not need the column.
+  const teacherColumn = <T extends { teacher: AppointmentSlot["teacher"] | Appointment["teacher"] }>(): ColumnDef<T>[] =>
+    isManager()
+      ? [{
+          id: "teacher",
+          header: t("appointments.teacher"),
+          cell: (cell) => <span class="block truncate">{personLabel(cell.row.original.teacher)}</span>,
+        }]
+      : [];
+
   const slotColumns = createMemo<ColumnDef<AppointmentSlot>[]>(() => [
+    ...teacherColumn<AppointmentSlot>(),
     ...windowColumns<AppointmentSlot>(),
     {
       id: "status",
@@ -261,6 +273,7 @@ function AppointmentsContent() {
       header: t("appointments.student"),
       cell: (cell) => <span class="block truncate font-medium">{personLabel(cell.row.original.requester)}</span>,
     },
+    ...teacherColumn<Appointment>(),
     ...windowColumns<Appointment>(),
     proposalColumn(),
     {
@@ -428,10 +441,12 @@ function AppointmentsContent() {
         </Show>
       </SidePanel>
 
+      <Show when={flash()}>
+        <Alert variant="success">{flash()}</Alert>
+      </Show>
       <Show when={error() && !showPublish() && bookSlot() == null && reschedAppt() == null}>
         <Alert variant="destructive">{error()}</Alert>
       </Show>
-
 
       <Tabs
         class="space-y-4"
@@ -451,7 +466,7 @@ function AppointmentsContent() {
           </TabsTrigger>
           <TabsTrigger value="availability" class="min-w-0">
             <IconClock class="h-4 w-4" />
-            {isStaff() ? t("appointments.mySlots") : t("appointments.availableSlots")}
+            {isManager() ? t("appointments.allSlots") : isStaff() ? t("appointments.mySlots") : t("appointments.availableSlots")}
             <Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">
               {isStaff() ? slotList.total() : availableSlots().length}
             </Badge>
@@ -465,7 +480,7 @@ function AppointmentsContent() {
                 <Show when={apptList.error()}>{(err) => <Alert variant="destructive">{formatApiError(err())}</Alert>}</Show>
                 <Show when={nextBooking()}>
                   {(booking) => (
-                    <div class="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-border-line bg-surface-tint p-4">
+                    <div class="flex flex-wrap items-center gap-3 rounded-xl border border-border-line bg-surface-tint p-4">
                       <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-base text-primary-text">
                         <IconCalendarDays class="h-4 w-4" />
                       </span>
@@ -496,7 +511,7 @@ function AppointmentsContent() {
                 <Show when={apptList.error()}>{(err) => <Alert variant="destructive">{formatApiError(err())}</Alert>}</Show>
                 <DataTable
                   title={t("appointments.requests")}
-                  description={t("appointments.requestsHint")}
+                  description={isManager() ? t("appointments.allRequestsHint") : t("appointments.requestsHint")}
                   columns={requestColumns()}
                   data={requests()}
                   tableClass="table-fixed min-w-[46rem]"
@@ -533,10 +548,10 @@ function AppointmentsContent() {
               <Show when={loaded()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
                 <Show when={slotList.error()}>{(err) => <Alert variant="destructive">{formatApiError(err())}</Alert>}</Show>
                 <DataTable
-                  title={t("appointments.mySlots")}
-                  description={t("appointments.mySlotsHint")}
+                  title={isManager() ? t("appointments.allSlots") : t("appointments.mySlots")}
+                  description={isManager() ? t("appointments.allSlotsHint") : t("appointments.mySlotsHint")}
                   actions={
-                    <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setShowPublish(true)}>
+                    <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={() => setShowPublish(true)}>
                       <IconPlus class="h-4 w-4" />
                       {t("appointments.publish")}
                     </Button>
@@ -570,7 +585,6 @@ function AppointmentsContent() {
                 <DetailField label={t("appointments.status")} value={t(appointmentStatusLabelKey(appointment.status))} />
                 <DetailField label={t("appointments.time")} value={timeWindow(appointment.starts_at, appointment.ends_at)} />
                 <DetailField label={t("appointments.proposedTime")} value={appointment.proposed_starts_at == null ? "—" : timeWindow(appointment.proposed_starts_at, appointment.proposed_ends_at)} />
-                <DetailField label={t("appointments.series")} value={appointment.slot} mono />
               </div>
               <div class="space-y-1">
                 <p class="text-xs font-medium text-muted-foreground">{t("appointments.reason")}</p>

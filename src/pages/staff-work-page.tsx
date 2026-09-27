@@ -486,14 +486,18 @@ function StaffCard(props: { person: PersonRef; stats: StaffCardStats | null | un
         )}
       </Show>
 
-      <div class="border-t border-border-hairline pt-2 text-xs text-text-subtle">
-        <Show
-          when={props.stats?.daysThisMonth != null}
-          fallback={<Show when={props.stats}>{t("work.totalEntries", { count: String(props.stats?.total ?? 0) })}</Show>}
-        >
-          {t("work.daysThisMonth", { count: String(props.stats?.daysThisMonth) })}
-        </Show>
-      </div>
+      {/* No stats (still loading, or the read failed): no footer, rather than
+          an empty band under a hairline. */}
+      <Show when={props.stats}>
+        <div class="border-t border-border-hairline pt-2 text-xs text-text-subtle">
+          <Show
+            when={props.stats?.daysThisMonth != null}
+            fallback={t("work.totalEntries", { count: String(props.stats?.total ?? 0) })}
+          >
+            {t("work.daysThisMonth", { count: String(props.stats?.daysThisMonth) })}
+          </Show>
+        </div>
+      </Show>
     </button>
   );
 }

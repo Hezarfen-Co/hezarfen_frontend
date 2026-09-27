@@ -25,7 +25,10 @@ export function MobileQuickActions(props: { hidden: boolean }) {
   const [notificationsOpen, setNotificationsOpen] = createSignal(false);
 
   createEffect(() => {
-    if (notificationsOpen()) notifications.refreshAll();
+    if (notificationsOpen()) {
+      notifications.opened();
+      notifications.refreshAll();
+    }
   });
 
   const actions = createMemo(() => {

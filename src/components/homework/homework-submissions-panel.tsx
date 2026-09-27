@@ -8,7 +8,8 @@ import type { HomeworkRosterEntry } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { InfoTip } from "@/components/ui/info-tip";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconDownload, IconEdit, IconEye, IconTrash } from "@/components/ui/icons";
@@ -42,7 +43,8 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId
   );
   const [enrollments] = createResource(
     () => props.instanceId,
-    async (instanceId) => (await getInstanceEnrollments(instanceId, { limit: 200 })).items,
+    // Without the roster the rows fall back to "—" names; not worth an error.
+    async (instanceId) => (await getInstanceEnrollments(instanceId, { limit: 200 }).catch(() => ({ items: [] }))).items,
   );
   const enrollmentUsers = createMemo(() => new Map((enrollments() ?? []).map((row) => [row.user.id, row.user])));
   const studentLabel = (userId: string) => {
@@ -178,7 +180,7 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId
       <Show when={error() && !gradeTarget()}><Alert variant="destructive">{error()}</Alert></Show>
       <Suspense fallback={<DataTableSkeleton />}>
         <Show when={submissions.error}><Alert variant="destructive">{formatApiError(submissions.error, locale())}</Alert></Show>
-        <DataTable columns={columns()} data={submissions()?.items ?? []} filterColumn="user" enablePagination pageSize={10} empty={t("common.noResults")} />
+        <DataTable columns={columns()} data={submissions.error ? [] : submissions()?.items ?? []} filterColumn="user" enablePagination pageSize={10} empty={t("common.noResults")} />
       </Suspense>
       <SidePanel open={gradeTarget() != null} onOpenChange={(open) => !open && closeGrade()} title={t("homework.grade")} description={gradeTarget() ? studentLabel(gradeTarget()!.user) : ""}>
         <form class="flex min-h-full flex-col space-y-4" onSubmit={(event) => void saveGrade(event)}>
@@ -233,10 +235,14 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId
                               <p class="truncate font-medium">{file.name}</p>
                               <p class="text-xs text-text-subtle">{formatBytes(file.size)}</p>
                             </div>
-                            <a href={getHomeworkSubmissionFileUrl(props.homeworkId, file.id)} download={file.name}>
-                              <Button type="button" size="icon" variant="ghost" class="h-7 w-7 rounded-lg" title={t("notes.downloadFile")}>
-                                <IconDownload class="h-3.5 w-3.5" />
-                              </Button>
+                            <a
+                              href={getHomeworkSubmissionFileUrl(props.homeworkId, file.id)}
+                              download={file.name}
+                              class={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-10 w-10 rounded-lg sm:h-8 sm:w-8 touch:h-10 touch:w-10")}
+                              title={t("notes.downloadFile")}
+                              aria-label={`${t("notes.downloadFile")}: ${file.name}`}
+                            >
+                              <IconDownload class="h-3.5 w-3.5" />
                             </a>
                           </li>
                         );
