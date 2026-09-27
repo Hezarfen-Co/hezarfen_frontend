@@ -5,6 +5,7 @@ if (typeof window !== "undefined") {
   // jsdom intentionally does not implement scrolling and logs a warning when
   // UI code calls it. Scrolling is outside the scope of these component tests.
   window.scrollTo = () => undefined;
+  Element.prototype.scrollIntoView = () => undefined;
   const values = new Map<string, string>();
   const storage = {
     get length() { return values.size; },
