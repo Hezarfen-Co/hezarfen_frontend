@@ -66,3 +66,25 @@ test("before the event starts nothing can be picked or saved", async () => {
   expect((row("Bora").getByRole("radio", { name: /Katıldı|Attended/ }) as HTMLButtonElement).disabled).toBe(true);
   expect((saveButton() as HTMLButtonElement).disabled).toBe(true);
 });
+
+test("pages a long roster and keeps draft marks across pages", async () => {
+  const longRoster = Array.from({ length: 12 }, (_, index) => ({
+    user: person(`student-${index}`, `Student ${index}`),
+    status: null,
+    marked_by: null,
+  }));
+  render(() => (
+    <PreferencesProvider>
+      <EventRollCall eventId="event-1" roster={longRoster} open onSaved={() => {}} />
+    </PreferencesProvider>
+  ));
+  await screen.findByText("Student 0");
+  expect(screen.queryByText("Student 10")).toBeNull();
+  fireEvent.click(row("Student 0").getByRole("radio", { name: /Katıldı|Attended/ }));
+  fireEvent.click(screen.getByRole("button", { name: /Next|Sonraki/ }));
+  expect(screen.getByText("Student 10")).toBeTruthy();
+  expect(screen.queryByText("Student 0")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: /Previous|Önceki/ }));
+  expect(row("Student 0").getByRole("radio", { name: /Katıldı|Attended/ }).getAttribute("aria-checked")).toBe("true");
+  expect(postEventAttendance).not.toHaveBeenCalled();
+});

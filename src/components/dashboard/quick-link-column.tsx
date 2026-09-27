@@ -1,4 +1,4 @@
-import { For, Show, type Component } from "solid-js";
+import { For, Show, onCleanup, type Component } from "solid-js";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { IconChevronRight } from "@/components/ui/icons";
 import type { IllustrationName } from "@/lib/illustrations";
@@ -15,6 +15,7 @@ export type QuickLinkColumnProps = {
   rows: QuickLinkRow[];
   empty: string;
   illustration?: IllustrationName;
+  onVisible?: () => void;
   onOpen: (row: QuickLinkRow) => void;
 };
 
@@ -22,8 +23,23 @@ export type QuickLinkColumnProps = {
  * list of resource rows with a trailing caption, each navigating to the
  * resource's real detail page. */
 export function QuickLinkColumn(props: QuickLinkColumnProps) {
+  const observe = (el: HTMLDivElement) => {
+    if (!props.onVisible) return;
+    if (typeof IntersectionObserver === "undefined") {
+      props.onVisible();
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        observer.disconnect();
+        props.onVisible?.();
+      }
+    }, { rootMargin: "160px" });
+    observer.observe(el);
+    onCleanup(() => observer.disconnect());
+  };
   return (
-    <div class="flex min-w-0 flex-1 flex-col rounded-xl border border-border-line bg-surface-base px-4 py-3">
+    <div ref={observe} class="flex min-w-0 flex-1 flex-col rounded-xl border border-border-line bg-surface-base px-4 py-3">
       <p class="pb-2 text-[13px] font-medium text-text-subtle">{props.title}</p>
       <Show when={props.rows.length > 0} fallback={<EmptyInline class="border-t border-border-hairline" illustration={props.illustration} title={props.empty} />}>
         <For each={props.rows}>

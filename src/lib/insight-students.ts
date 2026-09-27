@@ -14,9 +14,20 @@ export async function loadInsightStudents(role: Role): Promise<PersonRef[]> {
 
 /** Parallel insight reads; there is no bulk endpoint. */
 const READ_CONCURRENCY = 6;
+const insightCache = new Map<string, StudentInsight>();
+const cacheKey = (scope: string, id: string) => `${scope}\0${id}`;
+
+export function cachedStudentSignal(person: PersonRef, scope: string): StudentSignal | null {
+  const insight = insightCache.get(cacheKey(scope, person.id));
+  return insight ? toStudentSignal({ id: person.id, name: personLabel(person) }, insight, null) : null;
+}
+
+export function clearStudentSignalCache(scope: string): void {
+  for (const key of insightCache.keys()) if (key.startsWith(`${scope}\0`)) insightCache.delete(key);
+}
 
 /**
- * Read every student's insight a few at a time, reporting each row as it
+ * Read the requested students' insights a few at a time, reporting each row as it
  * lands so the table fills progressively instead of waiting on the slowest.
  * A failed read becomes that row's `error` state, never a made-up value.
  */
@@ -24,13 +35,17 @@ export async function loadStudentSignals(
   students: PersonRef[],
   onRow: (signal: StudentSignal) => void,
   read: (userId: string) => Promise<StudentInsight> = getInsightByUserId,
+  scope?: string,
 ): Promise<void> {
   const queue = [...students];
   const worker = async () => {
     for (let person = queue.shift(); person; person = queue.shift()) {
       const identity = { id: person.id, name: personLabel(person) };
       try {
-        onRow(toStudentSignal(identity, await read(person.id), null));
+        const cached = scope ? insightCache.get(cacheKey(scope, person.id)) : undefined;
+        const insight = cached ?? await read(person.id);
+        if (scope && !cached) insightCache.set(cacheKey(scope, person.id), insight);
+        onRow(toStudentSignal(identity, insight, null));
       } catch (error) {
         onRow(toStudentSignal(identity, null, formatApiError(error)));
       }

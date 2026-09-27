@@ -98,31 +98,28 @@ function stubIntersectionObserver() {
   };
 }
 
-test("reveals rows in steps instead of paging", async () => {
+test("paginates client rows without observing the scroll position", () => {
   const reachEnd = stubIntersectionObserver();
-  const rows = Array.from({ length: 120 }, (_, index) => ({ name: `Person ${index + 1}` }));
+  const rows = Array.from({ length: 21 }, (_, index) => ({ name: `Person ${index + 1}` }));
   try {
     render(() => (
       <PreferencesProvider>
         <DataTable columns={[columns[0]]} data={rows} enableColumnVisibility={false} />
       </PreferencesProvider>
     ));
-
-    expect(screen.getByText("Person 50")).toBeTruthy();
-    expect(screen.queryByText("Person 51")).toBeNull();
-    expect(screen.getByText(/(Showing 50 of 120|120 kayıttan 50)/)).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Next" })).toBeNull();
+    expect(screen.getByText("Person 10")).toBeTruthy();
+    expect(screen.queryByText("Person 11")).toBeNull();
+    expect(screen.getByText("1 / 3")).toBeTruthy();
     reachEnd();
-    // jsdom lays nothing out, so the sentinel always reads as near the end
-    // and each reveal chains into the next until the list is complete.
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(screen.getByText("Person 120")).toBeTruthy();
+    expect(screen.queryByText("Person 11")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Next|Sonraki/ }));
+    expect(screen.getByText("Person 11")).toBeTruthy();
   } finally {
     vi.unstubAllGlobals();
   }
 });
 
-test("without IntersectionObserver every row renders, with the total under the list", () => {
+test("without IntersectionObserver client rows still paginate", () => {
   vi.stubGlobal("IntersectionObserver", undefined);
   const rows = Array.from({ length: 60 }, (_, index) => ({ name: `Person ${index + 1}` }));
   try {
@@ -131,11 +128,55 @@ test("without IntersectionObserver every row renders, with the total under the l
         <DataTable columns={[columns[0]]} data={rows} enableColumnVisibility={false} />
       </PreferencesProvider>
     ));
-    expect(screen.getByText("Person 60")).toBeTruthy();
-    expect(screen.getByText(/^(Total|Toplam): 60$/)).toBeTruthy();
+    expect(screen.queryByText("Person 60")).toBeNull();
+    expect(screen.getByText("1 / 6")).toBeTruthy();
   } finally {
     vi.unstubAllGlobals();
   }
+});
+test("uses a shorter client page on phones", () => {
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: query.includes("max-width"),
+    media: query,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+  }));
+  try {
+    render(() => (
+      <PreferencesProvider>
+        <DataTable
+          columns={[columns[0]]}
+          data={Array.from({ length: 11 }, (_, index) => ({ name: `Person ${index + 1}` }))}
+          enableColumnVisibility={false}
+        />
+      </PreferencesProvider>
+    ));
+    expect(screen.getByText("Person 5")).toBeTruthy();
+    expect(screen.queryByText("Person 6")).toBeNull();
+    expect(screen.getByText("1 / 3")).toBeTruthy();
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
+test("search resets a client page and shrinking data clamps its index", () => {
+  const [rows, setRows] = createSignal(Array.from({ length: 22 }, (_, index) => ({ name: `Person ${index + 1}` })));
+  render(() => (
+    <PreferencesProvider>
+      <DataTable
+        columns={[columns[0]]}
+        data={rows()}
+        enableColumnVisibility={false}
+        searchPredicate={(row, query) => row.name.toLowerCase().includes(query.toLowerCase())}
+      />
+    </PreferencesProvider>
+  ));
+  fireEvent.click(screen.getByRole("button", { name: /Next|Sonraki/ }));
+  fireEvent.click(screen.getByRole("button", { name: /Next|Sonraki/ }));
+  expect(screen.getByText("Person 22")).toBeTruthy();
+  setRows((current) => current.slice(0, 12));
+  expect(screen.getByText("Person 12")).toBeTruthy();
+  fireEvent.input(screen.getByRole("textbox"), { target: { value: "Person 12" } });
+  expect(screen.getByText("Person 12")).toBeTruthy();
 });
 test("a display column renders its own cell instead of the empty dash", () => {
   // A column with no accessorFn has no value to be empty, so the empty-cell
@@ -315,25 +356,19 @@ test("an empty list narrowed by the caller's filters offers to clear them", () =
   expect(onClearFilters).toHaveBeenCalledOnce();
 });
 
-test("revealed rows hold when the caller hands over a fresh data array", async () => {
-  const reachEnd = stubIntersectionObserver();
+test("the client page holds when the caller hands over a fresh data array", () => {
   const [tick, setTick] = createSignal(0);
   const people = Array.from({ length: 70 }, (_, i) => ({ name: `P${String(i).padStart(2, "0")}` }));
-  try {
-    render(() => (
-      <PreferencesProvider>
-        {/* A new array on every read, like a page that maps rows inline. */}
-        <DataTable columns={[{ accessorKey: "name", header: "Name" }]} data={(tick(), people.map((row) => ({ ...row })))} enableColumnVisibility={false} />
-      </PreferencesProvider>
-    ));
-    reachEnd();
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(screen.getByText("P69")).toBeTruthy();
-    setTick(1);
-    expect(screen.getByText("P69")).toBeTruthy();
-  } finally {
-    vi.unstubAllGlobals();
-  }
+  render(() => (
+    <PreferencesProvider>
+      <DataTable columns={[{ accessorKey: "name", header: "Name" }]} data={(tick(), people.map((row) => ({ ...row })))} enableColumnVisibility={false} />
+    </PreferencesProvider>
+  ));
+  fireEvent.click(screen.getByRole("button", { name: /Next|Sonraki/ }));
+  expect(screen.getByText("P10")).toBeTruthy();
+  setTick(1);
+  expect(screen.getByText("P10")).toBeTruthy();
+  expect(screen.queryByText("P00")).toBeNull();
 });
 test("a toolbar holding only the column menu still gets its card", () => {
   const { container } = render(() => (

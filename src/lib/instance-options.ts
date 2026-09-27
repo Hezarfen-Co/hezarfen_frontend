@@ -1,8 +1,8 @@
-import { getClasses, getMyClasses } from "@/api/classes";
+import { getMyClasses } from "@/api/classes";
 import { getMyInstances } from "@/api/instances";
 import type { ClassGroup, Role } from "@/api/client";
 import { hasMinRole } from "@/lib/roles";
-import { loadSchoolSections } from "@/lib/instance-labels";
+import { classList, loadSchoolSections } from "@/lib/instance-labels";
 import { compareClasses } from "@/lib/student-directory";
 
 /** One pickable section: "<ders> — <şube>", plus the ids behind the label. */
@@ -41,7 +41,7 @@ export async function loadInstanceOptions(role: Role | undefined): Promise<Insta
   } else {
     const [mine, classes] = await Promise.all([
       getMyInstances({ limit: 200 }),
-      (hasMinRole(role, "teacher") ? getClasses({ limit: 200 }) : getMyClasses({ limit: 200 })).catch(
+      (hasMinRole(role, "teacher") ? classList().then((items) => ({ items })) : getMyClasses({ limit: 200 })).catch(
         () => ({ items: [] as ClassGroup[] }),
       ),
     ]);

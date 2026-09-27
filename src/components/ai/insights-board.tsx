@@ -14,7 +14,7 @@ import { IconSparkles } from "@/components/ui/icons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createFlash } from "@/lib/flash";
 import { toStudentSignal, type StudentSignal } from "@/lib/insight-run-report";
-import { insightOverview, loadInsightStudents, loadStudentSignals } from "@/lib/insight-students";
+import { cachedStudentSignal, clearStudentSignalCache, insightOverview, loadInsightStudents, loadStudentSignals } from "@/lib/insight-students";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
@@ -52,14 +52,33 @@ export function InsightsBoard() {
   // Each student's analysis lands in its row as it is read; rows start as
   // "not loaded" so the table and the overview never show a guessed value.
   const [signals, setSignals] = createSignal<Record<string, StudentSignal>>({});
+  const [requestedCount, setRequestedCount] = createSignal(0);
   let readGeneration = 0;
+  let requestThrough = (_count: number) => {};
   createEffect(on(() => students.latest, (list) => {
     if (!list) return;
     const generation = ++readGeneration;
-    setSignals(Object.fromEntries(list.map((person) => [person.id, toStudentSignal({ id: person.id, name: personLabel(person) }, null, null)])));
-    void loadStudentSignals(list, (row) => {
-      if (generation === readGeneration) setSignals((current) => ({ ...current, [row.id]: row }));
-    });
+    const scope = auth.user()?.id ?? "";
+    let queued = 0;
+    let reads = Promise.resolve();
+    setSignals(Object.fromEntries(list.map((person) => [person.id,
+      cachedStudentSignal(person, scope) ?? toStudentSignal({ id: person.id, name: personLabel(person) }, null, null),
+    ])));
+    setRequestedCount(Math.min(50, list.length));
+    requestThrough = (count) => {
+      const end = Math.min(count, list.length);
+      if (end <= queued) return;
+      const batch = list.slice(queued, end);
+      queued = end;
+      setRequestedCount(end);
+      reads = reads.then(() => {
+        if (generation !== readGeneration) return;
+        return loadStudentSignals(batch, (row) => {
+          if (generation === readGeneration) setSignals((current) => ({ ...current, [row.id]: row }));
+        }, undefined, scope);
+      });
+    };
+    requestThrough(50);
   }));
   const rows = createMemo(() => Object.values(signals()));
   const overview = createMemo(() => insightOverview(rows(), students.latest?.length ?? 0));
@@ -70,6 +89,7 @@ export function InsightsBoard() {
     setPageError("");
     try {
       await postInsightsRefresh();
+      clearStudentSignalCache(auth.user()?.id ?? "");
       flash(tx("insights.refreshQueued"));
       await refetchRuns();
     } catch (error) {
@@ -92,6 +112,9 @@ export function InsightsBoard() {
           <section>
             <InsightStudentsTable
               rows={rows()}
+              hasMore={requestedCount() < (students.latest?.length ?? 0)}
+              onNeedMore={() => requestThrough(requestedCount() + 50)}
+              onInspectAll={() => requestThrough(students.latest?.length ?? 0)}
               title={tx("insights.title")}
               description={role() === "parent" ? tx("insights.parentSubtitle") : tx("insights.subtitle")}
               empty={role() === "parent" ? tx("insights.emptyLinkedStudents") : tx("insights.emptyStudents")}

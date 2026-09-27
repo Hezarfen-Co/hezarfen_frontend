@@ -20,25 +20,29 @@ export function InsightOverview(props: { overview: Overview }) {
     </div>
   );
   const o = () => props.overview;
+  const partial = () => o().loaded < o().total;
+  const coverage = () => partial()
+    ? t("insights.overview.reading", { loaded: o().loaded, total: o().total })
+    : t("insights.overview.ofTotal", { total: o().total });
   return (
     <section class="space-y-2" aria-label={t("insights.summary")}>
       <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {tile(t("insights.overview.analysed"), String(o().analysed), t("insights.overview.ofTotal", { total: o().total }))}
+        {tile(t("insights.overview.analysed"), partial() ? `${o().analysed} / ${o().total}` : String(o().analysed), coverage())}
         {tile(
           t("insights.overview.needAttention"),
-          String(o().needAttention),
-          t("insights.overview.ofTotal", { total: o().total }),
+          partial() ? (o().loaded ? `${o().needAttention} / ${o().loaded}` : "—") : String(o().needAttention),
+          coverage(),
           o().needAttention > 0 ? "warn" : undefined,
         )}
         {tile(
           t("insights.overview.marks"),
           o().marksAverage == null ? "—" : runReportDecimal(o().marksAverage!, prefs.locale()),
-          o().marksAverage == null ? t("insights.overview.noData") : t("insights.overview.ofTotal", { total: o().analysed }),
+          partial() ? coverage() : o().marksAverage == null ? t("insights.overview.noData") : t("insights.overview.ofTotal", { total: o().analysed }),
         )}
         {tile(
           t("insights.overview.attendance"),
           o().attendanceRate == null ? "—" : runReportPercent(o().attendanceRate, prefs.locale()),
-          o().attendanceRate == null ? t("insights.overview.noData") : t("insights.overview.ofTotal", { total: o().analysed }),
+          partial() ? coverage() : o().attendanceRate == null ? t("insights.overview.noData") : t("insights.overview.ofTotal", { total: o().analysed }),
         )}
       </div>
       <Show when={o().loaded < o().total}>

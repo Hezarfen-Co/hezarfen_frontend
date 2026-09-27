@@ -50,7 +50,7 @@ import { formatDate, formatDateTime } from "@/lib/format";
 import { formatTry } from "@/lib/meals";
 import { PAYMENT_METHOD_KEYS, sortStatementEntries, statementStatus } from "@/lib/payments";
 import { matchesSearch } from "@/lib/search-text";
-import { FAN_OUT_LIMIT, mapConcurrent } from "@/lib/map-concurrent";
+import { FAN_OUT_LIMIT } from "@/lib/map-concurrent";
 import { personLabel } from "@/lib/person";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -79,8 +79,6 @@ function dateInputToMs(value: string): number | null {
 }
 
 type LineAction = { line: PaymentLine; kind: "refund" | "reverse" };
-type PaymentStudentRow = PersonRef & { balance_minor: number | null };
-
 export default function PaymentsPage() {
   return (
     <RouteGuard minRole="manager">
@@ -189,24 +187,61 @@ function PaymentsContent() {
     setSelectedStudent((prev) => (prev?.id === routeId ? prev : { id: routeId, username: routeId, display_name: null }));
   });
 
-  // The backend has no bulk balance endpoint. Fetch only the visible page so
-  // status/balance never disappear on schools with more than 200 students.
-  const [paymentStudentRows] = createResource(
-    () => {
-      const users = pagedStudents();
-      return users.length > 0 ? users : null;
-    },
-    async (users): Promise<PaymentStudentRow[]> =>
-      mapConcurrent(users, FAN_OUT_LIMIT, async (user) => {
-        try {
-          return { ...user, balance_minor: (await getPaymentBalanceByUserId(user.id)).balance_minor };
-        } catch {
-          return { ...user, balance_minor: null };
-        }
-      }),
-  );
+  const [balances, setBalances] = createSignal<Record<string, number | null | undefined>>({});
+  const requestedBalances = new Set<string>();
+  const balanceQueue: string[] = [];
+  let activeBalances = 0;
+  let disposed = false;
+  const drainBalances = () => {
+    while (activeBalances < FAN_OUT_LIMIT && balanceQueue.length > 0) {
+      const id = balanceQueue.shift()!;
+      activeBalances++;
+      void getPaymentBalanceByUserId(id)
+        .then((balance) => {
+          if (!disposed) setBalances((prev) => ({ ...prev, [id]: balance.balance_minor }));
+        })
+        .catch(() => {
+          if (!disposed) setBalances((prev) => ({ ...prev, [id]: null }));
+        })
+        .finally(() => {
+          activeBalances--;
+          if (!disposed) drainBalances();
+        });
+    }
+  };
+  const requestBalance = (id: string) => {
+    if (requestedBalances.has(id)) return;
+    requestedBalances.add(id);
+    balanceQueue.push(id);
+    drainBalances();
+  };
+  const invalidateBalance = (id: string) => {
+    requestedBalances.delete(id);
+    setBalances((prev) => ({ ...prev, [id]: undefined }));
+  };
+  let balanceObserver: IntersectionObserver | undefined;
+  const observeBalance = (element: HTMLElement, id: string) => {
+    if (requestedBalances.has(id)) return;
+    if (typeof IntersectionObserver === "undefined") {
+      requestBalance(id);
+      return;
+    }
+    balanceObserver ??= new IntersectionObserver((items) => {
+      for (const item of items) {
+        if (!item.isIntersecting) continue;
+        balanceObserver?.unobserve(item.target);
+        requestBalance((item.target as HTMLElement).dataset.studentId!);
+      }
+    });
+    element.dataset.studentId = id;
+    balanceObserver.observe(element);
+  };
+  onCleanup(() => {
+    disposed = true;
+    balanceObserver?.disconnect();
+  });
 
-  const studentColumns = createMemo<ColumnDef<PaymentStudentRow>[]>(() => [
+  const studentColumns = createMemo<ColumnDef<PersonRef>[]>(() => [
     {
       id: "name",
       header: t("payments.student"),
@@ -221,26 +256,32 @@ function PaymentsContent() {
     {
       id: "debt",
       header: t("payments.status"),
-      accessorFn: (user) => user.balance_minor ?? 0,
+      accessorFn: (user) => balances()[user.id] ?? 0,
       cell: (cell) => {
-        const bal = cell.row.original.balance_minor;
-        if (bal == null) return <span class="text-sm text-muted-foreground">—</span>;
-        const inDebt = bal < 0;
-        return (
-          <Badge variant="outline" class={inDebt ? "border-destructive/50 bg-destructive/10 text-destructive-text" : "border-success/50 bg-success/10 text-success-text"}>
-            <span class={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${inDebt ? "bg-destructive" : "bg-success"}`} />
-            {inDebt ? t("payments.inDebt") : t("payments.settled")}
-          </Badge>
-        );
+        const id = cell.row.original.id;
+        return <span ref={(element) => observeBalance(element, id)}>
+          <Show when={balances()[id] !== undefined} fallback={<span class="inline-block h-4 w-16 animate-pulse rounded bg-muted" />}>
+            <Show when={balances()[id] !== null} fallback={<span class="text-sm text-muted-foreground">—</span>}>
+              <Badge variant="outline" class={balances()[id]! < 0 ? "border-destructive/50 bg-destructive/10 text-destructive-text" : "border-success/50 bg-success/10 text-success-text"}>
+                <span class={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${balances()[id]! < 0 ? "bg-destructive" : "bg-success"}`} />
+                {balances()[id]! < 0 ? t("payments.inDebt") : t("payments.settled")}
+              </Badge>
+            </Show>
+          </Show>
+        </span>;
       },
     },
     {
       id: "balance",
       header: t("payments.balance"),
-      accessorFn: (user) => user.balance_minor ?? 0,
+      accessorFn: (user) => balances()[user.id] ?? 0,
       cell: (cell) => {
-        const bal = cell.row.original.balance_minor;
-        return <span class="font-medium tabular-nums" classList={{ "text-destructive-text": (bal ?? 0) < 0 }}>{bal == null ? "—" : formatTry(bal, moneyLocale())}</span>;
+        const id = cell.row.original.id;
+        return <span ref={(element) => observeBalance(element, id)} class="font-medium tabular-nums" classList={{ "text-destructive-text": (balances()[id] ?? 0) < 0 }}>
+          <Show when={balances()[id] !== undefined} fallback={<span class="inline-block h-4 w-20 animate-pulse rounded bg-muted" />}>
+            {balances()[id] === null ? "—" : formatTry(balances()[id]!, moneyLocale())}
+          </Show>
+        </span>;
       },
     },
     {
@@ -267,8 +308,9 @@ function PaymentsContent() {
     () => student() || null,
     (userId) => getPaymentStatementByUserId(userId, { limit: 500 }),
   );
+  const [showLedger, setShowLedger] = createSignal(false);
   const [ledger, { refetch: refetchLedger }] = createResource(
-    () => student() || null,
+    () => showLedger() && student() ? student() : null,
     (userId) => getPaymentLedgerByUserId(userId, { limit: 200 }),
   );
   const entries = () => statement()?.entries.items ?? [];
@@ -351,6 +393,7 @@ function PaymentsContent() {
       });
       setCollectEntry(null);
       setFlash(t("common.saved"));
+      invalidateBalance(student());
       await Promise.all([refetchStatement(), refetchLedger()]);
     } catch (err) {
       setError(formatApiError(err));
@@ -408,7 +451,6 @@ function PaymentsContent() {
   ]);
 
   // ---- account activity (advanced corrections) ----
-  const [showLedger, setShowLedger] = createSignal(false);
   const [lineAction, setLineAction] = createSignal<LineAction | null>(null);
   const [actionAmount, setActionAmount] = createSignal("");
   const [actionNote, setActionNote] = createSignal("");
@@ -440,6 +482,7 @@ function PaymentsContent() {
       }
       setLineAction(null);
       setFlash(t("common.saved"));
+      invalidateBalance(student());
       await Promise.all([refetchStatement(), refetchLedger()]);
     } catch (err) {
       setError(formatApiError(err));
@@ -617,7 +660,7 @@ function PaymentsContent() {
                 </Show>
                 <DataTable
                     columns={studentColumns()}
-                    data={paymentStudentRows() ?? []}
+                    data={pagedStudents()}
                     onRowClick={(user) => navigate({ to: "/management/payments/$userId", params: { userId: user.id } })}
                     searchValue={studentQuery()}
                     onSearchInput={(value) => {
@@ -728,6 +771,7 @@ function PaymentsContent() {
                     <h2 class="font-semibold">{t("payments.ledgerAudit")}</h2>
                     <p class="text-xs text-muted-foreground">{t("payments.appendOnly")}</p>
                   </div>
+                  <Show when={!ledger.loading} fallback={<div class="h-5 w-24 animate-pulse rounded bg-muted" />}>
                   <div class="divide-y divide-border/60">
                     <For each={ledger()?.items ?? []}>
                       {(line) => (
@@ -752,6 +796,7 @@ function PaymentsContent() {
                       <p class="py-2 text-sm text-muted-foreground">{t("payments.noLedger")}</p>
                     </Show>
                   </div>
+                  </Show>
                 </section>
               </Show>
             </div>

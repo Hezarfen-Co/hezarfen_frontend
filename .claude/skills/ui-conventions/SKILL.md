@@ -49,7 +49,7 @@ Active project reference docs (read the relevant one before changing that area):
 - Actions columns stay fixed at `w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap` to prevent localized headers like `"İŞLEMLER"` from changing their size.
 - Table-page headers fold into the `DataTable` title/description/actions area; do not render a separate `PageHeader` above table-primary pages.
 - Every list toolbar is one card (`TOOLBAR_CARD`), even when "Sütunlar" is its only control; its controls follow the pill standard above.
-- Lists have no page numbers: server lists fetch as you scroll (`createInfiniteList` + DataTable `infinite`, or `InfiniteSentinel` for card lists), only when the backend applies every filter the list offers (sorting is off there); client tables reveal 50 rows at a time. Back from a detail page restores rows and scroll (`restoreKey`, `createScrollRestore`).
+- Server lists fetch as you scroll (`createInfiniteList` + DataTable `infinite`, or `InfiniteSentinel` for card lists) only when the backend applies every filter the list offers (sorting is off there). Client tables use page numbers through `TablePagination`. Back from a detail page restores the page and scroll (`urlState`, `createScrollRestore`).
 - Pages/domain components must not import or render `Table` primitives directly; only the `DataTable` wrapper and table primitive files may.
 - Every list page uses one card: optional `Tabs` above, then `section.data-shell` holding the `DataTable` (its `title`/`description`/`actions`). Card-grid lists use `DataSection` from `src/components/ui/data-section.tsx` for the same header. No standalone `PageHeader`/`h1` above a list, and no row counts in descriptions (the pager shows them).
 

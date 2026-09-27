@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import { createResponsivePageSize } from "@/lib/create-page-size";
 import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
@@ -29,6 +29,7 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
+import { FAN_OUT_LIMIT } from "@/lib/map-concurrent";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 const PEOPLE_PAGE_SIZE = 9;
@@ -126,11 +127,69 @@ function StaffWorkContent() {
     { initialValue: [] },
   );
 
+  const workLogs = new Map<string, Page<WorkEntry>>();
+  const workLogReads = new Map<string, Promise<Page<WorkEntry>>>();
+  const [statsByUser, setStatsByUser] = createSignal<Record<string, StaffCardStats | null | undefined>>({});
+  const requestedStats = new Set<string>();
+  const statsQueue: string[] = [];
+  let activeStats = 0;
+  let disposed = false;
+  const drainStats = () => {
+    while (activeStats < FAN_OUT_LIMIT && statsQueue.length > 0) {
+      const id = statsQueue.shift()!;
+      activeStats++;
+      const read = getUserWorkLog(id, { limit: WORK_LOG_FETCH_LIMIT });
+      workLogReads.set(id, read);
+      void read
+        .then((log) => {
+          workLogs.set(id, log);
+          if (!disposed) setStatsByUser((prev) => ({ ...prev, [id]: summarizeWorkLog(log) }));
+        })
+        .catch(() => {
+          if (!disposed) setStatsByUser((prev) => ({ ...prev, [id]: null }));
+        })
+        .finally(() => {
+          workLogReads.delete(id);
+          activeStats--;
+          if (!disposed) drainStats();
+        });
+    }
+  };
+  const requestStats = (id: string) => {
+    if (requestedStats.has(id)) return;
+    requestedStats.add(id);
+    statsQueue.push(id);
+    drainStats();
+  };
+  let statsObserver: IntersectionObserver | undefined;
+  const observeStats = (element: HTMLElement, id: string) => {
+    if (requestedStats.has(id)) return;
+    if (typeof IntersectionObserver === "undefined") {
+      requestStats(id);
+      return;
+    }
+    statsObserver ??= new IntersectionObserver((items) => {
+      for (const item of items) {
+        if (!item.isIntersecting) continue;
+        statsObserver?.unobserve(item.target);
+        requestStats((item.target as HTMLElement).dataset.staffId!);
+      }
+    });
+    element.dataset.staffId = id;
+    statsObserver.observe(element);
+  };
+  onCleanup(() => {
+    disposed = true;
+    statsObserver?.disconnect();
+  });
+
   const [entries, { refetch: refetchEntries }] = createResource(
     () => viewUser()?.id ?? null,
     async (id) => {
       try {
-        return await getUserWorkLog(id);
+        const cached = workLogs.get(id);
+        const log = cached ?? await workLogReads.get(id);
+        return log && log.total <= log.items.length ? log : await getUserWorkLog(id);
       } catch (err) {
         if (err instanceof ApiError && err.status === 404) {
           setError(t("work.userNotFound"));
@@ -163,26 +222,6 @@ function StaffWorkContent() {
     peoplePageSize();
     setStaffPage(0);
   });
-
-  // Card stats are only fetched for the staff on the visible page — the same
-  // "bounded to what's on screen" shape as the payments roster balances and
-  // the classes-page member counts, so paging through the whole staff list
-  // never fires more than PEOPLE_PAGE_SIZE work-log requests at once.
-  const [cardStats] = createResource(
-    () => pagedPeople().map((person) => person.id),
-    async (ids) => {
-      const rows = await Promise.all(
-        ids.map(async (id) => {
-          try {
-            return [id, summarizeWorkLog(await getUserWorkLog(id, { limit: WORK_LOG_FETCH_LIMIT }))] as const;
-          } catch {
-            return [id, null] as const;
-          }
-        }),
-      );
-      return new Map(rows);
-    },
-  );
 
   const entryColumns = createMemo<ColumnDef<WorkEntry>[]>(() => [
     {
@@ -282,6 +321,10 @@ function StaffWorkContent() {
       await patchWorkEntryById(entry.id, { check_in, check_out });
       setEditTarget(null);
       await refetchEntries();
+      workLogs.delete(entry.user);
+      setStatsByUser((prev) => ({ ...prev, [entry.user]: undefined }));
+      requestedStats.delete(entry.user);
+      requestStats(entry.user);
       setFlash(t("common.saved"));
     } catch (err) {
       setError(formatApiError(err));
@@ -318,7 +361,8 @@ function StaffWorkContent() {
                   {(person) => (
                     <StaffCard
                       person={person}
-                      stats={cardStats()?.get(person.id) ?? undefined}
+                      stats={statsByUser()[person.id]}
+                      observe={observeStats}
                       locale={locale()}
                       onClick={() => {
                         setError("");
@@ -425,6 +469,10 @@ function StaffWorkContent() {
           try {
             await deleteWorkEntryById(entry.id);
             await refetchEntries();
+            workLogs.delete(entry.user);
+            setStatsByUser((prev) => ({ ...prev, [entry.user]: undefined }));
+            requestedStats.delete(entry.user);
+            requestStats(entry.user);
             setFlash(t("common.deleted"));
           } catch (err) {
             setError(formatApiError(err));
@@ -437,7 +485,7 @@ function StaffWorkContent() {
   );
 }
 
-function StaffCard(props: { person: PersonRef; stats: StaffCardStats | null | undefined; locale: Locale; onClick: () => void }) {
+function StaffCard(props: { person: PersonRef; stats: StaffCardStats | null | undefined; locale: Locale; onClick: () => void; observe: (element: HTMLElement, id: string) => void }) {
   const t = useT();
   const latest = () => props.stats?.latest ?? null;
   const isOpen = () => latest() != null && latest()!.check_out == null;
@@ -450,6 +498,7 @@ function StaffCard(props: { person: PersonRef; stats: StaffCardStats | null | un
   return (
     <button
       type="button"
+      ref={(element) => props.observe(element, props.person.id)}
       onClick={props.onClick}
       class="flex flex-col gap-3 rounded-lg border border-border-line bg-surface-base p-4 text-left shadow-xs transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
@@ -464,10 +513,8 @@ function StaffCard(props: { person: PersonRef; stats: StaffCardStats | null | un
         <IconChevronRight class="h-4 w-4 shrink-0 text-text-subtle" />
       </div>
 
-      <Show
-        when={latest()}
-        fallback={<p class="text-xs text-text-subtle">{t("work.noActivity")}</p>}
-      >
+      <Show when={props.stats !== undefined} fallback={<div class="h-4 w-24 animate-pulse rounded bg-muted" />}>
+      <Show when={latest()} fallback={<p class="text-xs text-text-subtle">{props.stats === null ? "—" : t("work.noActivity")}</p>}>
         {(entry) => (
           <div class="grid grid-cols-3 gap-2 text-xs">
             <div>
@@ -484,6 +531,7 @@ function StaffCard(props: { person: PersonRef; stats: StaffCardStats | null | un
             </div>
           </div>
         )}
+      </Show>
       </Show>
 
       {/* No stats (still loading, or the read failed): no footer, rather than

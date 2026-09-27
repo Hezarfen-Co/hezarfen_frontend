@@ -1,6 +1,7 @@
-import { formatInstanceLabel, loadInstanceLabels, resetInstanceLabelCache } from "./instance-labels";
+import { classSections, formatInstanceLabel, invalidateSchoolWalk, loadInstanceLabels, loadSchoolSections, resetInstanceLabelCache } from "./instance-labels";
 
 const calls: string[] = [];
+let failClassOnce = false;
 
 vi.mock("@/api/instances", () => ({
   getInstanceById: async (id: string) => {
@@ -17,6 +18,10 @@ vi.mock("@/api/classes", () => ({
   },
   getClassInstances: async (classId: string) => {
     calls.push(`class-instances:${classId}`);
+    if (classId === "k-9a" && failClassOnce) {
+      failClassOnce = false;
+      throw new Error("offline");
+    }
     const items = classId === "k-9a"
       ? [{ id: "i2", course: "c-math", class: "k-9a", title: "Matematik" }]
       : [{ id: "i1", course: "c-math", class: "k-10b", title: "Matematik" }, { id: "i3", course: "c-fiz", class: "k-10b", title: "Fizik" }];
@@ -35,6 +40,7 @@ vi.mock("@/api/classes", () => ({
 describe("instance labels", () => {
   beforeEach(() => {
     calls.length = 0;
+    failClassOnce = false;
     resetInstanceLabelCache();
   });
 
@@ -74,5 +80,21 @@ describe("instance labels", () => {
     // Two classes, three sections: two list reads instead of three instance reads.
     expect(calls.filter((call) => call.startsWith("instance:"))).toHaveLength(0);
     expect(calls.filter((call) => call.startsWith("class-instances:"))).toHaveLength(2);
+  });
+
+  it("shares the school walk across callers and refreshes after invalidation", async () => {
+    await loadSchoolSections();
+    await loadSchoolSections();
+    expect(calls.filter((call) => call.startsWith("class-instances:"))).toHaveLength(2);
+    invalidateSchoolWalk();
+    await loadSchoolSections();
+    expect(calls.filter((call) => call.startsWith("class-instances:"))).toHaveLength(4);
+  });
+
+  it("retries only the class whose section read failed", async () => {
+    failClassOnce = true;
+    expect(await classSections("k-9a").catch(() => [])).toEqual([]);
+    expect(await classSections("k-9a")).toHaveLength(1);
+    expect(calls.filter((call) => call === "class-instances:k-9a")).toHaveLength(2);
   });
 });

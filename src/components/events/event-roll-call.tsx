@@ -11,7 +11,7 @@ import { TOOLBAR_CONTROL } from "@/components/ui/data-toolbar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InfoTip } from "@/components/ui/info-tip";
 import { IconCheck } from "@/components/ui/icons";
-import { InfiniteSentinel } from "@/components/ui/infinite-sentinel";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { ATTENDANCE_STATUSES, getAttendanceStatusMeta } from "@/lib/attendance-status";
 import { cn } from "@/lib/cn";
 import {
@@ -22,10 +22,8 @@ import {
 } from "@/lib/event-roll-call";
 import { personLabel } from "@/lib/person";
 import { matchesSearch } from "@/lib/search-text";
+import { createResponsivePageSize } from "@/lib/create-page-size";
 import { useT } from "@/stores/preferences-context";
-
-/** Rows drawn at first and added each time the reader nears the end. */
-const REVEAL_STEP = 50;
 
 /**
  * Event roll call as one roster: every expected attendee (resolved by the
@@ -65,7 +63,8 @@ export function EventRollCall(props: {
   const [summary, setSummary] = createSignal<{ kind: "success" | "destructive"; text: string } | null>(null);
   const [query, setQuery] = createSignal("");
   const [onlyUnmarked, setOnlyUnmarked] = createSignal(false);
-  const [revealed, setRevealed] = createSignal(REVEAL_STEP);
+  const pageSize = createResponsivePageSize(10);
+  const [pageIndex, setPageIndex] = createSignal(0);
 
   const effective = (userId: string) => draft()[userId] ?? saved()[userId] ?? undefined;
   const changes = createMemo(() => rollCallChanges(saved(), draft()));
@@ -87,10 +86,12 @@ export function EventRollCall(props: {
       return !q || matchesSearch(q, personLabel(row.user), row.user.username, row.user.student_number);
     });
   });
-  // The roster is already in memory: no page numbers, the list just draws
-  // more rows as the reader scrolls (the app's client-list standard).
-  createEffect(on([query, onlyUnmarked], () => setRevealed(REVEAL_STEP), { defer: true }));
-  const pageRows = createMemo(() => visible().slice(0, revealed()));
+  createEffect(on([query, onlyUnmarked, pageSize], () => setPageIndex(0), { defer: true }));
+  createEffect(() => {
+    const last = Math.max(0, Math.ceil(visible().length / pageSize()) - 1);
+    if (pageIndex() > last) setPageIndex(last);
+  });
+  const pageRows = createMemo(() => visible().slice(pageIndex() * pageSize(), (pageIndex() + 1) * pageSize()));
 
   const busy = () => progress() != null;
   const locked = () => !props.open || busy();
@@ -301,13 +302,15 @@ export function EventRollCall(props: {
             </For>
           </ul>
         </Show>
-        <InfiniteSentinel
-          hasMore={pageRows().length < visible().length}
-          loading={false}
-          shown={pageRows().length}
-          total={visible().length}
-          onLoadMore={() => setRevealed((count) => count + REVEAL_STEP)}
-        />
+        <Show when={visible().length > 0}>
+          <TablePagination
+            pageIndex={pageIndex()}
+            pageCount={Math.ceil(visible().length / pageSize())}
+            pageSize={pageSize()}
+            total={visible().length}
+            onPageChange={setPageIndex}
+          />
+        </Show>
 
         <Show when={summary()}>
           {(item) => <Alert variant={item().kind}>{item().text}</Alert>}

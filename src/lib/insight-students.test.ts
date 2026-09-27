@@ -1,5 +1,5 @@
 import type { PersonRef, StudentInsight } from "@/api/client";
-import { insightOverview, loadStudentSignals } from "./insight-students";
+import { cachedStudentSignal, clearStudentSignalCache, insightOverview, loadStudentSignals } from "./insight-students";
 import { toStudentSignal } from "./insight-run-report";
 
 const person = (id: string): PersonRef => ({ id, username: id, display_name: id.toUpperCase() });
@@ -40,4 +40,51 @@ it("summarises only what the summaries measured", () => {
     marksAverage: 70,
     attendanceRate: 0.8,
   });
+});
+
+it("reuses successful reads within a viewer tab and keeps viewers separate", async () => {
+  const read = vi.fn(async (id: string) => insight(id, 80, 0.9, 0));
+  const rows: string[] = [];
+  await loadStudentSignals([person("a")], (row) => rows.push(row.state), read, "viewer-a");
+  expect(cachedStudentSignal(person("a"), "viewer-a")?.state).toBe("ok");
+  await loadStudentSignals([person("a")], (row) => rows.push(row.state), read, "viewer-a");
+  expect(read).toHaveBeenCalledTimes(1);
+  expect(cachedStudentSignal(person("a"), "viewer-b")).toBeNull();
+  await loadStudentSignals([person("a")], () => {}, read, "viewer-b");
+  expect(read).toHaveBeenCalledTimes(2);
+  expect(rows).toEqual(["ok", "ok"]);
+  clearStudentSignalCache("viewer-a");
+  clearStudentSignalCache("viewer-b");
+});
+
+it("limits concurrent reads in a requested row window", async () => {
+  let active = 0;
+  let peak = 0;
+  const pending: Array<() => void> = [];
+  const read = vi.fn((id: string) => new Promise<StudentInsight>((resolve) => {
+    active++;
+    peak = Math.max(peak, active);
+    pending.push(() => { active--; resolve(insight(id, 80, 0.9, 0)); });
+  }));
+  const done = loadStudentSignals(Array.from({ length: 12 }, (_, index) => person(String(index))), () => {}, read);
+  expect(read).toHaveBeenCalledTimes(6);
+  while (pending.length) {
+    pending.shift()!();
+    await Promise.resolve();
+  }
+  await done;
+  expect(read).toHaveBeenCalledTimes(12);
+  expect(peak).toBe(6);
+});
+
+it("does not cache a failed read", async () => {
+  const read = vi.fn()
+    .mockRejectedValueOnce(new Error("temporary"))
+    .mockResolvedValueOnce(insight("retry", 80, 0.9, 0));
+  const states: string[] = [];
+  await loadStudentSignals([person("retry")], (row) => states.push(row.state), read, "retry-viewer");
+  await loadStudentSignals([person("retry")], (row) => states.push(row.state), read, "retry-viewer");
+  expect(states).toEqual(["error", "ok"]);
+  expect(read).toHaveBeenCalledTimes(2);
+  clearStudentSignalCache("retry-viewer");
 });

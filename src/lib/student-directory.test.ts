@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import type { ClassGroup, ClassMember, PersonRef } from "@/api/client";
-import { getStudentDirectory, sortByClass } from "@/lib/student-directory";
+import { classMemberCount, getStudentDirectory, invalidateStudentDirectory, sortByClass } from "@/lib/student-directory";
+import { resetInstanceLabelCache } from "@/lib/instance-labels";
 
 const cls = (name: string, gradeLevel: number): ClassGroup => ({
   id: name, creator: null, name, grade_level: gradeLevel, year: null, teacher: null,
@@ -42,6 +43,8 @@ const jsonResponse = (data: unknown) =>
 
 describe("getStudentDirectory", () => {
   afterEach(() => {
+    invalidateStudentDirectory();
+    resetInstanceLabelCache();
     vi.restoreAllMocks();
   });
 
@@ -53,9 +56,9 @@ describe("getStudentDirectory", () => {
         return jsonResponse({ items: [person("Zeynep"), person("Ali")], total: 2, limit: null, offset: 0 });
       if (url === "/api/classes?limit=200")
         return jsonResponse({ items: [cls("9-A", 9), cls("10-B", 10)], total: 2, limit: 200, offset: 0 });
-      if (url === "/api/classes/9-A/members?limit=500")
+      if (url === "/api/classes/9-A/members?limit=500&offset=0")
         return jsonResponse({ items: [member("9-A", person("Ali"))], total: 1, limit: 500, offset: 0 });
-      if (url === "/api/classes/10-B/members?limit=500") return jsonResponse({ items: [], total: 0, limit: 500, offset: 0 });
+      if (url === "/api/classes/10-B/members?limit=500&offset=0") return jsonResponse({ items: [], total: 0, limit: 500, offset: 0 });
       throw new Error(`unexpected fetch: ${url}`);
     };
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => respond(String(input))));
@@ -65,8 +68,8 @@ describe("getStudentDirectory", () => {
     expect(calls).toEqual([
       "/api/users/search?q=&role=student",
       "/api/classes?limit=200",
-      "/api/classes/9-A/members?limit=500",
-      "/api/classes/10-B/members?limit=500",
+      "/api/classes/9-A/members?limit=500&offset=0",
+      "/api/classes/10-B/members?limit=500&offset=0",
     ]);
     expect(rows.map((row) => row.person.display_name)).toEqual(["Ali", "Zeynep"]);
     expect(rows[0].classes.map((c) => c.name)).toEqual(["9-A"]);
@@ -107,5 +110,29 @@ describe("getStudentDirectory", () => {
 
     expect(calls).toEqual(["/api/classes/c2/members?limit=500&offset=0"]);
     expect(rows.map((row) => row.person.display_name)).toEqual(["Ali"]);
+  });
+
+  test("reuses a roster for later visits and the class count, then invalidates it", async () => {
+    const fetch = vi.fn(async () => jsonResponse({ items: [member("c3", person("Ali"))], total: 1, limit: 500, offset: 0 }));
+    vi.stubGlobal("fetch", fetch);
+    const picked = { ...cls("9-A", 9), id: "c3" };
+    await getStudentDirectory(picked);
+    await getStudentDirectory(picked);
+    expect(await classMemberCount("c3")).toBe(1);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    invalidateStudentDirectory();
+    await getStudentDirectory(picked);
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  test("retries a class whose first roster request failed", async () => {
+    const fetch = vi.fn()
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockResolvedValue(jsonResponse({ items: [], total: 0, limit: 500, offset: 0 }));
+    vi.stubGlobal("fetch", fetch);
+    const picked = { ...cls("9-A", 9), id: "c4" };
+    await expect(getStudentDirectory(picked)).rejects.toThrow();
+    expect(await getStudentDirectory(picked)).toEqual([]);
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 });

@@ -3,12 +3,10 @@ import type { ColumnDef } from "@tanstack/solid-table";
 import { Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { matchesSearch } from "@/lib/search-text";
-import { getClassInstances, getClasses } from "@/api/classes";
 import { getCourses } from "@/api/courses";
 import { getUserSearch } from "@/api/users";
 import { formatApiError, type Course, type PersonRef } from "@/api/client";
-import { formatInstanceLabel } from "@/lib/instance-labels";
-import { FAN_OUT_LIMIT, mapConcurrent } from "@/lib/map-concurrent";
+import { formatInstanceLabel, loadSchoolSections, classList } from "@/lib/instance-labels";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { CreateUserPanel } from "@/components/users/create-user-panel";
 import { RosterPersonCell } from "@/components/users/roster-person-cell";
@@ -50,34 +48,36 @@ function TeachersRosterContent() {
   const [creating, setCreating] = createSignal(false);
 
   const [data, { refetch }] = createResource(async () => {
-    const [teachers, classes, courses] = await Promise.all([
+    const [teachers, classes] = await Promise.all([
       getUserSearch("", undefined, "teacher"),
-      getClasses(),
-      getCourses().catch(() => ({ items: [] as Course[] })),
+      classList().then((items) => ({ items })),
     ]);
     const push = (map: Map<string, string[]>, id: string, value: string) => map.set(id, [...(map.get(id) ?? []), value]);
     const byName = (a: string, b: string) => a.localeCompare(b, "tr", { numeric: true });
     const homeroom = new Map<string, string[]>();
     for (const cls of classes.items) if (cls.teacher) push(homeroom, cls.teacher.id, cls.name);
-    const titles = new Map(courses.items.map((course) => [course.id, course.title]));
-    const perClass = await mapConcurrent(classes.items, FAN_OUT_LIMIT, async (cls) => ({
-      cls,
-      // One unreadable class must not empty the whole column.
-      instances: await getClassInstances(cls.id).then((page) => page.items, () => []),
-    }));
-    const sections = new Map<string, string[]>();
-    for (const { cls, instances } of perClass) {
-      for (const instance of instances) {
-        const label = formatInstanceLabel(titles.get(instance.course) ?? null, cls.name);
-        for (const teacher of instance.teachers) push(sections, teacher.id, label);
-      }
-    }
     return teachers.items.map<TeacherRow>((person) => ({
       person,
       homeroom: (homeroom.get(person.id) ?? []).sort(byName),
-      sections: [...new Set(sections.get(person.id) ?? [])].sort(byName),
+      sections: [],
     }));
   });
+  const [sectionNames] = createResource(() => data.latest ? true : null, async () => {
+    const courses = await getCourses().catch(() => ({ items: [] as Course[] }));
+    const titles = new Map(courses.items.map((course) => [course.id, course.title]));
+    const push = (map: Map<string, string[]>, id: string, value: string) => map.set(id, [...(map.get(id) ?? []), value]);
+    const byName = (a: string, b: string) => a.localeCompare(b, "tr", { numeric: true });
+    const perClass = await loadSchoolSections();
+    const sections = new Map<string, string[]>();
+    for (const { klass, sections: instances } of perClass) {
+      for (const instance of instances) {
+        const label = formatInstanceLabel(titles.get(instance.course) ?? null, klass.name);
+        for (const teacher of instance.teachers) push(sections, teacher.id, label);
+      }
+    }
+    return new Map([...sections].map(([id, names]) => [id, [...new Set(names)].sort(byName)]));
+  });
+  const mergedRows = createMemo(() => (data.latest ?? []).map((row) => ({ ...row, sections: sectionNames.latest?.get(row.person.id) ?? [] })));
 
   const open = (row: TeacherRow) => void navigate({ to: "/profile/$userId", params: { userId: row.person.id } });
 
@@ -125,7 +125,6 @@ function TeachersRosterContent() {
             <ErrorAlert message={formatApiError(data.error)} onRetry={() => void refetch()} />
           </Show>
           <Show when={!data.error && data()}>
-            {(rows) => (
               <DataTable
                 urlState
                 surfaceSections
@@ -138,7 +137,7 @@ function TeachersRosterContent() {
             </Button>
           </Show></>}
                 columns={columns()}
-                data={rows()}
+                data={mergedRows()}
                 tableClass="min-w-2xl"
                 empty={t("roster.noTeachers")}
                 filterPlaceholder={t("roster.searchTeachers")}
@@ -151,7 +150,6 @@ function TeachersRosterContent() {
                 storageKey="teachers-roster"
                 onRowClick={open}
               />
-            )}
           </Show>
         </Suspense>
       </section>

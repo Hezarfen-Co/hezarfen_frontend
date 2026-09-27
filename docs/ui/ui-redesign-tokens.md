@@ -93,8 +93,8 @@ display-font, translucent surface, or custom shadow rules.
   `src/components/ui/data-toolbar.tsx`). Every list toolbar is one card.
 - Filled buttons carry a transparent border with `bg-clip-padding`, so they
   match an outlined pill's height; a border never matches its fill colour.
-- No page numbers: server lists fetch as you scroll (`createInfiniteList` +
-  `infinite`), client lists reveal 50 rows at a time. Empty cells show `—`.
+- Server lists fetch as you scroll (`createInfiniteList` + `infinite`);
+  client tables use page numbers. Empty cells show `—`.
 - `storageKey` remains optional. When provided, only column visibility persists
   under `hezarfen.table.<storageKey>`.
 - Application tables use `DataTable`; page/domain components do not render table

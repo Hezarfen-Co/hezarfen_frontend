@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createEffect, createMemo, createSignal, type Component } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createSignal, onCleanup, type Component } from "solid-js";
 import { createBoardResources } from "@/lib/board-resources";
 import { useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
@@ -74,7 +74,7 @@ const HEATMAP_WEEKS = 26;
  * `/exams/{id}/statistics` call — there is no bulk statistics endpoint — so the
  * homepage keeps a bounded recent history.
  */
-const TREND_EXAM_CAP = 20;
+const TREND_EXAM_CAP = 6;
 /** Marks plotted in a student's own trend. */
 const TREND_MARK_CAP = 20;
 /** Classes whose roster size the admin "Şubeler" quick links read. */
@@ -159,6 +159,21 @@ function PanelSkeleton() {
   );
 }
 
+function observeWhenVisible(el: Element, activate: () => void) {
+  if (typeof IntersectionObserver === "undefined") {
+    activate();
+    return;
+  }
+  const observer = new IntersectionObserver((entries) => {
+    if (entries.some((entry) => entry.isIntersecting)) {
+      observer.disconnect();
+      activate();
+    }
+  }, { rootMargin: "160px" });
+  observer.observe(el);
+  onCleanup(() => observer.disconnect());
+}
+
 function DashboardContent() {
   // Every panel reads its own source; one failed request must not take the
   // others down with it (see createBoardResources).
@@ -185,6 +200,10 @@ function DashboardContent() {
   // Server-anchored time (local fallback). Declared before the resources that
   // read it in their fetchers.
   const now = () => clock()?.now ?? Date.now();
+  const [trendVisible, setTrendVisible] = createSignal(false);
+  const [heatmapVisible, setHeatmapVisible] = createSignal(false);
+  const [classLinksVisible, setClassLinksVisible] = createSignal(false);
+  const [childHomeworkVisible, setChildHomeworkVisible] = createSignal(false);
   // Unpaged: the backend has no `kind` filter, so a "courses" count that
   // excludes studies and clubs has to be counted here over the whole list.
   const [courses] = createResource(
@@ -192,7 +211,7 @@ function DashboardContent() {
     () => quiet(getCourses()),
   );
   const courseTitleOf = (courseId: string) => courses()?.items.find((course) => course.id === courseId)?.title ?? "…";
-  const courseCount = () => (courses.error ? "—" : String((courses()?.items ?? []).filter((course) => course.kind === "course").length));
+  const courseCount = () => courses()?.items ? String(courses()!.items.filter((course) => course.kind === "course").length) : "—";
   // `/events` has no role gate — a parent-teacher conference is a real PAR-01
   // "Yaklaşan" item, so parent reads this too (unlike `exams`/`homework`
   // below, which really are course-scoped and out of a parent's reach).
@@ -266,13 +285,13 @@ function DashboardContent() {
   // `ends_after` window the deadlines table needs. The heatmap looks backwards
   // and there is no "before" filter, so past events need their own read.
   const [pastEvents] = createResource(
-    () => hasMinRole(role(), "teacher") && on("events") ? true : null,
+    () => heatmapVisible() && hasMinRole(role(), "teacher") && on("events") ? true : null,
     () => getEvents({ limit: 100 }).catch(() => null),
   );
   // Success trend source for teacher+. Exam statistics are grader-only, so this
   // never runs for a student or parent — they would get a 403.
   const [examStats] = createResource(
-    () => hasMinRole(role(), "teacher") ? exams.latest?.items ?? null : null,
+    () => trendVisible() && hasMinRole(role(), "teacher") ? exams.latest?.items ?? null : null,
     async (items) => {
       // An exam with no schedule (an untimed, paper or imported one) still
       // gets graded — skipping unscheduled exams left the charts empty while
@@ -396,18 +415,18 @@ function DashboardContent() {
     () => (isAdminHome() ? true : null),
     () => getUsers({ limit: 30 }),
   );
-  // "Şubeler" quick links: the classes with the most students, each labelled
-  // with its roster size. A class carries no member count, so each one costs
-  // a `limit=1` roster read for its `total` — capped at CLASS_LINK_CAP classes
-  // (taken in name order) so a large school does not fan out on the homepage.
+  // Class rows have no member count. Show the first two names immediately;
+  // rank by roster size once the quick-link card enters the viewport.
   const [recentClasses] = createResource(
     () => (isAdminHome() && on("classes") ? true : null),
-    async () => {
-      const page = await quiet(getClasses({ limit: 200 }));
-      if (!page) return null;
-      const candidates = [...page.items]
-        .sort((a, b) => a.name.localeCompare(b.name, "tr", { numeric: true }))
-        .slice(0, CLASS_LINK_CAP);
+    () => quiet(getClasses({ limit: 200 })),
+  );
+  const classCandidates = createMemo(() => [...(recentClasses.latest?.items ?? [])]
+    .sort((a, b) => a.name.localeCompare(b.name, "tr", { numeric: true }))
+    .slice(0, CLASS_LINK_CAP));
+  const [classCounts] = createResource(
+    () => classLinksVisible() && classCandidates().length > 0 ? classCandidates() : null,
+    async (candidates) => {
       const counted = await mapConcurrent(candidates, FAN_OUT_LIMIT, async (cls) => ({
         cls,
         students: await getClassMembers(cls.id, { limit: 1 }).then((members) => members.total, () => null),
@@ -429,10 +448,10 @@ function DashboardContent() {
       })),
   );
   const classQuickLinks = createMemo<QuickLinkRow[]>(() =>
-    (recentClasses() ?? []).map((row) => ({
+    (classCounts.latest ?? classCandidates().slice(0, 2).map((cls) => ({ cls, students: null as number | null }))).map((row) => ({
       id: row.cls.id,
       primary: row.cls.name,
-      secondary: row.students == null ? undefined : t("classGroups.studentsCount", { count: row.students }),
+      secondary: row.students == null ? "—" : t("classGroups.studentsCount", { count: row.students }),
       Icon: IconBook,
     })),
   );
@@ -497,7 +516,7 @@ function DashboardContent() {
 
   /** A stat over a list total; a source that failed shows "—", never a made-up 0. */
   const countOf = (source: { (): { total: number } | null | undefined; error: unknown }) =>
-    source.error ? "—" : String(source()?.total ?? 0);
+    source()?.total == null ? "—" : String(source()!.total);
   const allStats = createMemo<StatCardData[]>(() => {
     const r = role();
     if (r === "student") {
@@ -843,6 +862,7 @@ function DashboardContent() {
                   illustration="courses"
                   rows={classQuickLinks()}
                   empty={t("dashboard.quicklinks.empty")}
+                  onVisible={() => setClassLinksVisible(true)}
                   onOpen={(row) => navigate({ to: "/management/classes/$id", params: { id: row.id } })}
                 />
               </Show>
@@ -974,7 +994,8 @@ function DashboardContent() {
             </div>
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
               <Show when={on("exams")}>
-              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-2">
+              <div ref={(el) => observeWhenVisible(el, () => setTrendVisible(true))} data-dashboard-trend class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-2">
+                <Show when={trendVisible() && (examStats.latest != null || !!examStats.error)} fallback={<PanelSkeleton />}>
                 <ChartLine
                   class="sm:col-span-2"
                   title={t("dashboard.successTrend")}
@@ -990,6 +1011,7 @@ function DashboardContent() {
                   maxScale={100}
                   itemsPerPage={5}
                 />
+                </Show>
               </div>
               </Show>
               <Show when={on("appointments")}>
@@ -1027,7 +1049,8 @@ function DashboardContent() {
 
           <Suspense fallback={<PanelSkeleton />}>
           <Show when={(role() === "manager" || role() === "admin") && on("exams")}>
-            <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            <div ref={(el) => observeWhenVisible(el, () => setTrendVisible(true))} data-dashboard-trend class="grid grid-cols-1 gap-3 lg:grid-cols-3">
+              <Show when={trendVisible() && (examStats.latest != null || !!examStats.error)} fallback={<PanelSkeleton />}>
               <ChartLine
                 class="lg:col-span-2"
                 title={t("dashboard.successTrend")}
@@ -1042,6 +1065,7 @@ function DashboardContent() {
                 maxScale={100}
                 itemsPerPage={5}
               />
+              </Show>
             </div>
           </Show>
           </Suspense>
@@ -1137,9 +1161,11 @@ function DashboardContent() {
             {/* PAR progress: the child's homework report (a parent-readable
                 route) as overdue / due-this-week; marks-based progress still
                 has no parent-facing trend. */}
-            <Show when={on("homework") && selectedChildId() && clock()}>
-              <ChildHomeworkPanel childId={selectedChildId()} now={clock()!.now} />
-            </Show>
+            <div ref={(el) => observeWhenVisible(el, () => setChildHomeworkVisible(true))}>
+              <Show when={childHomeworkVisible() && on("homework") && selectedChildId() && clock()}>
+                <ChildHomeworkPanel childId={selectedChildId()} now={clock()!.now} />
+              </Show>
+            </div>
           </Show>
           </Suspense>
 
@@ -1159,8 +1185,9 @@ function DashboardContent() {
           </section>
           </Suspense>
 
+          <div ref={(el) => observeWhenVisible(el, () => setHeatmapVisible(true))} data-dashboard-heatmap>
           <Suspense fallback={<PanelSkeleton />}>
-          <Show when={!heatmapIsFocus() || on("pomodoro")}>
+          <Show when={heatmapVisible() && (!heatmapIsFocus() || on("pomodoro")) && (role() === "student" || role() === "parent" || !on("events") || pastEvents.state === "ready")} fallback={<PanelSkeleton />}>
           <ChartHeatmap
             title={heatmapIsFocus() ? t("dashboard.focusHeatmap") : t("dashboard.activityHeatmap")}
             subtitle={heatmapIsFocus() ? t("dashboard.focusHeatmapDesc") : t("dashboard.activityHeatmapDesc")}
@@ -1185,6 +1212,7 @@ function DashboardContent() {
           />
           </Show>
           </Suspense>
+          </div>
         </Suspense>
     </div>
   );

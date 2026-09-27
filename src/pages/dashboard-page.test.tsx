@@ -3,7 +3,7 @@ import type { JSX } from "solid-js";
 import DashboardPage from "@/pages/dashboard-page";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
-const { navigate, authUser, schoolModules, calls, refuseExams, failExams } = vi.hoisted(() => ({
+const { navigate, authUser, schoolModules, calls, refuseExams, failExams, extraExams, classRows } = vi.hoisted(() => ({
   navigate: vi.fn(),
   authUser: { authenticated: true, role: "student" },
   // null = module state unknown (fail open, everything shown).
@@ -11,6 +11,8 @@ const { navigate, authUser, schoolModules, calls, refuseExams, failExams } = vi.
   calls: [] as string[],
   refuseExams: { on: false },
   failExams: { times: 0 },
+  extraExams: [] as { id: string; title: string; class_course: string; draft: boolean; starts_at: number; ends_at: number }[],
+  classRows: [] as { id: string; name: string }[],
 }));
 
 vi.mock("@tanstack/solid-router", () => ({
@@ -142,9 +144,10 @@ vi.mock("@/api/exams", async () => {
       starts_at: null,
       ends_at: null,
     },
+    ...extraExams,
   ]);
   },
-  getExamStatistics: async (examId: string) => ({
+  getExamStatistics: async (examId: string) => (calls.push(`stats:${examId}`), {
     exam: examId,
     graded: 12,
     average: 74.5,
@@ -166,7 +169,7 @@ vi.mock("@/api/pomodoro", () => ({
   }),
 }));
 vi.mock("@/api/events", () => ({
-  getEvents: async () => page([
+  getEvents: async (params?: { ends_after?: number }) => (calls.push(params?.ends_after ? "events:upcoming" : "events:history"), page([
     {
       id: "event-1",
       title: "Event deadline",
@@ -174,7 +177,7 @@ vi.mock("@/api/events", () => ({
       ends_at: now + 4_000,
     },
     { id: "event-past", title: "Past event", starts_at: now - 5 * DAY, ends_at: now - 5 * DAY + 1_000 },
-  ]),
+  ])),
 }));
 vi.mock("@/api/homework", () => ({
   getHomeworkSubmissions: async () => page([
@@ -215,9 +218,9 @@ vi.mock("@/api/meals", () => ({
 vi.mock("@/api/classes", () => ({
   getMyClasses: async () => page([{ id: "class-1", name: "9-A" }]),
   getClassesByUserId: async () => page([]),
-  getClasses: async () => page([]),
+  getClasses: async () => page(classRows),
   getClassById: async () => ({ id: "class-1", name: "9-A" }),
-  getClassMembers: async () => page([]),
+  getClassMembers: async (id: string) => (calls.push(`members:${id}`), { ...page([]), total: Number(id.split("-")[1]) }),
 }));
 vi.mock("@/api/academic-years", () => ({
   getAcademicYears: async () => page([{ id: "y-1", name: "2026-2027" }]),
@@ -235,6 +238,9 @@ afterEach(() => {
   calls.length = 0;
   refuseExams.on = false;
   failExams.times = 0;
+  extraExams.length = 0;
+  classRows.length = 0;
+  vi.unstubAllGlobals();
 });
 
 function renderDashboard(role: string) {
@@ -245,6 +251,66 @@ function renderDashboard(role: string) {
     </PreferencesProvider>
   ));
 }
+
+function observeOnDemand() {
+  const targets = new Map<Element, IntersectionObserverCallback>();
+  class Observer {
+    constructor(private callback: IntersectionObserverCallback) {}
+    observe(target: Element) { targets.set(target, this.callback); }
+    disconnect() {}
+  }
+  vi.stubGlobal("IntersectionObserver", Observer);
+  return (target: Element) => {
+    const callback = targets.get(target);
+    expect(callback).toBeTruthy();
+    callback!([{ isIntersecting: true, target } as IntersectionObserverEntry], {} as IntersectionObserver);
+  };
+}
+
+test("teacher statistics wait for the chart and read only six recent exams", async () => {
+  const reveal = observeOnDemand();
+  extraExams.push(...Array.from({ length: 20 }, (_, index) => ({
+    id: `extra-${index}`,
+    title: `Exam ${index}`,
+    class_course: "instance-1",
+    draft: false,
+    starts_at: now - (index + 1) * DAY,
+    ends_at: now - (index + 1) * DAY + 1_000,
+  })));
+  renderDashboard("manager");
+
+  await screen.findByRole("heading", { name: "Upcoming deadlines" });
+  expect(calls.filter((call) => call.startsWith("stats:"))).toHaveLength(0);
+  reveal(document.querySelector("[data-dashboard-trend]")!);
+  await waitFor(() => expect(calls.filter((call) => call.startsWith("stats:"))).toHaveLength(6));
+  expect(calls).toContain("stats:extra-0");
+  expect(calls).not.toContain("stats:extra-19");
+  expect(await screen.findByText("Average of recent exams, by course.")).toBeTruthy();
+});
+
+test("admin class sizes wait for their card and keep the size ranking", async () => {
+  const reveal = observeOnDemand();
+  classRows.push(...Array.from({ length: 10 }, (_, index) => ({ id: `class-${index + 1}`, name: `9-${index + 1}` })));
+  renderDashboard("admin");
+
+  const column = await screen.findByText("Classes");
+  expect(calls.filter((call) => call.startsWith("members:"))).toHaveLength(0);
+  reveal(column.closest("div")!);
+  await waitFor(() => expect(calls.filter((call) => call.startsWith("members:"))).toHaveLength(10));
+  await waitFor(() => expect(within(column.closest("div")!).getByText("9-10")).toBeTruthy());
+  expect(within(column.closest("div")!).getByText("9-9")).toBeTruthy();
+});
+
+test("past events wait for the below-fold heatmap", async () => {
+  const reveal = observeOnDemand();
+  renderDashboard("manager");
+
+  await waitFor(() => expect(calls).toContain("events:upcoming"));
+  expect(calls).not.toContain("events:history");
+  reveal(document.querySelector("[data-dashboard-heatmap]")!);
+  await waitFor(() => expect(calls).toContain("events:history"));
+  expect(await screen.findByText("School activity")).toBeTruthy();
+});
 
 test("logged-out visitor redirects before dashboard reads user role", () => {
   authUser.authenticated = false;

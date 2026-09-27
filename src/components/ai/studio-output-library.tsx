@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { getCourseNoteRag } from "@/api/course-notes";
 import { listPodcastJobs } from "@/api/podcast";
@@ -6,8 +6,7 @@ import type { PodcastJobSummary } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { IconSparkles, IconWaveform } from "@/components/ui/icons";
-import { InfiniteSentinel } from "@/components/ui/infinite-sentinel";
-import { PageSpinner } from "@/components/ui/page-spinner";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -29,13 +28,15 @@ type StudioArtifact = {
   title: string;
   courseTitle: string;
   /** Sorts the list: when the run finished, else when it started. */
-  at: number;
+  at?: number;
   job: PodcastJobSummary | null;
+  pending?: boolean;
 };
 
 const LIBRARY_LIMIT = 100;
 /** Client lists reveal this many rows at a time, like client DataTables. */
-const LIBRARY_REVEAL = 50;
+/** Rows per library page; the history is already in memory, so it pages. */
+const LIBRARY_PAGE = 20;
 
 export function StudioOutputLibrary(props: {
   notes: StudioLibraryNote[];
@@ -46,6 +47,37 @@ export function StudioOutputLibrary(props: {
   const t = useT();
   const { locale } = usePreferences();
   const source = createMemo(() => props.notes.map((note) => note.id).join(","));
+  const [summaries, setSummaries] = createSignal<Record<string, number | null>>({});
+  const requested = new Set<string>();
+  let list: HTMLUListElement | undefined;
+  let observer: IntersectionObserver | undefined;
+
+  const loadSummary = (noteId: string) => {
+    if (requested.has(noteId)) return;
+    requested.add(noteId);
+    void getCourseNoteRag(noteId, { limit: 1 }).then(
+      (page) => setSummaries((current) => ({ ...current, [noteId]: page.items[0]?.generated_at ?? null })),
+      () => setSummaries((current) => ({ ...current, [noteId]: null })),
+    );
+  };
+  const watchNote = (element: HTMLLIElement, noteId: string) => {
+    element.dataset.noteId = noteId;
+    if (observer) observer.observe(element);
+    else if (typeof IntersectionObserver === "undefined") loadSummary(noteId);
+  };
+  onMount(() => {
+    if (typeof IntersectionObserver === "undefined") return;
+    observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        const noteId = (entry.target as HTMLElement).dataset.noteId;
+        if (noteId) loadSummary(noteId);
+        observer?.unobserve(entry.target);
+      }
+    }, { rootMargin: "100px" });
+    list?.querySelectorAll<HTMLLIElement>("[data-studio-note]").forEach((element) => observer?.observe(element));
+  });
+  onCleanup(() => observer?.disconnect());
 
   const stateVariant = (state: string) => {
     if (state === "done") return "success" as const;
@@ -73,18 +105,15 @@ export function StudioOutputLibrary(props: {
     return "bg-warning";
   };
 
-  const [items] = createResource(source, async (): Promise<StudioArtifact[]> => {
-    const [podcastResult, ...summaryResults] = await Promise.allSettled([
-      listPodcastJobs({ limit: LIBRARY_LIMIT }),
-      ...props.notes.map((note) => getCourseNoteRag(note.id, { limit: 1 })),
-    ]);
+  const [podcasts] = createResource(source, () => listPodcastJobs({ limit: LIBRARY_LIMIT }));
+  const items = createMemo((): StudioArtifact[] => {
     const byId = new Map(props.notes.map((note) => [note.id, note]));
     const rows: StudioArtifact[] = [];
 
     // Every job, not only the finished ones: a failed or cancelled run is part
     // of the history and saying so is more useful than hiding it.
-    if (podcastResult.status === "fulfilled") {
-      for (const job of podcastResult.value.items) {
+    if (podcasts()) {
+      for (const job of podcasts()!.items) {
         const note = byId.get(job.source_id);
         rows.push({
           key: `podcast:${job.job_id}`,
@@ -97,31 +126,36 @@ export function StudioOutputLibrary(props: {
       }
     }
 
-    props.notes.forEach((note, index) => {
-      const result = summaryResults[index];
-      const summary = result?.status === "fulfilled" ? result.value.items[0] : undefined;
-      if (!summary) return;
+    props.notes.forEach((note) => {
+      const at = summaries()[note.id];
+      if (at === null) return;
       rows.push({
-        key: `summary:${summary.id}`,
+        key: `summary:${note.id}`,
         noteId: note.id,
         title: note.title,
         courseTitle: note.courseTitle,
-        at: summary.generated_at,
+        at,
         job: null,
+        pending: at === undefined,
       });
     });
 
-    return rows.sort((a, b) => b.at - a.at);
+    return rows.sort((a, b) => (b.at ?? -1) - (a.at ?? -1));
   });
 
-  // The history is merged here from two sources, so it is revealed in
-  // memory as the reader scrolls — the app's client-list standard.
-  const [shown, setShown] = createSignal(LIBRARY_REVEAL);
+  // The history is merged here from two sources and held in memory, so it
+  // pages with numbers — the app's standard for lists that are not fetched as
+  // you scroll. A new source goes back to the first page.
+  const [page, setPage] = createSignal(0);
   const total = () => items()?.length ?? 0;
-  const pageItems = createMemo(() => (items() ?? []).slice(0, shown()));
+  const pageCount = () => Math.max(1, Math.ceil(total() / LIBRARY_PAGE));
+  const pageItems = createMemo(() => (items() ?? []).slice(page() * LIBRARY_PAGE, (page() + 1) * LIBRARY_PAGE));
   createEffect(() => {
     source();
-    setShown(LIBRARY_REVEAL);
+    setPage(0);
+  });
+  createEffect(() => {
+    if (page() >= pageCount()) setPage(pageCount() - 1);
   });
 
   const open = (item: StudioArtifact) => {
@@ -137,16 +171,15 @@ export function StudioOutputLibrary(props: {
           <h2 class="text-sm font-semibold text-text-strong">{t("aiStudio.library.title")}</h2>
           <p class="mt-0.5 text-xs text-muted-foreground">{t("aiStudio.library.description")}</p>
         </div>
-        <Show when={(items()?.length ?? 0) > 0}>
+        <Show when={items().some((item) => !item.pending)}>
           <span class="shrink-0 text-xs tabular-nums text-muted-foreground">
-            {t("aiStudio.library.count", { count: items()?.length ?? 0 })}
+            {t("aiStudio.library.count", { count: items().filter((item) => !item.pending).length })}
           </span>
         </Show>
       </header>
 
-      <Suspense fallback={<div class="py-8"><PageSpinner /></div>}>
         <Show
-          when={(items()?.length ?? 0) > 0}
+          when={items().length > 0 || podcasts.loading}
           fallback={
             <div class="px-4 py-5">
               <EmptyInline title={t("aiStudio.library.empty")} hint={t("aiStudio.library.emptyHint")} />
@@ -155,10 +188,10 @@ export function StudioOutputLibrary(props: {
         >
           {/* A run history, the way a studio lists one: hairline dividers, a
               status dot, what was produced and when — no cards. */}
-          <ul class="divide-y divide-border-hairline">
+          <ul ref={list} class="divide-y divide-border-hairline">
             <For each={pageItems()}>
               {(item) => (
-                <li>
+                <li data-studio-note={item.pending ? "" : undefined} ref={item.pending ? (element) => watchNote(element, item.noteId) : undefined}>
                   <button
                     type="button"
                     aria-current={props.selectedId === item.noteId ? "true" : undefined}
@@ -168,9 +201,7 @@ export function StudioOutputLibrary(props: {
                     )}
                     onClick={() => open(item)}
                   >
-                    <span
-                      class={cn("h-1.5 w-1.5 shrink-0 rounded-full", item.job ? dotClass(item.job.state) : "bg-success")}
-                    />
+                    <span class={cn("h-1.5 w-1.5 shrink-0 rounded-full", item.pending ? "animate-pulse bg-muted-foreground/30" : item.job ? dotClass(item.job.state) : "bg-success")} />
                     <span class="min-w-0 flex-1">
                       <span class="block truncate text-sm font-medium text-text-strong">{item.title}</span>
                       <span class="mt-0.5 block truncate text-xs text-muted-foreground">
@@ -178,7 +209,7 @@ export function StudioOutputLibrary(props: {
                         {/* Phones fold the date under the title so the title keeps the row's width. */}
                         <span class="tabular-nums sm:hidden">
                           {item.courseTitle ? " · " : ""}
-                          {formatDateTime(item.at, locale())}
+                          {item.at === undefined ? "—" : formatDateTime(item.at, locale())}
                         </span>
                       </span>
                     </span>
@@ -188,7 +219,7 @@ export function StudioOutputLibrary(props: {
                         fallback={
                           <Badge variant="outline" class="gap-1 rounded-md font-normal">
                             <IconSparkles class="h-3 w-3" />
-                            {t("aiStudio.library.summary")}
+                            {item.pending ? "—" : t("aiStudio.library.summary")}
                           </Badge>
                         }
                       >
@@ -208,26 +239,25 @@ export function StudioOutputLibrary(props: {
                       </Show>
                     </span>
                     <span class="hidden shrink-0 text-xs tabular-nums text-muted-foreground sm:block">
-                      {formatDateTime(item.at, locale())}
+                      {item.at === undefined ? "—" : formatDateTime(item.at, locale())}
                     </span>
                   </button>
                 </li>
               )}
             </For>
           </ul>
-          <Show when={total() > LIBRARY_REVEAL}>
-            <div class="flex flex-col items-start gap-2 border-t border-border-hairline px-4 py-3">
-              <InfiniteSentinel
-                hasMore={shown() < total()}
-                loading={false}
-                shown={Math.min(shown(), total())}
+          <Show when={total() > 0}>
+            <div class="border-t border-border-hairline px-4 py-3">
+              <TablePagination
+                pageIndex={page()}
+                pageCount={pageCount()}
+                pageSize={LIBRARY_PAGE}
                 total={total()}
-                onLoadMore={() => setShown((count) => count + LIBRARY_REVEAL)}
+                onPageChange={setPage}
               />
             </div>
           </Show>
         </Show>
-      </Suspense>
 
     </section>
   );

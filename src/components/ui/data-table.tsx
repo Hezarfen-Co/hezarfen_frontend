@@ -11,6 +11,7 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
 } from "@tanstack/solid-table";
 import { Illustration } from "@/components/ui/illustration";
@@ -23,10 +24,10 @@ import { IconArrowDown, IconArrowUp, IconChevronsUpDown } from "@/components/ui/
 import { InfoTip } from "@/components/ui/info-tip";
 import { cn } from "@/lib/cn";
 import { createMediaQuery } from "@/lib/create-media-query";
-import { COMPACT_SCREEN_QUERY } from "@/lib/create-page-size";
+import { COMPACT_SCREEN_QUERY, createResponsivePageSize } from "@/lib/create-page-size";
 import { createScrollRestore } from "@/lib/scroll-restore";
 import { createTablePreferences } from "@/lib/table-preferences";
-import { createUrlParam, createUrlString, decodeSort, encodeSort, listParamKeys } from "@/lib/url-state";
+import { createUrlPageIndex, createUrlParam, createUrlString, decodeSort, encodeSort, listParamKeys } from "@/lib/url-state";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useT } from "@/stores/preferences-context";
 
@@ -99,10 +100,7 @@ export type DataTableProps<TData, TValue = unknown> = {
   mobileLayout?: "cards" | "scroll";
   onRowClick?: (row: TData) => void;
   onSearchInput?: (value: string) => void;
-  /**
-   * Server-paged tables only: rows per page on a wide screen. A client-side
-   * table has no pages — it reveals rows as the reader scrolls.
-   */
+  /** Rows per page on a wide screen; client tables use fewer on phones. */
   pageSize?: number;
   searchPredicate?: (row: TData, query: string) => boolean;
   searchValue?: string;
@@ -136,13 +134,7 @@ const resolveUpdater = <T,>(updater: Updater<T>, old: T): T =>
 
 const alignClass = { left: "text-left", center: "text-center", right: "text-right" } as const;
 
-/**
- * A client-side table renders this many rows, then this many more each time
- * the reader nears the end. The data is already in memory, so sorting, search
- * and filters still see every row — only the DOM is paced.
- */
-const REVEAL_STEP = 50;
-/** Start revealing the next rows this far before the list's end comes into view. */
+/** Start fetching the next server page this far before the list's end comes into view. */
 const REVEAL_MARGIN_PX = 600;
 
 export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, TValue>) {
@@ -157,34 +149,13 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     ? createUrlParam<SortingState>(urlKeys.sort, { parse: decodeSort, serialize: encodeSort })
     : createSignal<SortingState>([]);
   const [otherColumnFilters, setOtherColumnFilters] = createSignal<ColumnFiltersState>([]);
-  // Client-side tables drop page numbers for scroll-to-reveal; only a
-  // server-paged table (`manualPagination`) still pages.
-  const revealing = () => paginationEnabled && !props.manualPagination && !props.infinite;
-  // How far the reader had revealed, per page and table, for this tab: coming
-  // back from a detail page renders those rows again, so the router's scroll
-  // restoration has somewhere to land.
-  const revealKey = typeof window === "undefined"
-    ? null
-    : `reveal:${window.location.pathname}${window.location.search}:${props.storageKey ?? props.title ?? ""}`;
-  const readRevealed = () => {
-    try {
-      const count = Number(revealKey ? sessionStorage.getItem(revealKey) : null);
-      return Number.isFinite(count) && count > REVEAL_STEP ? Math.floor(count) : REVEAL_STEP;
-    } catch {
-      return REVEAL_STEP;
-    }
-  };
-  const [revealed, setRevealed] = createSignal(readRevealed());
-  createEffect(on(revealed, (count) => {
-    if (!revealKey || count === Number.MAX_SAFE_INTEGER) return;
-    try {
-      sessionStorage.setItem(revealKey, String(count));
-    } catch {
-      // storage blocked: the table just starts at the first step
-    }
-  }, { defer: true }));
-  const resetReveal = () => setRevealed(REVEAL_STEP);
-  createEffect(on(() => props.pageResetKey, resetReveal, { defer: true }));
+  const clientPageSize = createResponsivePageSize(props.pageSize ?? 10);
+  const [clientPageIndex, setClientPageIndex] = urlKeys && !props.manualPagination && !props.infinite
+    ? createUrlPageIndex(urlKeys.page)
+    : createSignal(0);
+  const pagination = (): PaginationState => ({ pageIndex: clientPageIndex(), pageSize: clientPageSize() });
+  createEffect(on(clientPageSize, () => setClientPageIndex(0), { defer: true }));
+  createEffect(on(() => props.pageResetKey, () => setClientPageIndex(0), { defer: true }));
   // The search box's text when the table owns it — the `searchPredicate`
   // query, or the `filterColumn` filter value.
   const [search, setSearch] = urlKeys && props.searchValue === undefined && !props.onSearchInput
@@ -208,12 +179,12 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     const own = next.find((filter) => filter.id === column);
     setSearch(typeof own?.value === "string" ? own.value : "");
     setOtherColumnFilters(next.filter((filter) => filter.id !== column));
-    resetReveal();
+    setClientPageIndex(0);
   };
   // A new sort order is a new list: start again from its top.
   const setSorting = (next: SortingState) => {
     setSortingState(next);
-    resetReveal();
+    setClientPageIndex(0);
   };
   // Sorting is client-side only, and the backend takes no sort parameter: on
   // a server-paged table it would reorder the visible page alone while the
@@ -240,12 +211,13 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    // Server paging is the caller's; the table itself never slices pages.
+    ...(paginationEnabled && !props.manualPagination && !props.infinite ? { getPaginationRowModel: getPaginationRowModel() } : {}),
     autoResetPageIndex: false,
     onSortingChange: (updater) => setSorting(resolveUpdater(updater, sorting())),
     onColumnFiltersChange: (updater) => setColumnFilters(resolveUpdater(updater, columnFilters())),
     onColumnVisibilityChange: (updater) =>
       prefs.setVisibility(resolveUpdater(updater, prefs.preferences().visibility)),
+    onPaginationChange: (updater) => setClientPageIndex(resolveUpdater(updater, pagination()).pageIndex),
     state: {
       get sorting() {
         return sorting();
@@ -259,7 +231,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
       get pagination(): PaginationState {
         return props.manualPagination
           ? { pageIndex: props.manualPagination.pageIndex, pageSize: props.manualPagination.pageSize }
-          : { pageIndex: 0, pageSize: Number.MAX_SAFE_INTEGER };
+          : props.infinite ? { pageIndex: 0, pageSize: Number.MAX_SAFE_INTEGER } : pagination();
       },
     },
   });
@@ -349,52 +321,51 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   // slot sizes them rather than trusting each page to.
   const TOOLBAR_ACTIONS =
     "[&_button]:h-10 [&_button]:rounded-full [&_button]:px-3.5 [&_button]:text-[13px] sm:[&_button]:h-8 touch:[&_button]:h-10 [&_a]:h-10 [&_a]:rounded-full [&_a]:px-3.5 [&_a]:text-[13px] sm:[&_a]:h-8 touch:[&_a]:h-10";
-  const totalRows = () => props.manualPagination?.total ?? props.infinite?.total ?? table.getRowModel().rows.length;
+  const pageCount = () => props.manualPagination
+    ? Math.max(1, Math.ceil(props.manualPagination.total / props.manualPagination.pageSize))
+    : table.getPageCount();
+  const pageIndex = () => props.manualPagination?.pageIndex ?? clientPageIndex();
+  const pageSize = () => props.manualPagination?.pageSize ?? clientPageSize();
+  const totalRows = () => props.manualPagination?.total ?? props.infinite?.total ?? table.getFilteredRowModel().rows.length;
   const setPageIndex = (next: number) => {
     if (props.manualPagination) props.manualPagination.onPageChange(next);
-    else resetReveal();
+    else setClientPageIndex(next);
   };
-  /** The rows actually rendered: all of them, or the revealed head of the list. */
-  const visibleRows = () => {
-    const rows = table.getRowModel().rows;
-    return revealing() ? rows.slice(0, revealed()) : rows;
-  };
-  const hasHidden = () => revealing() && table.getRowModel().rows.length > revealed();
-  // A sentinel under the list reveals the next rows as it nears the viewport.
-  // Without IntersectionObserver (old engines, jsdom) everything renders.
+  createEffect(() => {
+    if (props.manualPagination || props.infinite || !paginationEnabled) return;
+    const rows = table.getFilteredRowModel().rows.length;
+    if (rows === 0) return;
+    const last = Math.max(0, Math.ceil(rows / clientPageSize()) - 1);
+    if (clientPageIndex() > last) setClientPageIndex(last);
+  });
+  const visibleRows = () => table.getRowModel().rows;
   let sentinel: HTMLDivElement | undefined;
   const observing = typeof IntersectionObserver !== "undefined";
   const nearEnd = () => !!sentinel && sentinel.getBoundingClientRect().top < window.innerHeight + REVEAL_MARGIN_PX;
-  const revealMore = () => {
+  const loadMore = () => {
     if (!nearEnd()) return;
     const infinite = props.infinite;
-    if (infinite) {
-      if (infinite.hasMore && !infinite.loading) infinite.onLoadMore();
-      return;
-    }
-    if (hasHidden()) setRevealed((count) => count + REVEAL_STEP);
+    if (infinite?.hasMore && !infinite.loading) infinite.onLoadMore();
   };
   createEffect(() => {
-    if (!(revealing() || props.infinite) || !observing) return;
+    if (!props.infinite || !observing) return;
     const node = sentinel;
     if (!node) return;
     const observer = new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) revealMore();
+      if (entries.some((entry) => entry.isIntersecting)) loadMore();
     }, { rootMargin: `0px 0px ${REVEAL_MARGIN_PX}px 0px` });
     observer.observe(node);
     onCleanup(() => observer.disconnect());
   });
-  // The observer only fires when the sentinel crosses the margin; after a
-  // reveal of short rows it can still sit inside it, so check again.
-  createEffect(on(revealed, () => queueMicrotask(revealMore), { defer: true }));
   // Same for a fetched page: once it lands, a short page may leave the end
   // in view, so ask for the next one straight away.
   createEffect(on(() => props.infinite?.loading, (busy) => {
-    if (busy === false && observing) queueMicrotask(revealMore);
+    if (busy === false && observing) queueMicrotask(loadMore);
   }, { defer: true }));
-  if (!observing) setRevealed(Number.MAX_SAFE_INTEGER);
-  // Back from a detail page lands on the same row once the rows are drawn.
-  createScrollRestore(revealKey, () => visibleRows().length > 0);
+  const scrollKey = typeof window === "undefined" || props.infinite || props.manualPagination
+    ? null
+    : `${window.location.pathname}:${props.storageKey ?? props.title ?? ""}:${urlKeys?.page ?? "page"}`;
+  createScrollRestore(scrollKey, () => visibleRows().length > 0);
   const searchFieldValue = () => {
     if (props.onSearchInput || props.searchPredicate || props.filterColumn) return searchValue();
     return "";
@@ -403,7 +374,6 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     if (props.onSearchInput) props.onSearchInput(value);
     else setSearch(value);
     setPageIndex(0);
-    resetReveal();
   };
   const isInteractiveTarget = (target: EventTarget | null, row: EventTarget | null) => {
     if (!(target instanceof Element)) return false;
@@ -766,20 +736,16 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
         </Table>
       </DataTableFrame>
       </Show>
-      <Show when={props.manualPagination}>
-        {(manual) => (
-          <Show when={manual().total > 0}>
-            <TablePagination
-              pageIndex={manual().pageIndex}
-              pageCount={Math.max(1, Math.ceil(manual().total / manual().pageSize))}
-              pageSize={manual().pageSize}
-              total={manual().total}
-              onPageChange={setPageIndex}
-            />
-          </Show>
-        )}
+      <Show when={(props.manualPagination || paginationEnabled) && !props.infinite && totalRows() > 0}>
+        <TablePagination
+          pageIndex={pageIndex()}
+          pageCount={pageCount()}
+          pageSize={pageSize()}
+          total={totalRows()}
+          onPageChange={setPageIndex}
+        />
       </Show>
-      <Show when={(revealing() || props.infinite) && totalRows() > 0}>
+      <Show when={props.infinite && totalRows() > 0}>
         {/* One block, so the parent's space-y gap is paid once: the sentinel
             and the count as siblings put two gaps under the scroll hint. */}
         <div class="-mt-1.5 flex flex-col gap-2">
@@ -789,9 +755,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
             ? t("common.loadingMore")
             : props.infinite?.hasMore
               ? t("common.showingOf", { shown: props.data.length, total: totalRows() })
-              : hasHidden()
-                ? t("common.showingOf", { shown: revealed(), total: totalRows() })
-                : t("common.rowCount", { total: totalRows() })}
+              : t("common.rowCount", { total: totalRows() })}
         </p>
         <Show when={!observing && props.infinite?.hasMore && !props.infinite.loading}>
           <Button type="button" variant="outline" size="sm" class="self-start" onClick={() => props.infinite?.onLoadMore()}>

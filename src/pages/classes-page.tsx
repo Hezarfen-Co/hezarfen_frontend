@@ -2,7 +2,7 @@ import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { createResource } from "@/lib/create-resource";
 import { useNavigate } from "@tanstack/solid-router";
-import { deleteClassById, getClasses, getClassMembers, postClass, postClassBlueprintApply } from "@/api/classes";
+import { deleteClassById, getClasses, postClass, postClassBlueprintApply } from "@/api/classes";
 import { getAcademicYears } from "@/api/academic-years";
 import { getCourses } from "@/api/courses";
 import { getLimits } from "@/api/limits";
@@ -31,7 +31,8 @@ import { createFlash } from "@/lib/flash";
 import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
-import { compareClasses } from "@/lib/student-directory";
+import { classMemberCount, compareClasses, invalidateStudentDirectory } from "@/lib/student-directory";
+import { invalidateSchoolWalk } from "@/lib/instance-labels";
 import { createUrlString } from "@/lib/url-state";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
@@ -110,7 +111,7 @@ function ClassesContent() {
   const [memberCounts] = createResource(memberCountIds, async (ids) => {
     const entries = await mapConcurrent(ids, FAN_OUT_LIMIT, async (id) => {
       try {
-        return [id, (await getClassMembers(id, { limit: 1 })).total] as const;
+        return [id, await classMemberCount(id)] as const;
       } catch {
         return [id, null] as const;
       }
@@ -126,7 +127,7 @@ function ClassesContent() {
   // A fresh array once the member counts land: the table redraws a row only
   // when its data changes, so the counts would otherwise stay "—".
   const rows = createMemo(() => {
-    memberCounts();
+    memberCounts.latest;
     return gradeFiltered().slice();
   });
   const openClass = (cls: ClassGroup) => void navigate({ to: "/management/classes/$id", params: { id: cls.id } });
@@ -137,6 +138,8 @@ function ClassesContent() {
   const [deleteTarget, setDeleteTarget] = createSignal<ClassGroup | null>(null);
   const [rowError, setRowError] = createSignal("");
   const refreshList = async () => {
+    invalidateStudentDirectory();
+    invalidateSchoolWalk();
     // The grade dropdown reads its own unfiltered page, so a create, edit or
     // delete that changes which rungs have classes must refresh it too.
     try { await Promise.all([refetch(), refetchGrades()]); } catch { /* stale rows until the next load */ }
@@ -149,6 +152,7 @@ function ClassesContent() {
     setPending(true);
     try {
       const result = await postClassBlueprintApply(cls.id);
+      invalidateSchoolWalk();
       if (result.skipped.length === 0) {
         setFlash(t("classBlueprints.applied"));
         return;
@@ -207,7 +211,7 @@ function ClassesContent() {
     },
     {
       id: "students",
-      accessorFn: (row) => memberCounts()?.get(row.id) ?? -1,
+      accessorFn: (row) => memberCounts.latest?.get(row.id) ?? -1,
       header: t("nav.studentsRoster"),
       size: 130,
       minSize: 100,
@@ -219,7 +223,7 @@ function ClassesContent() {
         headerInfo: memberCountsCapped() ? t("classGroups.memberCountCapped", { cap: MEMBER_COUNT_FETCH_CAP }) : undefined,
       },
       cell: (cell) => {
-        const count = memberCounts()?.get(cell.row.original.id);
+        const count = memberCounts.latest?.get(cell.row.original.id);
         return count == null ? <span class="text-text-subtle">—</span> : t("classGroups.studentsCount", { count: String(count) });
       },
     },
@@ -274,6 +278,8 @@ function ClassesContent() {
         year: yearId() || undefined,
         teacher_id: teacherId() || undefined,
       });
+      invalidateStudentDirectory();
+      invalidateSchoolWalk();
       setName(""); setGradeLevel(null); setYearId(""); setTeacherId(""); setShowForm(false);
       // Reloading the list is housekeeping for a page we are leaving anyway: a
       // failure here used to be reported as if the class had not been created,

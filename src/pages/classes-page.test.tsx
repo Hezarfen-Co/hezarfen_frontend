@@ -3,6 +3,7 @@ import type { JSX } from "solid-js";
 import { afterEach, expect, test, vi } from "vitest";
 import ClassesPage from "@/pages/classes-page";
 import { PreferencesProvider } from "@/stores/preferences-context";
+import { invalidateStudentDirectory } from "@/lib/student-directory";
 
 const { getClasses, getClassMembers, postClass, getCourses, navigate } = vi.hoisted(() => ({
   getClasses: vi.fn(),
@@ -38,6 +39,7 @@ const createdClass = { id: "c-new", creator: null, name: "9-A", grade_level: 9, 
 
 afterEach(() => {
   cleanup();
+  invalidateStudentDirectory();
   vi.clearAllMocks();
 });
 
@@ -140,4 +142,15 @@ test("the grade filter narrows on the server and keeps every option listed", asy
   // Picking a grade must not erase the other options.
   fireEvent.pointerDown(screen.getByRole("button", { name: /Grade:/ }), { button: 0, pointerType: "mouse" });
   expect(await screen.findByRole("menuitem", { name: "Grade 10" })).toBeTruthy();
+});
+
+test("shows class rows before member counts finish", async () => {
+  const grade9 = { id: "c9", creator: null, name: "9-A", grade_level: 9, year: null, teacher: null };
+  getClasses.mockResolvedValue({ items: [grade9], total: 1, limit: 200, offset: 0 });
+  getClassMembers.mockImplementation(() => new Promise(() => {}));
+
+  render(() => <PreferencesProvider><ClassesPage /></PreferencesProvider>);
+
+  expect(await screen.findByRole("button", { name: /^9-A/ })).toBeTruthy();
+  expect(getClassMembers).toHaveBeenCalled();
 });

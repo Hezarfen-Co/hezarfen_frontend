@@ -34,11 +34,23 @@ const classCache = new Map<string, Promise<string | null>>();
 let myClassesCache: Promise<Map<string, string>> | null = null;
 let allClassesCache: Promise<Map<string, string>> | null = null;
 let classListCache: Promise<ClassGroup[]> | null = null;
-let schoolSectionsCache: Promise<{ klass: ClassGroup; sections: ClassCourse[] }[]> | null = null;
+const sectionCache = new Map<string, Promise<ClassCourse[]>>();
 let schoolIndexCache: Promise<boolean> | null = null;
+const FRESH_MS = 5 * 60 * 1000;
+let freshUntil = Date.now() + FRESH_MS;
+
+function ensureFresh(): void {
+  if (Date.now() >= freshUntil) invalidateSchoolWalk();
+}
+
+export function invalidateSchoolWalk(): void {
+  resetInstanceLabelCache();
+  freshUntil = Date.now() + FRESH_MS;
+}
 
 /** Teacher+: the school's class list, read once per tab. */
 export function classList(): Promise<ClassGroup[]> {
+  ensureFresh();
   if (!classListCache) {
     classListCache = getClasses({ limit: 200 }).then(
       (page) => page.items,
@@ -56,21 +68,26 @@ export function classList(): Promise<ClassGroup[]> {
  * school-wide section route), read once per tab and shared by the label
  * cache and the section pickers. A class that cannot be read comes back empty.
  */
-export function loadSchoolSections(): Promise<{ klass: ClassGroup; sections: ClassCourse[] }[]> {
-  if (!schoolSectionsCache) {
-    schoolSectionsCache = classList().then((classes) =>
-      mapConcurrent(classes, FAN_OUT_LIMIT, (klass) =>
-        getClassInstances(klass.id, { limit: 200 }).then(
-          (page) => ({ klass, sections: page.items }),
-          () => ({ klass, sections: [] as ClassCourse[] }),
-        ),
-      ),
-    ).catch(() => {
-      schoolSectionsCache = null;
-      return [];
+export function classSections(classId: string): Promise<ClassCourse[]> {
+  ensureFresh();
+  let hit = sectionCache.get(classId);
+  if (!hit) {
+    const read = getClassInstances(classId, { limit: 200 }).then((page) => page.items);
+    const pending = read.catch((error) => {
+      if (sectionCache.get(classId) === pending) sectionCache.delete(classId);
+      throw error;
     });
+    hit = pending;
+    sectionCache.set(classId, hit);
   }
-  return schoolSectionsCache;
+  return hit;
+}
+
+export async function loadSchoolSections(): Promise<{ klass: ClassGroup; sections: ClassCourse[] }[]> {
+  const classes = await classList();
+  return mapConcurrent(classes, FAN_OUT_LIMIT, async (klass) => ({
+    klass, sections: await classSections(klass.id).catch(() => [] as ClassCourse[]),
+  }));
 }
 
 /**
@@ -146,6 +163,7 @@ export function formatInstanceLabel(courseTitle: string | null, className: strin
 }
 
 export function loadInstanceLabel(id: string, role: Role | undefined): Promise<InstanceLabel | null> {
+  ensureFresh();
   const key = `${role ?? ""}:${id}`;
   let hit = instanceCache.get(key);
   if (!hit) {
@@ -172,6 +190,7 @@ export function loadInstanceLabel(id: string, role: Role | undefined): Promise<I
 
 /** Labels for a bounded set of instance ids, fetched a few at a time. */
 export async function loadInstanceLabels(ids: readonly string[], role: Role | undefined): Promise<Map<string, InstanceLabel>> {
+  ensureFresh();
   const unique = [...new Set(ids)];
   // Many labels at once: reading the school's sections class by class is
   // cheaper than one read per section, once they outnumber the classes.
@@ -227,6 +246,7 @@ export function resetInstanceLabelCache(): void {
   myClassesCache = null;
   allClassesCache = null;
   classListCache = null;
-  schoolSectionsCache = null;
+  sectionCache.clear();
   schoolIndexCache = null;
+  freshUntil = Date.now() + FRESH_MS;
 }

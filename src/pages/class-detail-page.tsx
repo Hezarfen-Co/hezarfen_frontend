@@ -1,4 +1,6 @@
 import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
+import { invalidateStudentDirectory } from "@/lib/student-directory";
+import { invalidateSchoolWalk } from "@/lib/instance-labels";
 import { createResource } from "@/lib/create-resource";
 import { useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
@@ -149,6 +151,10 @@ function ClassDetailContent() {
     setPending(true);
     try {
       await fn();
+      // Every write here changes a class, its members or its sections: drop
+      // the shared per-tab rosters and section walk so other pages re-read.
+      invalidateStudentDirectory();
+      invalidateSchoolWalk();
       if (successKey) setFlash(t(successKey as never));
     } catch (err) {
       setError(formatApiError(err));
@@ -165,6 +171,7 @@ function ClassDetailContent() {
     setPending(true);
     try {
       const result = await postClassBlueprintApply(id());
+      invalidateSchoolWalk();
       await refresh(refetchCourses);
       setSkipped(result.skipped);
       if (result.skipped.length === 0) setFlash(t("classBlueprints.applied"));

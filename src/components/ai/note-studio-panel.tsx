@@ -33,31 +33,48 @@ function readRailWidth(): number {
 }
 
 type StudioNote = CourseNote & { courseTitle: string; courseCreatorId: string };
+const studioNotesCache = new Map<string, Promise<StudioNote[]>>();
 
 /** Every lesson note the account can produce from, with its course. */
-async function loadStudioNotes(): Promise<StudioNote[]> {
+export async function loadStudioNotes(): Promise<StudioNote[]> {
   // GET /courses is already scoped to what the caller teaches or takes.
   const courses = await getCourses({ limit: 100 });
-  const rows = await Promise.all(
-    courses.items.map(async (course) => {
+  const rows: StudioNote[][] = Array.from({ length: courses.items.length }, () => []);
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(4, courses.items.length) }, async () => {
+    while (next < courses.items.length) {
+      const index = next++;
+      const course = courses.items[index]!;
       try {
         const page = await getCourseNotes(course.id, { limit: 100 });
-        return page.items.map<StudioNote>((note) => ({
+        rows[index] = page.items.map<StudioNote>((note) => ({
           ...note,
           courseTitle: course.title,
           courseCreatorId: course.creator.id,
         }));
       } catch {
-        return [];
+        rows[index] = [];
       }
-    }),
-  );
+    }
+  }));
   return rows.flat();
+}
+
+export function getCachedStudioNotes(userId: string): Promise<StudioNote[]> {
+  let pending = studioNotesCache.get(userId);
+  if (!pending) {
+    pending = loadStudioNotes().catch((error) => {
+      studioNotesCache.delete(userId);
+      throw error;
+    });
+    studioNotesCache.set(userId, pending);
+  }
+  return pending;
 }
 
 function useStudioNotes() {
   const auth = useAuth();
-  return createResource(() => auth.user()?.role ?? null, () => loadStudioNotes());
+  return createResource(() => auth.user()?.id ?? null, (userId) => userId ? getCachedStudioNotes(userId) : []);
 }
 
 /**
@@ -76,6 +93,11 @@ export function NoteStudioPanel() {
   };
 
   return (
+    <div class="w-full space-y-8">
+      <header class="space-y-1.5">
+        <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{t("aiHub.tab.studio")}</h1>
+        <p class="text-sm text-muted-foreground">{t("aiStudio.heading")}</p>
+      </header>
     <Suspense fallback={<PageSpinner />}>
       <Show when={notes.error}>
         <ErrorAlert message={formatApiError(notes.error)} onRetry={() => void refetch()} />
@@ -88,12 +110,7 @@ export function NoteStudioPanel() {
           {/* A studio home: a plain title and one line saying what it makes,
               the way to start on a note, then everything produced so far.
               Flat hairline cards, no banner and no shadow stack. */}
-          <div class="w-full space-y-8">
-            <header class="space-y-1.5">
-              <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{t("aiHub.tab.studio")}</h1>
-              <p class="text-sm text-muted-foreground">{t("aiStudio.heading")}</p>
-            </header>
-
+          <div class="space-y-8">
             <div class="max-w-xl space-y-2">
               <Label for="sound-studio-note">{t("podcast.source")}</Label>
               <SearchableSelect
@@ -115,6 +132,7 @@ export function NoteStudioPanel() {
         </Show>
       </Show>
     </Suspense>
+    </div>
   );
 }
 
